@@ -63,4 +63,10 @@ public class BoardService {
                 .build();
 
     }
+
+    // 게시글 삭제
+    @Transactional
+    public void deleteBoard(Long boardId) {
+        boardRepository.deleteById(boardId);
+    }
 }
