@@ -4,6 +4,7 @@ import cc.backend.dto.request.BoardRequest;
 import cc.backend.dto.response.BoardResponse;
 import cc.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,19 +16,22 @@ public class BoardController {
 
     //TODO : 추후 @AuthenticationPrincipal 로 변환
     @PostMapping
-    public BoardResponse createBoard(@RequestParam Long memberId, @RequestBody BoardRequest request) {
-        return boardService.createBoard(memberId, request);
+    public ResponseEntity<BoardResponse> createBoard(@RequestParam Long memberId, @RequestBody BoardRequest request) {
+        BoardResponse response= boardService.createBoard(memberId, request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{boardId}")
-    public BoardResponse updateBoard(@PathVariable Long boardId, @RequestBody BoardRequest request)
+    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long boardId, @RequestBody BoardRequest request)
     {
-        return boardService.updateBoard(boardId, request);
+        BoardResponse response = boardService.updateBoard(boardId, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{boardId}")
-    public void deleteBoard(@PathVariable Long boardId)
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId)
     {
         boardService.deleteBoard(boardId);
+        return ResponseEntity.noContent().build();
     }
 }
