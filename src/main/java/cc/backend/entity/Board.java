@@ -1,5 +1,6 @@
 package cc.backend.entity;
 
+import cc.backend.entity.common.BaseEntity;
 import cc.backend.entity.enums.BoardType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Board {
+public class Board extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
