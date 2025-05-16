@@ -13,9 +13,16 @@ public class BoardController {
 
     private final BoardService boardService;
 
-    //TODO : 추후 Auth로 변환
+    //TODO : 추후 @AuthenticationPrincipal 로 변환
     @PostMapping
     public BoardResponse createBoard(@RequestParam Long memberId, @RequestBody BoardRequest request) {
         return boardService.createBoard(memberId, request);
     }
+
+    @PutMapping("/{boardId}")
+    public BoardResponse updateBoard(@PathVariable Long boardId, @RequestBody BoardRequest request)
+    {
+        return boardService.updateBoard(boardId, request);
+    }
+
 }

@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
+
 @Service
 @RequiredArgsConstructor
 public class BoardService {
@@ -44,4 +46,21 @@ public class BoardService {
                 .build();
     }
 
+    //게시글 수정
+    @Transactional
+   public  BoardResponse updateBoard( Long boardId, BoardRequest dto) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+
+        board.update(dto.getTitle(), dto.getContent(), dto.getImgUrls(), dto.getBoardType());
+
+        return BoardResponse.builder()
+                .boardId(board.getId())
+                .boardType(board.getBoardType())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .imgUrls(board.getImgUrls())
+                .build();
+
+    }
 }

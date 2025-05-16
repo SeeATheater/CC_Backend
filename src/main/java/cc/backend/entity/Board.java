@@ -37,4 +37,12 @@ public class Board {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    // ----- method -----
+    public void update(String title, String content, List<String> imgUrls, BoardType boardType) {
+        this.title = title;
+        this.content = content;
+        this.imgUrls = imgUrls;
+        this.boardType = boardType;
+    }
 }
