@@ -47,6 +47,8 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .imgUrls(board.getImgUrls())
+                .createdAt(board.getCreatedAt())
+                .updatedAt(board.getUpdatedAt())
                 .build();
     }
 
@@ -64,6 +66,8 @@ public class BoardService {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .imgUrls(board.getImgUrls())
+                .createdAt(board.getCreatedAt())
+                .updatedAt(board.getUpdatedAt())
                 .build();
 
     }

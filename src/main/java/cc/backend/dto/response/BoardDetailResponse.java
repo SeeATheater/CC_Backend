@@ -5,6 +5,7 @@ import cc.backend.entity.enums.BoardType;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -18,6 +19,8 @@ public class BoardDetailResponse {
     private int likeCount;
     private int commentCount;
     private Long memberId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static BoardDetailResponse from(Board board) {
         return BoardDetailResponse.builder()
@@ -29,6 +32,8 @@ public class BoardDetailResponse {
                 .likeCount(board.getLikeCount())
                 .commentCount(board.getCommentCount())
                 .memberId(board.getMember().getId())
+                .createdAt(board.getCreatedAt())
+                .updatedAt(board.getUpdatedAt())
                 .build();
     }
 }

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,4 +19,6 @@ public class BoardResponse {
     private String title;
     private String content;
     private List<String> imgUrls;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
