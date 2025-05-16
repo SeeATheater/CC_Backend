@@ -1,11 +1,14 @@
 package cc.backend.controller;
 
 import cc.backend.dto.request.BoardRequest;
+import cc.backend.dto.response.BoardDetailResponse;
 import cc.backend.dto.response.BoardResponse;
 import cc.backend.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/boards")
@@ -33,5 +36,15 @@ public class BoardController {
     {
         boardService.deleteBoard(boardId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BoardDetailResponse>> getBoards(){
+        return ResponseEntity.ok(boardService.getBoards());
+    }
+
+    @GetMapping("/{boardId}")
+    public ResponseEntity<BoardDetailResponse> getBoard(@PathVariable Long boardId){
+        return ResponseEntity.ok(boardService.getBoard(boardId));
     }
 }

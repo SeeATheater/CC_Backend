@@ -1,6 +1,7 @@
 package cc.backend.service;
 
 import cc.backend.dto.request.BoardRequest;
+import cc.backend.dto.response.BoardDetailResponse;
 import cc.backend.dto.response.BoardResponse;
 import cc.backend.entity.Board;
 import cc.backend.entity.Member;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class BoardService {
     private final MemberRepository memberRepository;
 
     // 게시글 작성
+    //TODO : 이미지 업로드 코드 추가
     @Transactional
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
         Member member = memberRepository.findById(memberId)
@@ -69,4 +73,22 @@ public class BoardService {
     public void deleteBoard(Long boardId) {
         boardRepository.deleteById(boardId);
     }
+
+    //게시글 조회
+    @Transactional(readOnly = true)
+    public List<BoardDetailResponse> getBoards() {
+        List<Board> boards=boardRepository.findAll();
+        return boards.stream()
+                .map(BoardDetailResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    //게시글 상세 조회
+    @Transactional(readOnly = true)
+    public BoardDetailResponse getBoard(Long boardId) {
+        Board board=boardRepository.findById(boardId)
+                .orElseThrow(()-> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        return BoardDetailResponse.from(board);
+    }
+
 }
