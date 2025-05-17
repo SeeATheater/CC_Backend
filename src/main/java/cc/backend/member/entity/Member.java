@@ -1,5 +1,6 @@
-package cc.backend.entity;
+package cc.backend.member.entity;
 
+import cc.backend.board.entity.Board;
 import jakarta.persistence.*;
 import lombok.*;
 

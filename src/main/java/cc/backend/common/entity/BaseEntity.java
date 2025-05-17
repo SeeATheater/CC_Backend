@@ -1,4 +1,4 @@
-package cc.backend.entity.common;
+package cc.backend.common.entity;
 
 
 import jakarta.persistence.Column;

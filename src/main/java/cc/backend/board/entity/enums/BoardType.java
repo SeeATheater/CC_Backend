@@ -1,4 +1,4 @@
-package cc.backend.entity.enums;
+package cc.backend.board.entity.enums;
 
 public enum BoardType {
     NORMAL, PROMOTION, HOT
