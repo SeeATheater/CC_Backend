@@ -1,17 +1,16 @@
-package cc.backend.service;
+package cc.backend.board.service;
 
-import cc.backend.dto.request.BoardRequest;
-import cc.backend.dto.response.BoardDetailResponse;
-import cc.backend.dto.response.BoardResponse;
-import cc.backend.entity.Board;
-import cc.backend.entity.Member;
-import cc.backend.repository.BoardRepository;
-import cc.backend.repository.MemberRepository;
+import cc.backend.board.dto.request.BoardRequest;
+import cc.backend.board.dto.response.BoardDetailResponse;
+import cc.backend.board.dto.response.BoardResponse;
+import cc.backend.board.entity.Board;
+import cc.backend.member.entity.Member;
+import cc.backend.board.repository.BoardRepository;
+import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.stream.Collectors;
 

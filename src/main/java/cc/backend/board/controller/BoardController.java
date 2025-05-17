@@ -1,9 +1,9 @@
-package cc.backend.controller;
+package cc.backend.board.controller;
 
-import cc.backend.dto.request.BoardRequest;
-import cc.backend.dto.response.BoardDetailResponse;
-import cc.backend.dto.response.BoardResponse;
-import cc.backend.service.BoardService;
+import cc.backend.board.dto.request.BoardRequest;
+import cc.backend.board.dto.response.BoardDetailResponse;
+import cc.backend.board.dto.response.BoardResponse;
+import cc.backend.board.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

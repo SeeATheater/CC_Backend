@@ -1,6 +1,6 @@
-package cc.backend.dto.response;
+package cc.backend.board.dto.response;
 
-import cc.backend.entity.enums.BoardType;
+import cc.backend.board.entity.enums.BoardType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

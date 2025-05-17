@@ -1,6 +1,6 @@
-package cc.backend.dto.request;
+package cc.backend.board.dto.request;
 
-import cc.backend.entity.enums.BoardType;
+import cc.backend.board.entity.enums.BoardType;
 import lombok.Getter;
 
 import java.util.List;

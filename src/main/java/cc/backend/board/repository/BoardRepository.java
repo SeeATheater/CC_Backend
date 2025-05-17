@@ -1,6 +1,6 @@
-package cc.backend.repository;
+package cc.backend.board.repository;
 
-import cc.backend.entity.Board;
+import cc.backend.board.entity.Board;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
