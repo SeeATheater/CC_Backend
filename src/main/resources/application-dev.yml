@@ -4,9 +4,9 @@ spring:
       on-profile: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DEV_DB_URL}
-    username: ${DEV_DB_USERNAME}
-    password: ${DEV_DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/SeeATheater?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
+    username: root
+    password: 0864
   jpa:
     hibernate:
       ddl-auto: update

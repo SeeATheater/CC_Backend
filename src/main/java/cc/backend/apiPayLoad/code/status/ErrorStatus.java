@@ -59,8 +59,8 @@ public enum ErrorStatus implements BaseErrorCode {
     AMATEUR_TICKET_STOCK(HttpStatus.BAD_REQUEST, "AMATEURTICKET4001", "주문 수량은 최소 1개 이상이어야 합니다."),
 
 
-    // MUSICAL ERROR
-    MUSICAL_NOT_FOUND(HttpStatus.NOT_FOUND, "MUSICAL4000", "존재하지 않는 뮤지컬입니다."),
+    // PHOTOALBUM ERROR
+    PHOTOALBUM_NOT_FOUND(HttpStatus.NOT_FOUND, "PHOTOALBUM4000", "존재하지 않는 사진첩입니다."),
 
     // INQUIRY ERROR
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다.");
