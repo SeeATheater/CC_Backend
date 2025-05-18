@@ -1,8 +1,11 @@
 package cc.backend.member.entity;
 
+import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.board.entity.Board;
+import cc.backend.common.entity.BaseEntity;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
+import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +15,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member {
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,7 +52,9 @@ public class Member {
     private List<Board> boards;
 
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
-    private List<PhotoAlbum> photoAlbums = new ArrayList<>();
+    private List<AmateurShow> amateurShows = new ArrayList<>();
+
+
 
     @Builder
     public void Member(String username, String name, Role role, String address, String email, String phone,
