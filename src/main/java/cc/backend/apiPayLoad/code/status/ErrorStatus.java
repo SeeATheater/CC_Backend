@@ -33,6 +33,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4010", "토큰이 유효하지 않습니다."),
     MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4011", "해당 사용자게에게 관리자 권한이 없습니다."),
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
+    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
 
 
     // MEMBER TICKET ERROR
