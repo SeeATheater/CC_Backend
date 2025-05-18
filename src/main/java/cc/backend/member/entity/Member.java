@@ -1,18 +1,17 @@
 package cc.backend.member.entity;
 
+import cc.backend.board.entity.Board;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
     @Id
@@ -45,6 +44,9 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     private ActiveStatus active_status;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Board> boards;
 
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
     private List<PhotoAlbum> photoAlbums = new ArrayList<>();
