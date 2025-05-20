@@ -72,4 +72,13 @@ public class Member extends BaseEntity {
         this.inactive_date = inactive_date;
         this.active_status = ActiveStatus.ACTIVE;
     }
+
+
+
+    public void deactivateMember(Member member) {
+        this.active_status = ActiveStatus.INACTIVE;
+    }
+    public void reactivateMember(Member member) {
+        this.active_status = ActiveStatus.ACTIVE;
+    }
 }
