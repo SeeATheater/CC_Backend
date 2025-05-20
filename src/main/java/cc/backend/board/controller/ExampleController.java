@@ -1,4 +1,4 @@
-package cc.backend.controller;
+package cc.backend.board.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

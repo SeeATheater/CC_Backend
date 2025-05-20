@@ -1,0 +1,12 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    default: dev # 기본 환경을 dev로
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
