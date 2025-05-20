@@ -1,13 +1,10 @@
-package cc.backend.domain.entity.amateur;
+package cc.backend.amateurShow.entity;
 
+import cc.backend.common.entity.BaseEntity;
+import cc.backend.member.entity.Member;
+import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import cc.backend.domain.common.BaseEntity;
-import cc.backend.domain.entity.member.Member;
-import cc.backend.domain.enums.AmateurStatus;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
@@ -16,38 +13,34 @@ import java.util.List;
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AmateurShow extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, columnDefinition = "bigint")
     private Long id;
 
     private String name;
-
-    private String troupe; // 공연진 이름
-
-    private String posterImgUrl;
 
     private String place;
 
     private String schedule;
 
+    // 추가
     private String runtime;
 
     private String age;
 
-    private String starring; // 출연자 목록, AmateurCasting 과는 다른기능입니다
+    private String starring; // 출연자 목록
 
     private Integer totalTicket;
 
     @ColumnDefault("0")
     private Integer soldTicket;
 
-    private String timeInfo; // 공연시간 정보, runtime과 다름
-
-    //private String staff; // 제거 예정,
+    private String timeInfo;
 
     private String account;
 
@@ -61,10 +54,18 @@ public class AmateurShow extends BaseEntity {
 
     private Integer performanceRounds; // 공연 회차
 
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private AmateurStatus amateurStatus = AmateurStatus.YET;
+    private String troupe; // 공연진
 
+//    @Enumerated(EnumType.STRING)
+//    @Builder.Default
+//    private AmateurStatus amateurStatus = AmateurStatus.YET;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
+    @OneToMany (mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<PhotoAlbum> photoAlbums = new ArrayList<>();
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private List<AmateurTicket> amateurTicketList = new ArrayList<>();
@@ -81,7 +82,11 @@ public class AmateurShow extends BaseEntity {
     @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private AmateurSummary amateurSummary;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @Builder
+    public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {
+        this.name = name;
+        this.place = place;
+        this.schedule = schedule;
+        this.photoAlbums = photoAlbums;
+    }
 }
