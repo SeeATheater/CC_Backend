@@ -1,33 +1,33 @@
-package cc.backend.domain.entity.amateur;
+package cc.backend.amateurShow.entity;
 
-
+import cc.backend.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import cc.backend.domain.common.BaseEntity;
-import cc.backend.domain.entity.member.Member;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmateurNotice extends BaseEntity {
+public class AmateurSummary extends BaseEntity {
 
-    @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ElementCollection
-    private List<String> noticeImageUrls = new ArrayList<>();
-
     private String content;
+
+    private String summaryImage;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
+
+    // amateurShow 업데이트할 때 사용
+    public void updateContent(String newContent) {
+        this.content = newContent;
+    }
 }

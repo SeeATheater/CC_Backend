@@ -1,10 +1,10 @@
-package cc.backend.converter;
+package cc.backend.amateurShow.converter;
 
-import cc.backend.domain.entity.amateur.*;
-import cc.backend.domain.entity.member.Member;
-import cc.backend.domain.enums.TicketType;
-import cc.backend.dto.amateurDTO.AmateurEnrollRequestDTO;
-import cc.backend.dto.amateurDTO.AmateurEnrollResponseDTO;
+import cc.backend.amateurShow.entity.*;
+import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
+import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.amateurShow.entity.enums.TicketType;
+import cc.backend.member.entity.Member;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 public class AmateurConverter {
 
     // 소극장 공연 생성
-    public static AmateurShow toAmateurShowEntity(Member member, AmateurEnrollRequestDTO requestDTO, String posterUrl) {
+    public static AmateurShow toAmateurShowEntity(Member member, AmateurEnrollRequestDTO requestDTO) {
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())
@@ -30,7 +30,7 @@ public class AmateurConverter {
                 .account(requestDTO.getAccount())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
-                .posterImgUrl(posterUrl)
+                //.posterImgUrl(posterUrl)
                 .soldTicket(0)
                 .performanceRounds(requestDTO.getPerformanceRounds())
                 .build();
@@ -46,32 +46,31 @@ public class AmateurConverter {
 
     // 엔티티로 변환
     public static List<AmateurCasting> toAmateurCastingEntity(List<AmateurEnrollRequestDTO.Casting> castings,
-                                                       List<String> castingUrls, AmateurShow amateurShow) {
-        if (castings == null || castings.isEmpty() || castingUrls == null) return Collections.emptyList();
+                                                              AmateurShow amateurShow) {
+        if (castings == null || castings.isEmpty()) return Collections.emptyList();
 
         return IntStream.range(0, castings.size())
                 .mapToObj(i -> AmateurCasting.builder()
                         .amateurShow(amateurShow)
-                        .imageUrl(castingUrls.get(i))
+                        //.imageUrl(castingUrls.get(i))
                         .actorName(castings.get(i).getActorName())
                         .castingName(castings.get(i).getCastingName())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    public static AmateurNotice toAmateurNoticeEntity(String noticeContent,
-                                               List<String> noticeUrls, AmateurShow amateurShow) {
-        if (noticeContent == null || noticeUrls == null) return null;
+    public static AmateurNotice toAmateurNoticeEntity(String noticeContent, AmateurShow amateurShow) {
+        if (noticeContent == null) return null;
 
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
-                .noticeImageUrls(noticeUrls)
+                //.noticeImageUrls(noticeUrls)
                 .content(noticeContent)
                 .build();
     }
 
     public static AmateurSummary toAmateurSummaryEntity(String summaryContent,
-                                                 AmateurShow amateurShow) {
+                                                        AmateurShow amateurShow) {
         if (summaryContent == null) return null;
 
         return AmateurSummary.builder()
@@ -81,7 +80,7 @@ public class AmateurConverter {
     }
 
     public static List<AmateurTicket> toAmateurTicketEntity(AmateurEnrollRequestDTO requestDTO,
-                                                     AmateurShow amateurShow) {
+                                                            AmateurShow amateurShow) {
         List<AmateurTicket> tickets = new ArrayList<>();
 
         // 일반 티켓
@@ -89,7 +88,7 @@ public class AmateurConverter {
             for (AmateurEnrollRequestDTO.RegularTicket regularTicket : requestDTO.getRegularTicket()) {
                 AmateurTicket ticket = AmateurTicket.builder()
                         .amateurShow(amateurShow)
-                        .ticketType(TicketType.REGULAR)
+                        .ticketType(TicketType.COMMON)
                         .price(regularTicket.getRegularPrice())
                         .discountName(null)
                         .build();
@@ -114,7 +113,7 @@ public class AmateurConverter {
     }
 
     public static List<AmateurStaff> toAmateurStaffEntity(List<AmateurEnrollRequestDTO.Staff> staffs,
-                                                   AmateurShow amateurShow) {
+                                                          AmateurShow amateurShow) {
         if (staffs == null || staffs.isEmpty()) return Collections.emptyList();
 
         return staffs.stream()

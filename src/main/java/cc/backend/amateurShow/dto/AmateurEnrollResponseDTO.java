@@ -1,4 +1,4 @@
-package cc.backend.dto.amateurDTO;
+package cc.backend.amateurShow.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
-package cc.backend.repository.amateurRepository;
+package cc.backend.amateurShow.repository;
 
-import cc.backend.domain.entity.amateur.AmateurSummary;
+import cc.backend.amateurShow.entity.AmateurSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

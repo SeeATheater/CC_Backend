@@ -1,8 +1,8 @@
-package cc.backend.domain.entity.amateur;
+package cc.backend.amateurShow.entity;
 
+import cc.backend.amateurShow.entity.enums.TicketType;
 import cc.backend.domain.common.BaseEntity;
-import cc.backend.domain.entity.member.MemberTicket;
-import cc.backend.domain.enums.TicketType;
+import cc.backend.member.entity.MemberTicket;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
