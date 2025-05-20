@@ -52,8 +52,6 @@ public class AmateurShow extends BaseEntity {
 
     private Integer cancelFee;
 
-    private Integer performanceRounds; // 공연 회차
-
     private String troupe; // 공연진
 
 //    @Enumerated(EnumType.STRING)
@@ -81,6 +79,10 @@ public class AmateurShow extends BaseEntity {
 
     @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private AmateurSummary amateurSummary;
+
+    //--공연 회차랑 날짜 넣기--
+    @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
     @Builder
     public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {

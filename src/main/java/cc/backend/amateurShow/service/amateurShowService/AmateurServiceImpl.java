@@ -1,5 +1,6 @@
 package cc.backend.amateurShow.service.amateurShowService;
 
+import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
@@ -28,7 +29,9 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurSummaryRepository amateurSummaryRepository;
     private final AmateurStaffRepository amateurStaffRepository;
+    private final AmateurRoundsRepository amateurRoundsRepository;
 
+    // 소극장 공연 등록
     @Transactional
     @Override
     public AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
@@ -58,7 +61,7 @@ public class AmateurServiceImpl implements AmateurService {
         saveRelatedEntity(requestDTO, amateurShow);
 
         // response
-        return AmateurConverter.toAmateurShowDTO(amateurShow);
+        return AmateurConverter.toAmateurEnrollDTO(amateurShow);
     }
 
     private void saveRelatedEntity(AmateurEnrollRequestDTO requestDTO, AmateurShow amateurShow) {
@@ -92,5 +95,18 @@ public class AmateurServiceImpl implements AmateurService {
         if (!amateurStaff.isEmpty()) {
             amateurStaffRepository.saveAll(amateurStaff);
         }
+
+        // 공연 회차
+        List<AmateurRounds> rounds = AmateurConverter.toAmateurRoundEntity(requestDTO.getRounds(), amateurShow);
+        amateurRoundsRepository.saveAll(rounds);
+    }
+
+    // 소극장 공연 단건 조회
+    @Override
+    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurId) {
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        return AmateurConverter.toResponseDTO(amateurShow);
     }
 }

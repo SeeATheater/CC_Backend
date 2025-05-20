@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -30,7 +31,7 @@ public class AmateurEnrollRequestDTO {
     private List<Casting> casting; // 캐스팅 정보
     private List<DiscountTicket> discountTicket; // 할인 티켓 정보
     private List<Staff> staff; // 감독 및 스태프 정보
-    private int performanceRounds; // 공연 회차
+    private List<Rounds> rounds;
 
     @Getter
     @Builder
@@ -65,5 +66,14 @@ public class AmateurEnrollRequestDTO {
     public static class Staff {
         private String position;
         private String staffName;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Rounds {
+        private int roundNumber;
+        private LocalDateTime performanceDateTime;
     }
 }

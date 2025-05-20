@@ -2,6 +2,7 @@ package cc.backend.amateurShow.controller;
 
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.MemberService;
@@ -32,5 +33,12 @@ public class AmateurController {
 
         return ApiResponse.onSuccess(amateurService.enrollShow(memberId, requestDTO));
 
+    }
+
+    @GetMapping("/{amateurShowId}")
+    @Operation(summary = "소극장 공연 조회 - 단건")
+    public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@PathVariable Long amateurShowId){
+        //Member member = memberService.getMemberByToken(authorizationHeader);
+        return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
     }
 }
