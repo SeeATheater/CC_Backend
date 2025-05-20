@@ -5,7 +5,10 @@ import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AmateurServiceImpl implements AmateurService {
 
+    private final MemberRepository memberRepository;
     private final AmateurShowRepository amateurShowRepository;
     private final AmateurCastingRepository amateurCastingRepository;
     private final AmateurNoticeRepository amateurNoticeRepository;
@@ -27,7 +31,7 @@ public class AmateurServiceImpl implements AmateurService {
 
     @Transactional
     @Override
-    public AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Member member,
+    public AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
                                                                    AmateurEnrollRequestDTO requestDTO) {
 //        // 포스터 이미지
 //        String posterUrl = (posterImage != null) ?
@@ -45,6 +49,8 @@ public class AmateurServiceImpl implements AmateurService {
 //                        .map(file->uuidFileService.createFile(file, FilePath.AMATEUR_NOTICE).getFileUrl())
 //                        .toList() : null;
 
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         AmateurShow amateurShow = AmateurConverter.toAmateurShowEntity(member, requestDTO);
         amateurShowRepository.save(amateurShow);
 

@@ -10,6 +10,6 @@ import java.util.List;
 
 @Service
 public interface AmateurService {
-    AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Member member,
+    AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
                                                                    AmateurEnrollRequestDTO requestDTO);
 }
