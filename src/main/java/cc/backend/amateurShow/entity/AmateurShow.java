@@ -1,20 +1,19 @@
 package cc.backend.amateurShow.entity;
 
-import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.common.entity.BaseEntity;
 import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AmateurShow extends BaseEntity {
 
@@ -29,12 +28,61 @@ public class AmateurShow extends BaseEntity {
 
     private String schedule;
 
+    // 추가
+    private String runtime;
+
+    private String age;
+
+    private String starring; // 출연자 목록
+
+    private Integer totalTicket;
+
+    @ColumnDefault("0")
+    private Integer soldTicket;
+
+    private String timeInfo;
+
+    private String account;
+
+    private String hashtag;
+
+    private String contact;
+
+    private String rejectReason;
+
+    private Integer cancelFee;
+
+    private String troupe; // 공연진
+
+//    @Enumerated(EnumType.STRING)
+//    @Builder.Default
+//    private AmateurStatus amateurStatus = AmateurStatus.YET;
+
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @OneToMany (mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private List<PhotoAlbum> photoAlbums = new ArrayList<>();
+
+    @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<AmateurTicket> amateurTicketList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<AmateurCasting> amateurCastingList = new ArrayList<>();
+
+    @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private AmateurNotice amateurNotice;
+
+    @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<AmateurStaff> amateurStaffList = new ArrayList<>();
+
+    @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private AmateurSummary amateurSummary;
+
+    //--공연 회차랑 날짜 넣기--
+    @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
+    private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
     @Builder
     public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {
