@@ -31,7 +31,7 @@ public class Board extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BoardType boardType; //NORMAL, PROMOTION, HOT
+    private BoardType boardType; //NORMAL, PROMOTION
 
     @ElementCollection
     private List<String> imgUrls;

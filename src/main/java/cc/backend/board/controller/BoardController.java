@@ -40,7 +40,7 @@ public class BoardController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/boards")
+    @GetMapping
     public Slice<BoardDetailResponse> getBoards(
             @RequestParam BoardType boardType,
             @RequestParam int page,
@@ -53,10 +53,16 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getBoard(boardId));
     }
 
-    @PostMapping("/boards/{boardId}/like")
+    @PostMapping("/{boardId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long boardId, @RequestParam Long memberId) {
         int result = boardService.toggleLike(boardId, memberId);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/hot")
+    public ResponseEntity<List<BoardDetailResponse>> getHotBoards(){
+        List<BoardDetailResponse> hotboards = boardService.getHotBoards();
+        return ResponseEntity.ok(hotboards);
     }
 
 }

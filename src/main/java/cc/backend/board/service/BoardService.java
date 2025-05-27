@@ -5,8 +5,10 @@ import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
 import cc.backend.board.entity.BoardLike;
+import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
+import cc.backend.board.repository.HotBoardRepository;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +34,7 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final HotBoardRepository hotBoardRepository;
     private final MemberRepository memberRepository;
 
     // 게시글 작성
@@ -142,9 +147,45 @@ public class BoardService {
             BoardLike newLike = BoardLike.of(member, board);
             boardLikeRepository.save(newLike);
             board.increaseLikeCount();
+            promoteToHotBoard(board);
             return 1;
         }
     }
+
+    //핫게시판 조회
+    @Transactional(readOnly = true)
+    public List<BoardDetailResponse> getHotBoards() {
+        List<HotBoard> hotBoards = hotBoardRepository.findTop10ByOrderByBoard_CreatedAtDesc();
+        // 등록일 순으로 정렬
+        return hotBoards.stream()
+                .sorted(Comparator.comparing(hb -> hb.getBoard().getCreatedAt()))
+                .map(hb -> BoardDetailResponse.from(hb.getBoard()))
+                .collect(Collectors.toList());
+    }
+
+    // --------------- 내부 메서드 ------------
+    //핫게시판 선정 로직
+    private void promoteToHotBoard(Board board) {
+        // 이미 핫게시글이면 아무것도 하지 않음
+        if (hotBoardRepository.findByBoard(board).isPresent()) {
+            return;
+        }
+        if (board.getLikeCount() >= 10) {
+            // 핫게시글이 10개 이상이면 가장 오래된 것 제거
+            if (hotBoardRepository.count() >= 10) {
+                List<HotBoard> hotBoards = hotBoardRepository.findTop10ByOrderByHotRegisteredAtAsc();
+                HotBoard oldest = hotBoards.get(0);
+                hotBoardRepository.delete(oldest);
+            }
+            // 핫게시글로 등록
+            HotBoard hotBoard = HotBoard.builder()
+                    .board(board)
+                    .hotRegisteredAt(LocalDateTime.now())
+                    .build();
+            hotBoardRepository.save(hotBoard);
+        }
+    }
+
 
 
 }
