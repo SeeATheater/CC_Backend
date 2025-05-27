@@ -1,0 +1,115 @@
+package cc.backend.board.service;
+
+import cc.backend.board.dto.request.CommentRequest;
+import cc.backend.board.dto.response.CommentCreateResponse;
+import cc.backend.board.dto.response.CommentResponse;
+import cc.backend.board.entity.Board;
+import cc.backend.board.entity.Comment;
+import cc.backend.board.repository.BoardRepository;
+import cc.backend.board.repository.CommentRepository;
+import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CommentService {
+    //TODO:댓글 좋아요 구현
+
+    private final CommentRepository commentRepository;
+    private final BoardRepository boardRepository;
+    private final MemberRepository memberRepository;
+
+    //댓글 작성
+    @Transactional
+    public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        Member member = memberRepository.findById(req.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        Comment comment;
+        if (req.getParentCommentId() == null) {
+            // 댓글
+            comment = Comment.createComment(req.getContent(), member, board);
+        } else {
+            // 대댓글
+            Comment parent = commentRepository.findById(req.getParentCommentId())
+                    .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
+            if (parent.getDepth() != 0) {
+                throw new IllegalArgumentException("대댓글의 depth는 1까지만 허용됩니다.");
+            }
+            comment = Comment.createReply(req.getContent(), member, board, parent);
+        }
+        commentRepository.save(comment);
+
+        Long boardWriterId = board.getMember().getId();
+        return CommentCreateResponse.from(comment, boardWriterId);
+    }
+
+    //댓글/대댓글 수정
+    @Transactional
+    public CommentCreateResponse updateComment(Long memberId, Long commentId, String newContent) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+        if (!comment.getMember().getId().equals(memberId)) {
+            throw new SecurityException("수정 권한이 없습니다.");
+        }
+        comment.updateContent(newContent);
+
+        // 게시글 작성자 id 추출
+        Long boardWriterId = comment.getBoard().getMember().getId();
+        return CommentCreateResponse.from(comment, boardWriterId);
+    }
+
+    // 댓글/대댓글 삭제
+    @Transactional
+    public void deleteComment(Long memberId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+        if (!comment.getMember().getId().equals(memberId)) {
+            throw new SecurityException("삭제 권한이 없습니다.");
+        }
+        comment.softDelete(); // 실제 삭제가 아니라 soft delete
+    }
+
+    // 댓글/대댓글 목록 조회
+    @Transactional(readOnly = true)
+    public List<CommentResponse> getComments(Long boardId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        List<Comment> comments = commentRepository.findByBoardOrderByCreatedAtAsc(board);
+        Long boardWriterId = board.getMember().getId();
+
+        //  모든 댓글을 Map<id, CommentResponse>로 변환
+        Map<Long, CommentResponse> map = new LinkedHashMap<>();
+        for (Comment comment : comments) {
+            map.put(comment.getId(), CommentResponse.from(comment, boardWriterId));
+        }
+
+        // 트리 구조로 변환
+        List<CommentResponse> result = new ArrayList<>();
+        for (Comment comment : comments) {
+            CommentResponse response = map.get(comment.getId());
+            if (comment.getParent() == null) {
+                // 최상위 댓글
+                result.add(response);
+            } else {
+                // 대댓글을 부모의 children에 추가
+                CommentResponse parentResponse = map.get(comment.getParent().getId());
+                parentResponse.getChildren().add(response);
+            }
+        }
+        return result;
+    }
+
+
+}
