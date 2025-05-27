@@ -5,7 +5,9 @@ import cc.backend.board.dto.response.CommentCreateResponse;
 import cc.backend.board.dto.response.CommentResponse;
 import cc.backend.board.entity.Board;
 import cc.backend.board.entity.Comment;
+import cc.backend.board.entity.CommentLike;
 import cc.backend.board.repository.BoardRepository;
+import cc.backend.board.repository.CommentLikeRepository;
 import cc.backend.board.repository.CommentRepository;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
@@ -13,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +24,7 @@ public class CommentService {
     //TODO:댓글 좋아요 구현
 
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
@@ -109,6 +109,30 @@ public class CommentService {
             }
         }
         return result;
+    }
+
+    //댓글 좋아요
+    @Transactional
+    public int toggleCommentLike(Long commentId, Long memberId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        Optional<CommentLike> existingLike = commentLikeRepository.findByMemberAndComment(member, comment);
+
+        if (existingLike.isPresent()) {
+            // 이미 좋아요한 경우: 취소
+            commentLikeRepository.delete(existingLike.get());
+            comment.decreaseLikeCount();
+            return -1;
+        } else {
+            // 좋아요 추가
+            CommentLike like = CommentLike.of(member, comment);
+            commentLikeRepository.save(like);
+            comment.increaseLikeCount();
+            return 1;
+        }
     }
 
 

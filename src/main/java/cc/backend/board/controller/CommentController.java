@@ -53,4 +53,15 @@ public class CommentController {
         List<CommentResponse> comments = commentService.getComments(boardId);
         return ResponseEntity.ok(comments);
     }
+
+    //댓글 좋아요
+    @PostMapping("/{commentId}/like")
+    public ResponseEntity<Integer> toggleCommentLike(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            @RequestParam Long memberId) {
+        int result = commentService.toggleCommentLike(commentId, memberId);
+        return ResponseEntity.ok(result);
+    }
+
 }

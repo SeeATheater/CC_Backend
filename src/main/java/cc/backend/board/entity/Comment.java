@@ -81,4 +81,16 @@ public class Comment extends BaseEntity {
         this.deleted = true;
         this.content = "삭제된 댓글입니다.";
     }
+
+    // Comment.java
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
 }

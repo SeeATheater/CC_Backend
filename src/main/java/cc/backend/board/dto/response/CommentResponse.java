@@ -17,6 +17,7 @@ public class CommentResponse {
     private boolean deleted;
     private Long parentId;
     private List<CommentResponse> children;
+    private int likeCount;
 
     public static CommentResponse from(Comment comment, Long boardWriterId) {
         String writer;
@@ -33,6 +34,7 @@ public class CommentResponse {
                 .deleted(comment.isDeleted())
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
                 .children(new ArrayList<>())
+                .likeCount(comment.getLikeCount())
                 .build();
     }
 }
