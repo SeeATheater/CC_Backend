@@ -52,4 +52,11 @@ public class BoardController {
     public ResponseEntity<BoardDetailResponse> getBoard(@PathVariable Long boardId){
         return ResponseEntity.ok(boardService.getBoard(boardId));
     }
+
+    @PostMapping("/boards/{boardId}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable Long boardId, @RequestParam Long memberId) {
+        int result = boardService.toggleLike(boardId, memberId);
+        return ResponseEntity.ok(result);
+    }
+
 }

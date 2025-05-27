@@ -55,4 +55,16 @@ public class Board extends BaseEntity {
         this.imgUrls = imgUrls;
         this.boardType = boardType;
     }
+
+    // 좋아요 카운트 증가
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    // 좋아요 카운트 감소
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }

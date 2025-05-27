@@ -4,7 +4,9 @@ import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
+import cc.backend.board.entity.BoardLike;
 import cc.backend.board.entity.enums.BoardType;
+import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final BoardLikeRepository boardLikeRepository;
     private final MemberRepository memberRepository;
 
     // 게시글 작성
@@ -117,5 +121,30 @@ public class BoardService {
                 .orElseThrow(()-> new IllegalArgumentException("게시글이 존재하지 않습니다."));
         return BoardDetailResponse.from(board);
     }
+
+    //게시글 좋아요
+    @Transactional
+    public int toggleLike(Long boardId, Long memberId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        Optional<BoardLike> existingLike = boardLikeRepository.findByMemberAndBoard(member, board);
+
+        if (existingLike.isPresent()) {
+            // 좋아요 취소
+            boardLikeRepository.delete(existingLike.get());
+            board.decreaseLikeCount();
+            return -1;
+        } else {
+            // 좋아요 추가
+            BoardLike newLike = BoardLike.of(member, board);
+            boardLikeRepository.save(newLike);
+            board.increaseLikeCount();
+            return 1;
+        }
+    }
+
 
 }
