@@ -3,8 +3,10 @@ package cc.backend.board.controller;
 import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
+import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.service.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +40,14 @@ public class BoardController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<BoardDetailResponse>> getBoards(){
-        return ResponseEntity.ok(boardService.getBoards());
+    @GetMapping("/boards")
+    public Slice<BoardDetailResponse> getBoards(
+            @RequestParam BoardType boardType,
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        return boardService.getBoards(boardType, page, size);
     }
-
     @GetMapping("/{boardId}")
     public ResponseEntity<BoardDetailResponse> getBoard(@PathVariable Long boardId){
         return ResponseEntity.ok(boardService.getBoard(boardId));

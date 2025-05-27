@@ -10,8 +10,13 @@ import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -99,11 +104,10 @@ public class BoardService {
 
     //게시글 조회
     @Transactional(readOnly = true)
-    public List<BoardDetailResponse> getBoards() {
-        List<Board> boards=boardRepository.findAll();
-        return boards.stream()
-                .map(BoardDetailResponse::from)
-                .collect(Collectors.toList());
+    public Slice<BoardDetailResponse> getBoards(BoardType boardType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Slice<Board> boardSlice = boardRepository.findAllByBoardTypeOrderByIdDesc(boardType, pageable);
+        return boardSlice.map(BoardDetailResponse::from);
     }
 
     //게시글 상세 조회
