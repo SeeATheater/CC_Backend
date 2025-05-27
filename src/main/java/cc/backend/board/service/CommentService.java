@@ -1,5 +1,7 @@
 package cc.backend.board.service;
 
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.request.CommentRequest;
 import cc.backend.board.dto.response.CommentCreateResponse;
 import cc.backend.board.dto.response.CommentResponse;
@@ -21,7 +23,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CommentService {
-    //TODO:댓글 좋아요 구현
 
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
@@ -32,9 +33,9 @@ public class CommentService {
     @Transactional
     public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         Member member = memberRepository.findById(req.getMemberId())
-                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         Comment comment;
         if (req.getParentCommentId() == null) {
@@ -43,9 +44,9 @@ public class CommentService {
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
-                    .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
+                    .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
             if (parent.getDepth() != 0) {
-                throw new IllegalArgumentException("대댓글의 depth는 1까지만 허용됩니다.");
+                throw new GeneralException(ErrorStatus.COMMENT_DEPTH_EXCEEDED);
             }
             comment = Comment.createReply(req.getContent(), member, board, parent);
         }
@@ -61,9 +62,9 @@ public class CommentService {
     @Transactional
     public CommentCreateResponse updateComment(Long memberId, Long commentId, String newContent) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
         if (!comment.getMember().getId().equals(memberId)) {
-            throw new SecurityException("수정 권한이 없습니다.");
+            throw new GeneralException(ErrorStatus.COMMENT_ACCESS_DENIED);
         }
         comment.updateContent(newContent);
 
@@ -76,11 +77,11 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long memberId, Long commentId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
         if (!comment.getMember().getId().equals(memberId)) {
-            throw new SecurityException("삭제 권한이 없습니다.");
+            throw new GeneralException(ErrorStatus.COMMENT_ACCESS_DENIED);
         }
-        comment.softDelete(); // 실제 삭제가 아니라 soft delete
+        comment.softDelete(); // soft delete
 
         Board board = comment.getBoard();
         board.decreaseCommentCount();
@@ -90,7 +91,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponse> getComments(Long boardId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         List<Comment> comments = commentRepository.findByBoardOrderByCreatedAtAsc(board);
         Long boardWriterId = board.getMember().getId();
 
@@ -120,9 +121,9 @@ public class CommentService {
     @Transactional
     public int toggleCommentLike(Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         Optional<CommentLike> existingLike = commentLikeRepository.findByMemberAndComment(member, comment);
 

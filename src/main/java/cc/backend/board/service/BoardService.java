@@ -1,5 +1,7 @@
 package cc.backend.board.service;
 
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
@@ -42,11 +44,11 @@ public class BoardService {
     @Transactional
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+                .orElseThrow(() ->  new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         // 홍보게시판은 Performer만 작성 가능
         if (dto.getBoardType() == BoardType.PROMOTION && member.getRole() != Role.PERFORMER) {
-            throw new IllegalArgumentException("홍보게시판은 Performer만 작성할 수 있습니다.");
+            throw new GeneralException(ErrorStatus.ONLY_PERFORMER_CAN_WRITE_PROMOTION);
         }
 
         Board board = Board.builder()
@@ -75,11 +77,11 @@ public class BoardService {
     @Transactional
    public  BoardResponse updateBoard( Long memberId, Long boardId, BoardRequest dto) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
 
         // 작성자 본인만 수정 가능
         if (!board.getMember().getId().equals(memberId)) {
-            throw new SecurityException("수정 권한이 없습니다.");
+            throw new GeneralException(ErrorStatus.BOARD_ACCESS_DENIED);
         }
 
         board.update(dto.getTitle(), dto.getContent(), dto.getImgUrls(), dto.getBoardType());
@@ -101,11 +103,11 @@ public class BoardService {
     public void deleteBoard(Long memberId, Long boardId) {
 
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
 
         // 작성자 본인만 삭제 가능
         if (!board.getMember().getId().equals(memberId)) {
-            throw new SecurityException("삭제 권한이 없습니다.");
+            throw new GeneralException(ErrorStatus.BOARD_ACCESS_DENIED);
         }
         boardRepository.delete(board); //soft delete
     }
@@ -122,7 +124,7 @@ public class BoardService {
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoard(Long boardId) {
         Board board=boardRepository.findById(boardId)
-                .orElseThrow(()-> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(()-> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         return BoardDetailResponse.from(board);
     }
 
@@ -130,9 +132,9 @@ public class BoardService {
     @Transactional
     public int toggleLike(Long boardId, Long memberId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         Optional<BoardLike> existingLike = boardLikeRepository.findByMemberAndBoard(member, board);
 
