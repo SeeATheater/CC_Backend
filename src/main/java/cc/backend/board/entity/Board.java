@@ -37,8 +37,9 @@ public class Board extends BaseEntity {
     private List<String> imgUrls;
 
     private int likeCount;
-    private int commentCount;
-    private int commentMaxIndex;
+
+    private int commentCount = 0;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -66,5 +67,12 @@ public class Board extends BaseEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
+    }
+
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+    public void decreaseCommentCount() {
+        if (this.commentCount > 0) this.commentCount--;
     }
 }

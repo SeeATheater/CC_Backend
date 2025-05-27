@@ -51,6 +51,8 @@ public class CommentService {
         }
         commentRepository.save(comment);
 
+        board.increaseCommentCount();
+
         Long boardWriterId = board.getMember().getId();
         return CommentCreateResponse.from(comment, boardWriterId);
     }
@@ -79,6 +81,9 @@ public class CommentService {
             throw new SecurityException("삭제 권한이 없습니다.");
         }
         comment.softDelete(); // 실제 삭제가 아니라 soft delete
+
+        Board board = comment.getBoard();
+        board.decreaseCommentCount();
     }
 
     // 댓글/대댓글 목록 조회

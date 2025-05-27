@@ -56,7 +56,6 @@ public class BoardService {
                 .boardType(dto.getBoardType())
                 .likeCount(0)
                 .commentCount(0)
-                .commentMaxIndex(0)
                 .member(member)
                 .build();
 
