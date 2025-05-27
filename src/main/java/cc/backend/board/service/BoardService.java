@@ -4,8 +4,10 @@ import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
+import cc.backend.board.entity.enums.BoardType;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
+import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,11 @@ public class BoardService {
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        // 홍보게시판은 Performer만 작성 가능
+        if (dto.getBoardType() == BoardType.PROMOTION && member.getRole() != Role.PERFORMER) {
+            throw new IllegalArgumentException("홍보게시판은 Performer만 작성할 수 있습니다.");
+        }
 
         Board board = Board.builder()
                 .title(dto.getTitle())
