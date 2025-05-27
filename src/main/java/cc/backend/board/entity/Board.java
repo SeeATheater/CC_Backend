@@ -5,6 +5,8 @@ import cc.backend.board.entity.enums.BoardType;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.List;
 
@@ -13,6 +15,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE board SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class Board extends BaseEntity {
 
     @Id
@@ -39,6 +43,10 @@ public class Board extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     // ----- method -----
     public void update(String title, String content, List<String> imgUrls, BoardType boardType) {

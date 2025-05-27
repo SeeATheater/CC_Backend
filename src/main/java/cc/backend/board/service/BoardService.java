@@ -60,9 +60,14 @@ public class BoardService {
 
     //게시글 수정
     @Transactional
-   public  BoardResponse updateBoard( Long boardId, BoardRequest dto) {
+   public  BoardResponse updateBoard( Long memberId, Long boardId, BoardRequest dto) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+
+        // 작성자 본인만 수정 가능
+        if (!board.getMember().getId().equals(memberId)) {
+            throw new SecurityException("수정 권한이 없습니다.");
+        }
 
         board.update(dto.getTitle(), dto.getContent(), dto.getImgUrls(), dto.getBoardType());
 
@@ -80,8 +85,16 @@ public class BoardService {
 
     // 게시글 삭제
     @Transactional
-    public void deleteBoard(Long boardId) {
-        boardRepository.deleteById(boardId);
+    public void deleteBoard(Long memberId, Long boardId) {
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+
+        // 작성자 본인만 삭제 가능
+        if (!board.getMember().getId().equals(memberId)) {
+            throw new SecurityException("삭제 권한이 없습니다.");
+        }
+        boardRepository.delete(board); //soft delete
     }
 
     //게시글 조회

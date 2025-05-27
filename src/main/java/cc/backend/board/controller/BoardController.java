@@ -25,16 +25,16 @@ public class BoardController {
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<BoardResponse> updateBoard(@PathVariable Long boardId, @RequestBody BoardRequest request)
+    public ResponseEntity<BoardResponse> updateBoard(@RequestParam Long memberId,@PathVariable Long boardId, @RequestBody BoardRequest request)
     {
-        BoardResponse response = boardService.updateBoard(boardId, request);
+        BoardResponse response = boardService.updateBoard(memberId,boardId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{boardId}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId)
+    public ResponseEntity<Void> deleteBoard(@RequestParam Long memberId,@PathVariable Long boardId)
     {
-        boardService.deleteBoard(boardId);
+        boardService.deleteBoard(memberId,boardId);
         return ResponseEntity.noContent().build();
     }
 
