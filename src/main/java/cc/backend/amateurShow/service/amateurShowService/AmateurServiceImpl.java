@@ -27,7 +27,6 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurCastingRepository amateurCastingRepository;
     private final AmateurNoticeRepository amateurNoticeRepository;
     private final AmateurTicketRepository amateurTicketRepository;
-    private final AmateurSummaryRepository amateurSummaryRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
 
@@ -82,12 +81,6 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurTicket> tickets = AmateurConverter.toAmateurTicketEntity(requestDTO, amateurShow);
         if (!tickets.isEmpty()) {
             amateurTicketRepository.saveAll(tickets);
-        }
-
-        // 줄거리
-        AmateurSummary amateurSummary = AmateurConverter.toAmateurSummaryEntity(requestDTO.getSummaryContent(), amateurShow);
-        if (amateurSummary != null) {
-            amateurSummaryRepository.save(amateurSummary);
         }
 
         // 스태프

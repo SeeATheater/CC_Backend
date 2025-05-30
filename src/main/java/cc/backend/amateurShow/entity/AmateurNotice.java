@@ -25,6 +25,8 @@ public class AmateurNotice extends BaseEntity {
 
     private String content;
 
+    private String time_info;
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;

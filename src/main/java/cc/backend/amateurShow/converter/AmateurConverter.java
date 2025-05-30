@@ -4,10 +4,8 @@ import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
-import cc.backend.amateurShow.entity.enums.TicketType;
 import cc.backend.member.entity.Member;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,13 +18,10 @@ public class AmateurConverter {
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())
-                .troupe(requestDTO.getTroupe())
                 .place(requestDTO.getPlace())
                 .schedule(requestDTO.getSchedule())
                 .runtime(requestDTO.getRuntime())
-                .age(requestDTO.getAge())
-                .starring(requestDTO.getStarring())
-                .totalTicket(requestDTO.getTotalTicket())
+                .summary(requestDTO.getSummary())
                 .timeInfo(requestDTO.getTimeInfo())
                 .account(requestDTO.getAccount())
                 .contact(requestDTO.getContact())
@@ -47,11 +42,10 @@ public class AmateurConverter {
                                                               AmateurShow amateurShow) {
         if (castings == null || castings.isEmpty()) return Collections.emptyList();
 
-        return IntStream.range(0, castings.size())
-                .mapToObj(i -> AmateurCasting.builder()
+        return castings.stream().map(casting -> AmateurCasting.builder()
                         .amateurShow(amateurShow)
-                        .actorName(castings.get(i).getActorName())
-                        .castingName(castings.get(i).getCastingName())
+                        .actorName(casting.getActorName())
+                        .castingName(casting.getCastingName())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -65,42 +59,20 @@ public class AmateurConverter {
                 .build();
     }
 
-    public static AmateurSummary toAmateurSummaryEntity(String summaryContent, AmateurShow amateurShow) {
-        if (summaryContent == null) return null;
-
-        return AmateurSummary.builder()
-                .amateurShow(amateurShow)
-                .content(summaryContent)
-                .build();
-    }
-
     public static List<AmateurTicket> toAmateurTicketEntity(AmateurEnrollRequestDTO requestDTO,
                                                             AmateurShow amateurShow) {
-        List<AmateurTicket> tickets = new ArrayList<>();
+        if (requestDTO.getTickets() == null) return Collections.emptyList();
 
-        if (requestDTO.getRegularTicket() != null) {
-            for (AmateurEnrollRequestDTO.RegularTicket rt : requestDTO.getRegularTicket()) {
-                tickets.add(AmateurTicket.builder()
+        return requestDTO.getTickets().stream()
+                .map(t -> AmateurTicket.builder()
                         .amateurShow(amateurShow)
-                        .ticketType(TicketType.COMMON)
-                        .price(rt.getRegularPrice())
-                        .discountName(null)
-                        .build());
-            }
-        }
-
-        if (requestDTO.getDiscountTicket() != null) {
-            for (AmateurEnrollRequestDTO.DiscountTicket dt : requestDTO.getDiscountTicket()) {
-                tickets.add(AmateurTicket.builder()
-                        .amateurShow(amateurShow)
-                        .ticketType(TicketType.DISCOUNT)
-                        .price(dt.getDiscountPrice())
-                        .discountName(dt.getDiscountName())
-                        .build());
-            }
-        }
-
-        return tickets;
+                        .discountName(
+                                (t.getDiscountName() == null || t.getDiscountName().isBlank())
+                                        ? "COMMON" : t.getDiscountName()
+                        )
+                        .price(t.getPrice())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public static List<AmateurStaff> toAmateurStaffEntity(List<AmateurEnrollRequestDTO.Staff> staffs,
@@ -122,6 +94,7 @@ public class AmateurConverter {
                 .map(r -> AmateurRounds.builder()
                         .roundNumber(r.getRoundNumber())
                         .performanceDateTime(r.getPerformanceDateTime())
+                        .totalTicket(r.getTotalTicket())
                         .amateurShow(show)
                         .build())
                 .collect(Collectors.toList());
@@ -129,20 +102,13 @@ public class AmateurConverter {
 
     // --소극장 공연 단건 조회 response--
     public static AmateurShowResponseDTO.AmateurShowResult toResponseDTO(AmateurShow amateurShow) {
-        List<AmateurShowResponseDTO.AmateurShowResult.RegularTicket> regularTickets = amateurShow.getAmateurTicketList().stream()
-                .filter(t -> t.getTicketType() == TicketType.COMMON)
-                .map(t -> AmateurShowResponseDTO.AmateurShowResult.RegularTicket.builder()
-                        .regularPrice(t.getPrice())
-                        .build())
-                .collect(Collectors.toList());
 
-        List<AmateurShowResponseDTO.AmateurShowResult.DiscountTicket> discountTickets = amateurShow.getAmateurTicketList().stream()
-                .filter(t -> t.getTicketType() == TicketType.DISCOUNT)
-                .map(t -> AmateurShowResponseDTO.AmateurShowResult.DiscountTicket.builder()
+        List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = amateurShow.getAmateurTicketList().stream()
+                .map(t -> AmateurShowResponseDTO.AmateurShowResult.Tickets.builder()
                         .discountName(t.getDiscountName())
-                        .discountPrice(t.getPrice())
+                        .price(t.getPrice())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         List<AmateurShowResponseDTO.AmateurShowResult.Casting> castings = amateurShow.getAmateurCastingList().stream()
                 .map(c -> AmateurShowResponseDTO.AmateurShowResult.Casting.builder()
@@ -168,21 +134,14 @@ public class AmateurConverter {
         return AmateurShowResponseDTO.AmateurShowResult.builder()
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
-                .troupe(amateurShow.getTroupe())
                 .place(amateurShow.getPlace())
-                .schedule(amateurShow.getSchedule())
                 .runtime(amateurShow.getRuntime())
-                .age(amateurShow.getAge())
-                .starring(amateurShow.getStarring())
-                .totalTicket(amateurShow.getTotalTicket())
-                .timeInfo(amateurShow.getTimeInfo())
                 .account(amateurShow.getAccount())
                 .contact(amateurShow.getContact())
                 .hashtag(amateurShow.getHashtag())
-                .summaryContent(amateurShow.getAmateurSummary() != null ? amateurShow.getAmateurSummary().getContent() : null)
+                .summary(amateurShow.getSummary())
                 .noticeContent(amateurShow.getAmateurNotice() != null ? amateurShow.getAmateurNotice().getContent() : null)
-                .regularTicket(regularTickets)
-                .discountTicket(discountTickets)
+                .tickets(tickets)
                 .casting(castings)
                 .staff(staff)
                 .rounds(rounds)

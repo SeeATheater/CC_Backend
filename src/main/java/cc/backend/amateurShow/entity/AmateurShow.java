@@ -31,12 +31,6 @@ public class AmateurShow extends BaseEntity {
     // 추가
     private String runtime;
 
-    private String age;
-
-    private String starring; // 출연자 목록
-
-    private Integer totalTicket;
-
     @ColumnDefault("0")
     private Integer soldTicket;
 
@@ -52,7 +46,7 @@ public class AmateurShow extends BaseEntity {
 
     private Integer cancelFee;
 
-    private String troupe; // 공연진
+    private String summary;
 
 //    @Enumerated(EnumType.STRING)
 //    @Builder.Default
@@ -77,9 +71,6 @@ public class AmateurShow extends BaseEntity {
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private List<AmateurStaff> amateurStaffList = new ArrayList<>();
 
-    @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL)
-    private AmateurSummary amateurSummary;
-
     //--공연 회차랑 날짜 넣기--
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL)
     private List<AmateurRounds> amateurRounds = new ArrayList<>();
@@ -88,7 +79,6 @@ public class AmateurShow extends BaseEntity {
     public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {
         this.name = name;
         this.place = place;
-        this.schedule = schedule;
         this.photoAlbums = photoAlbums;
     }
 }

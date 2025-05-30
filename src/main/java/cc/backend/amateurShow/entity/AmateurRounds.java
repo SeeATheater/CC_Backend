@@ -20,6 +20,8 @@ public class AmateurRounds {
 
     private LocalDateTime performanceDateTime;
 
+    private Integer totalTicket;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;

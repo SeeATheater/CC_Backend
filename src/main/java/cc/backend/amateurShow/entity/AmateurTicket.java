@@ -1,6 +1,5 @@
 package cc.backend.amateurShow.entity;
 
-import cc.backend.amateurShow.entity.enums.TicketType;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.MemberTicket;
 import jakarta.persistence.*;
@@ -21,9 +20,6 @@ public class AmateurTicket extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Enumerated(EnumType.STRING)
-    private TicketType ticketType;
 
     private String discountName;
 
