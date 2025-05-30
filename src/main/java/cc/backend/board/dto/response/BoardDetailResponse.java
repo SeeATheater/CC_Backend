@@ -19,10 +19,17 @@ public class BoardDetailResponse {
     private int likeCount;
     private int commentCount;
     private Long memberId;
+    private String writer;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static BoardDetailResponse from(Board board) {
+        String writer;
+        if (board.getBoardType() == BoardType.PROMOTION) {
+            writer = board.getMember().getUsername();
+        } else {
+            writer = "익명";
+        }
         return BoardDetailResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())
