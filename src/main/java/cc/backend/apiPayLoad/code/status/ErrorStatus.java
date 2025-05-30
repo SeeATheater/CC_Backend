@@ -67,10 +67,9 @@ public enum ErrorStatus implements BaseErrorCode {
     COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, "COMMENT4003", "대댓글의 depth는 1까지만 허용됩니다."),
 
     // INQUIRY ERROR
-    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다."),
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다.");
 
-    // BOARD ERROR
-    BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "BOARD4000", "존재하지 않는 게시글입니다.");
+
 
 
     private final HttpStatus httpStatus;

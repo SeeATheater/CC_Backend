@@ -1,5 +1,8 @@
 package cc.backend.event.entity;
 
+import lombok.Getter;
+
+@Getter
 public class PostEvent {
     private final Long boardId;
     private final Long userId;
