@@ -45,7 +45,7 @@ public class MemberTicket extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    public void cancelTicket(ReservationStatus reservationStatus) {
+    public void updateReservationStatus(ReservationStatus reservationStatus) {
         this.reservationStatus = reservationStatus;
     }
 

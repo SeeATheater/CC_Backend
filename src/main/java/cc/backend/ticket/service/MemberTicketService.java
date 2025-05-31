@@ -1,8 +1,9 @@
 package cc.backend.ticket.service;
 
-import cc.backend.ticket.dto.MemberTicketListResponseDTO;
+import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
 import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
 import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
+import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,7 +12,10 @@ import java.util.List;
 public interface MemberTicketService {
 
     MemberTicketCreateResponseDTO create(Long amateurTicketID, MemberTicketCreateRequestDTO requestDTO);
-    List<MemberTicketListResponseDTO> getMyTickets(Long memberId, String status);
+    List<MemberTicketListResponseDTO> getMyTicketList(Long memberId, String status);
+    MemberTicketResponseDTO getMyTicket(Long memberId, Long ticketId);
+    MemberTicketResponseDTO cancelTicket(Long memberId, Long ticketId);
+
 
 
 }

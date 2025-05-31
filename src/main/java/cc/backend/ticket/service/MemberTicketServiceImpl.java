@@ -9,9 +9,10 @@ import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.ticket.dto.MemberTicketListResponseDTO;
+import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
 import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
 import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
+import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
@@ -73,7 +74,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
     }
 
     @Override
-    public List<MemberTicketListResponseDTO> getMyTickets(Long memberId, String status){
+    public List<MemberTicketListResponseDTO> getMyTicketList(Long memberId, String status){
         ReservationStatus filter = null;
         if (!status.equalsIgnoreCase("ALL")) {
             try {
@@ -92,6 +93,24 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .toList();
     }
 
+    @Override
+    public MemberTicketResponseDTO getMyTicket(Long memberId, Long ticketId) {
+        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, ticketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+        return MemberTicketResponseDTO.from(memberTicket);
+    }
+
+    @Override
+    @Transactional
+    public MemberTicketResponseDTO cancelTicket(Long memberId, Long ticketId) {
+        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, ticketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+        if (memberTicket.getReservationStatus().equals(ReservationStatus.CANCELLED)) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_CANCELED);
+        }
+        memberTicket.updateReservationStatus(ReservationStatus.CANCELLED);
+        return MemberTicketResponseDTO.from(memberTicket);
+    }
 
 
 
