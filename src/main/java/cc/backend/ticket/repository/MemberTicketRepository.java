@@ -1,0 +1,16 @@
+package cc.backend.ticket.repository;
+
+import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.enums.ReservationStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface MemberTicketRepository extends JpaRepository<MemberTicket, Long> {
+
+    List<MemberTicket> findAllByMemberId(Long memberId);
+    List<MemberTicket> findAllByMemberIdAndReservationStatus(Long memberId, ReservationStatus reservationStatus);
+
+}

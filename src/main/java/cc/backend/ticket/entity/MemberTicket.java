@@ -1,7 +1,9 @@
-package cc.backend.member.entity;
+package cc.backend.ticket.entity;
 
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.domain.common.BaseEntity;
+import cc.backend.member.entity.Member;
+import cc.backend.ticket.entity.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,16 +23,19 @@ public class MemberTicket extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer quantity;
+    private int quantity;
 
-    private Integer totalPrice;
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus reservationStatus;
 
-    private LocalDateTime reservationTime;
+    private LocalDateTime reserveDate;
 
-    private String accountName;
+    private LocalDateTime performanceDateTime;
 
-//    @Enumerated(EnumType.STRING)
-//    private ReservationStatus reservationStatus;
+    private LocalDateTime cancelAvailableUntil;
+
+    private int totalPrice;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_ticket_id")
@@ -40,11 +45,11 @@ public class MemberTicket extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-//    public void cancelTicket(ReservationStatus reservationStatus) {
-//        this.reservationStatus = reservationStatus;
-//    }
-//
-//    public void updateMemberTicket(ReservationStatus reservationStatus) {
-//        this.reservationStatus = reservationStatus;
-//    }
+    public void cancelTicket(ReservationStatus reservationStatus) {
+        this.reservationStatus = reservationStatus;
+    }
+
+    public void updateMemberTicket(ReservationStatus reservationStatus) {
+        this.reservationStatus = reservationStatus;
+    }
 }
