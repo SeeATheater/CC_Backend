@@ -23,7 +23,6 @@ public class AmateurShowResponseDTO {
         private String account; // 계좌번호
         private String contact; // 연락처
         private String hashtag; // 해시태그
-        private String totalTicket;
         private String summary; // 줄거리
         private String posterImageUrl;
         private AmateurShowResult.Notice notice;

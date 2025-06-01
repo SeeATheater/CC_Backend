@@ -34,8 +34,6 @@ public class AmateurShow extends BaseEntity {
     @ColumnDefault("0")
     private Integer soldTicket;
 
-    private String timeInfo;
-
     private String account;
 
     private String hashtag;

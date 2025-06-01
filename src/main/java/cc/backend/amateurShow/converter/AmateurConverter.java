@@ -142,6 +142,7 @@ public class AmateurConverter {
                 .map(r -> AmateurShowResponseDTO.AmateurShowResult.Rounds.builder()
                         .roundNumber(r.getRoundNumber())
                         .performanceDateTime(r.getPerformanceDateTime())
+                        .totalTicket(r.getTotalTicket())
                         .build())
                 .collect(Collectors.toList());
 
@@ -149,6 +150,7 @@ public class AmateurConverter {
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
                 .place(amateurShow.getPlace())
+                .schedule(amateurShow.getSchedule())
                 .runtime(amateurShow.getRuntime())
                 .account(amateurShow.getAccount())
                 .contact(amateurShow.getContact())
