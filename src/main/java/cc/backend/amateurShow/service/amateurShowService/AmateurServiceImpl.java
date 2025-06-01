@@ -35,21 +35,6 @@ public class AmateurServiceImpl implements AmateurService {
     @Override
     public AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
                                                                    AmateurEnrollRequestDTO requestDTO) {
-//        // 포스터 이미지
-//        String posterUrl = (posterImage != null) ?
-//                uuidFileService.createFile(posterImage, FilePath.AMATEUR).getFileUrl() : null;
-//
-//        // 캐스팅 이미지
-//        List<String> castingUrls = (castingImages != null) ?
-//                castingImages.stream()
-//                        .map(file->uuidFileService.createFile(file, FilePath.AMATEUR_CASTING).getFileUrl())
-//                        .toList() : null;
-//
-//        // 공지사항 이미지
-//        List<String> noticeUrls = (noticeImages != null) ?
-//                noticeImages.stream()
-//                        .map(file->uuidFileService.createFile(file, FilePath.AMATEUR_NOTICE).getFileUrl())
-//                        .toList() : null;
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
@@ -72,7 +57,7 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         // 공지사항
-        AmateurNotice amateurNotice = AmateurConverter.toAmateurNoticeEntity(requestDTO.getNoticeContent(), amateurShow);
+        AmateurNotice amateurNotice = AmateurConverter.toAmateurNoticeEntity(requestDTO.getNotice(), amateurShow);
         if (amateurNotice != null) {
             amateurNoticeRepository.save(amateurNotice);
         }

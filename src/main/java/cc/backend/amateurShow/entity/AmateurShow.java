@@ -48,6 +48,8 @@ public class AmateurShow extends BaseEntity {
 
     private String summary;
 
+    private String posterImageUrl;
+
 //    @Enumerated(EnumType.STRING)
 //    @Builder.Default
 //    private AmateurStatus amateurStatus = AmateurStatus.YET;

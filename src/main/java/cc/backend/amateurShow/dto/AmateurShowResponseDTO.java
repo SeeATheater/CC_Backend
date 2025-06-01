@@ -25,11 +25,22 @@ public class AmateurShowResponseDTO {
         private String hashtag; // 해시태그
         private String totalTicket;
         private String summary; // 줄거리
-        private String noticeContent; // 공지사항 -> 일대일 맵핑
+        private String posterImageUrl;
+        private AmateurShowResult.Notice notice;
         private List<AmateurShowResult.Casting> casting; // 캐스팅 정보
         private List<AmateurShowResult.Staff> staff; // 감독 및 스태프 정보
         private List<AmateurShowResult.Rounds> rounds; // 회차 정보
         private List<AmateurShowResult.Tickets> tickets;// 티켓 정보
+
+        @Getter
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Notice {
+            private String content;
+            private String noticeImageUrl;
+            private String timeInfo;
+        }
 
         @Getter
         @Builder
@@ -47,6 +58,7 @@ public class AmateurShowResponseDTO {
         public static class Casting {
             private String actorName;
             private String castingName;
+            private String castingImageUrl;
         }
 
         @Getter

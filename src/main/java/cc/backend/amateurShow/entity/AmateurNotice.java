@@ -20,12 +20,11 @@ public class AmateurNotice extends BaseEntity {
     @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ElementCollection
-    private List<String> noticeImageUrls = new ArrayList<>();
+    private String noticeImageUrl;
 
     private String content;
 
-    private String time_info;
+    private String timeInfo;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "amateur_show_id")

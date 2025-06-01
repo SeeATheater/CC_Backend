@@ -22,10 +22,10 @@ public class AmateurConverter {
                 .schedule(requestDTO.getSchedule())
                 .runtime(requestDTO.getRuntime())
                 .summary(requestDTO.getSummary())
-                .timeInfo(requestDTO.getTimeInfo())
                 .account(requestDTO.getAccount())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
+                .posterImageUrl(requestDTO.getPosterImageUrl())
                 .soldTicket(0)
                 .build();
     }
@@ -46,16 +46,19 @@ public class AmateurConverter {
                         .amateurShow(amateurShow)
                         .actorName(casting.getActorName())
                         .castingName(casting.getCastingName())
+                        .castingImageUrl(casting.getCastingImageUrl())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    public static AmateurNotice toAmateurNoticeEntity(String noticeContent, AmateurShow amateurShow) {
-        if (noticeContent == null) return null;
+    public static AmateurNotice toAmateurNoticeEntity(AmateurEnrollRequestDTO.Notice notice, AmateurShow amateurShow) {
+        if (notice.getContent() == null) return null;
 
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
-                .content(noticeContent)
+                .content(notice.getContent())
+                .noticeImageUrl(notice.getNoticeImageUrl())
+                .timeInfo(notice.getTimeInfo())
                 .build();
     }
 
@@ -103,6 +106,16 @@ public class AmateurConverter {
     // --소극장 공연 단건 조회 response--
     public static AmateurShowResponseDTO.AmateurShowResult toResponseDTO(AmateurShow amateurShow) {
 
+        AmateurNotice amateurNotice = amateurShow.getAmateurNotice();
+        AmateurShowResponseDTO.AmateurShowResult.Notice notice = null;
+        if (amateurNotice != null) {
+            notice = AmateurShowResponseDTO.AmateurShowResult.Notice.builder()
+                    .content(amateurNotice.getContent())
+                    .noticeImageUrl(amateurNotice.getNoticeImageUrl())
+                    .timeInfo(amateurNotice.getTimeInfo())
+                    .build();
+        }
+
         List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = amateurShow.getAmateurTicketList().stream()
                 .map(t -> AmateurShowResponseDTO.AmateurShowResult.Tickets.builder()
                         .discountName(t.getDiscountName())
@@ -114,6 +127,7 @@ public class AmateurConverter {
                 .map(c -> AmateurShowResponseDTO.AmateurShowResult.Casting.builder()
                         .actorName(c.getActorName())
                         .castingName(c.getCastingName())
+                        .castingImageUrl(c.getCastingImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
@@ -140,11 +154,12 @@ public class AmateurConverter {
                 .contact(amateurShow.getContact())
                 .hashtag(amateurShow.getHashtag())
                 .summary(amateurShow.getSummary())
-                .noticeContent(amateurShow.getAmateurNotice() != null ? amateurShow.getAmateurNotice().getContent() : null)
                 .tickets(tickets)
+                .notice(notice)
                 .casting(castings)
                 .staff(staff)
                 .rounds(rounds)
+                .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
     }
 }

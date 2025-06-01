@@ -18,7 +18,7 @@ public class AmateurCasting extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String imageUrl;
+    private String castingImageUrl;
 
     private String actorName;
 
