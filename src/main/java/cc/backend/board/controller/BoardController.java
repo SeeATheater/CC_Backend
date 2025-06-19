@@ -2,11 +2,8 @@ package cc.backend.board.controller;
 
 import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
-import cc.backend.board.dto.response.BoardReportResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.enums.BoardType;
-import cc.backend.board.entity.enums.ReportReason;
-import cc.backend.board.service.BoardReportService;
 import cc.backend.board.service.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +25,6 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
-    private final BoardReportService boardReportService;
 
 
     //TODO : 추후 @AuthenticationPrincipal 로 변환
@@ -92,15 +88,5 @@ public class BoardController {
     public ResponseEntity<List<BoardDetailResponse>> getHotBoards(){
         List<BoardDetailResponse> hotboards = boardService.getHotBoards();
         return ResponseEntity.ok(hotboards);
-    }
-
-
-    @PostMapping("/{boardId}/report")
-    public ResponseEntity<BoardReportResponse> reportBoard(
-            @PathVariable Long boardId,
-            @RequestParam Long memberId,
-            @RequestParam ReportReason reason) {
-        BoardReportResponse response=boardReportService.reportBoard(memberId, boardId, reason);
-        return ResponseEntity.ok(response);
     }
 }
