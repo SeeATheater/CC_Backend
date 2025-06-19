@@ -34,13 +34,21 @@ public class ReportService {
         Member reporter = memberRepository.findById(reporterId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        // 신고 대상 존재 여부 체크
+        // 신고 대상 존재 여부 및 자기 자신 신고 못하도록 예외처리
         if (targetType == ReportTarget.BOARD) {
-            boardRepository.findById(targetId)
+            Board board = boardRepository.findById(targetId)
                     .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
+            // 본인 글 신고 불가
+            if (board.getMember().getId().equals(reporterId)) {
+                throw new GeneralException(ErrorStatus.SELF_REPORT_NOT_ALLOWED);
+            }
         } else if (targetType == ReportTarget.COMMENT) {
-            commentRepository.findById(targetId)
+            Comment comment = commentRepository.findById(targetId)
                     .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
+            // 본인 댓글 신고 불가
+            if (comment.getMember().getId().equals(reporterId)) {
+                throw new GeneralException(ErrorStatus.SELF_REPORT_NOT_ALLOWED);
+            }
         }
 
         // 중복 신고 방지
