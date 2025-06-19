@@ -49,6 +49,9 @@ public class Board extends BaseEntity {
     @Column(nullable = false)
     private boolean deleted = false;
 
+    @OneToMany (mappedBy = "board", cascade = CascadeType.ALL)
+    private List<BoardReport> reports;
+
     // ----- method -----
     public void update(String title, String content, List<String> imgUrls, BoardType boardType) {
         this.title = title;

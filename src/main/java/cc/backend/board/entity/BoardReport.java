@@ -1,6 +1,7 @@
 package cc.backend.board.entity;
 
 import cc.backend.board.entity.enums.ReportReason;
+import cc.backend.common.entity.BaseEntity;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,7 @@ import lombok.*;
 @Builder
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"member_id", "board_id"}))
 //UniqueConstraint : 동일 사용자가 같은 게시글 여러번 신고하는 것 방지
-public class BoardReport {
+public class BoardReport extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

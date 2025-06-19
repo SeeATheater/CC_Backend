@@ -25,6 +25,9 @@ public class BoardReportService {
     // 신고 누적 5회시 -> delete
     private static final int REPORT_THRESHOLD = 5;
 
+    /**
+     * 게시글 신고
+     */
     @Transactional
     public BoardReportResponse reportBoard(Long memberId, Long boardId, ReportReason reason) {
         Member member = memberRepository.findById(memberId)
