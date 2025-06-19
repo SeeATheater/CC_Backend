@@ -5,6 +5,7 @@ import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.service.BoardService;
+import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,29 +33,29 @@ public class BoardController {
     @ApiResponse(responseCode = "200", description = "게시글 등록 성공",
             content = @Content(schema = @Schema(implementation = BoardResponse.class)))
     @PostMapping
-    public ResponseEntity<BoardResponse> createBoard(@Parameter(description = "작성자 회원 ID", required = true) @RequestParam Long memberId,
+    public ResponseEntity<BoardResponse> createBoard(@Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
                                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "게시글 요청 DTO", required = true)
                                                      @RequestBody BoardRequest request) {
-        BoardResponse response= boardService.createBoard(memberId, request);
+        BoardResponse response= boardService.createBoard(member.getId(), request);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "게시글 수정 API", description = "게시글을 수정합니다.")
     @PutMapping("/{boardId}")
-    public ResponseEntity<BoardResponse> updateBoard(@Parameter(description = "작성자 회원 ID", required = true) @RequestParam Long memberId,
+    public ResponseEntity<BoardResponse> updateBoard(@Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
                                                      @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
                                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "게시글 요청 DTO", required = true)@RequestBody BoardRequest request)
     {
-        BoardResponse response = boardService.updateBoard(memberId,boardId, request);
+        BoardResponse response = boardService.updateBoard(member.getId(), boardId, request);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "게시글 삭제 API", description = "게시글을 삭제합니다.")
     @DeleteMapping("/{boardId}")
     public ResponseEntity<Void> deleteBoard(
-            @Parameter(description = "작성자 회원 ID", required = true) @RequestParam Long memberId,
+            @Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
             @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId) {
-        boardService.deleteBoard(memberId,boardId);
+        boardService.deleteBoard(member.getId(),boardId);
         return ResponseEntity.noContent().build();
     }
 
@@ -78,8 +80,8 @@ public class BoardController {
     @PostMapping("/{boardId}/like")
     public ResponseEntity<?> toggleLike(
             @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
-            @Parameter(description = "회원 ID", required = true) @RequestParam Long memberId) {
-        int result = boardService.toggleLike(boardId, memberId);
+            @Parameter(description = "회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member) {
+        int result = boardService.toggleLike(boardId, member.getId());
         return ResponseEntity.ok(result);
     }
     @Operation(summary = "핫게시판 조회 API", description = "핫게시판(좋아요 10개 이상) 목록을 조회합니다.")
