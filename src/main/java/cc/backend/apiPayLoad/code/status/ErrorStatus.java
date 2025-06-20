@@ -69,6 +69,9 @@ public enum ErrorStatus implements BaseErrorCode {
     // INQUIRY ERROR
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다.");
 
+
+
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;

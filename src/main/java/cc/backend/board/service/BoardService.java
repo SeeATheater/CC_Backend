@@ -11,11 +11,13 @@ import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
+import cc.backend.event.entity.PostEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -39,10 +41,15 @@ public class BoardService {
     private final HotBoardRepository hotBoardRepository;
     private final MemberRepository memberRepository;
 
+    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+
     // 게시글 작성
     //TODO : 이미지 업로드 코드 추가
     @Transactional
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
+
+
+
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() ->  new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
@@ -61,7 +68,11 @@ public class BoardService {
                 .member(member)
                 .build();
 
+
         boardRepository.save(board);
+
+        eventPublisher.publishEvent(new PostEvent(board.getId(), board.getMember().getId()));   //이벤트 테스트
+
         return BoardResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())

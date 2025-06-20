@@ -11,9 +11,12 @@ import cc.backend.board.entity.CommentLike;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentLikeRepository;
 import cc.backend.board.repository.CommentRepository;
+import cc.backend.event.entity.CommentEvent;
+import cc.backend.event.entity.PostEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
+    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
     //댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
@@ -51,6 +55,8 @@ public class CommentService {
             comment = Comment.createReply(req.getContent(), member, board, parent);
         }
         commentRepository.save(comment);
+
+        eventPublisher.publishEvent(new CommentEvent(comment.getBoard().getId(), comment.getMember().getId()));   //이벤트 테스트
 
         board.increaseCommentCount();
 
