@@ -36,7 +36,7 @@ public class AmateurController {
 
     }
 
-    @PutMapping("/{amateurShowId}")
+    @PatchMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 수정 API")
     public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@PathVariable Long amateurShowId, @RequestBody AmateurUpdateRequestDTO requestDTO) {
 
