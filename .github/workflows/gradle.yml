@@ -60,8 +60,8 @@ jobs:
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
             echo "🛑 Stop & remove old containers"
-            docker-compose down
+            docker compose down
 
             echo "📦 Pull latest image & restart"
-            docker-compose pull
-            docker-compose up -d --build
+            docker compose pull
+            docker compose up -d --build
