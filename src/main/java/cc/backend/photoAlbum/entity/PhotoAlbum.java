@@ -1,7 +1,7 @@
 package cc.backend.photoAlbum.entity;
 
 import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.common.entity.BaseEntity;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;

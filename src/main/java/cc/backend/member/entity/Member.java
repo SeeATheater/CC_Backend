@@ -2,11 +2,12 @@ package cc.backend.member.entity;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.board.entity.Board;
-import cc.backend.common.entity.BaseEntity;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.notice.entity.Notice;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
+import cc.backend.ticket.entity.MemberTicket;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -57,6 +58,9 @@ public class Member extends BaseEntity {
 
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
     private List<Notice> notices = new ArrayList<>();
+
+    @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
+    private List<MemberTicket> memberTickets = new ArrayList<>();
 
     @Builder
     public Member(String username, String name, Role role, String address, String email, String phone,

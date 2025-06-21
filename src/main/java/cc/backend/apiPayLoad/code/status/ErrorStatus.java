@@ -37,10 +37,11 @@ public enum ErrorStatus implements BaseErrorCode {
 
 
     // MEMBER TICKET ERROR
-    MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBERTICKET4000", "존재하지 않는 예약 티켓입니다."),
-    MEMBER_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "MEMBERTICKET4001", "주문 수량이 적절하지 않습니다"),
-    MEMBER_TICKET_STOCK(HttpStatus.BAD_REQUEST, "MEMBERTICKET4002", "주문 수량이 재고를 초과했습니다"),
-    MEMBER_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "MEMBERTICKET4003", "이미 취소하신 티켓입니다."),
+    MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
+    MEMBER_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "TICKET4001", "주문 수량이 적절하지 않습니다"),
+    MEMBER_TICKET_STOCK(HttpStatus.BAD_REQUEST, "TICKET4002", "주문 수량이 재고를 초과했습니다"),
+    MEMBER_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "TICKET4003", "이미 취소하신 티켓입니다."),
+    MEMBER_TICKET_WRONG_STATUS(HttpStatus.BAD_REQUEST, "TICKET4004", "티켓의 상태가 적절하지 않습니다."),
 
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "IMAGE4000", "이미지를 찾을 수 없습니다."),
     
@@ -65,6 +66,9 @@ public enum ErrorStatus implements BaseErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT4001", "댓글이 존재하지 않습니다."),
     COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMENT4002", "댓글 수정/삭제 권한이 없습니다."),
     COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, "COMMENT4003", "대댓글의 depth는 1까지만 허용됩니다."),
+    ALREADY_REPORTED(HttpStatus.BAD_REQUEST, "REPORT4001", "이미 신고한 게시글입니다."),
+    SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REPORT4002", "본인이 작성한 글/댓글은 신고할 수 없습니다."),
+
 
     // INQUIRY ERROR
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다.");
