@@ -37,6 +37,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           source: "./build/libs/*.jar"
           target: "/home/ubuntu/cicd"
+          strip_components: 3
 
       - name: Copy deploy script file to remote
         uses: appleboy/scp-action@v0.1.7
