@@ -24,7 +24,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cicdsample
           path: build/libs/*.jar
