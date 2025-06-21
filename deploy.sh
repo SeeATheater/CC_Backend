@@ -11,7 +11,7 @@ else
 fi
 
 # 2. 최신 JAR 파일 찾기 (여러 개 있을 경우 최신 파일로 실행)
-JAR_FILE=$(ls -t *.jar | head -n 1)
+JAR_FILE=$(ls -t *SNAPSHOT.jar | grep -v 'plain' | head -n 1)
 
 if [ ! -f "$JAR_FILE" ]; then
   echo "[ERROR] JAR 파일을 찾을 수 없습니다. 배포를 중단합니다."
