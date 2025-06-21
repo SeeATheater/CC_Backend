@@ -28,6 +28,7 @@ jobs:
         with:
           name: cicdsample
           path: build/libs/*.jar
+          
       - name: Print JWT_SECRET for debug
         run: echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
         
@@ -69,5 +70,3 @@ jobs:
             cd /home/ubuntu/cicd
             chmod +x deploy.sh
             ./deploy.sh
-      - name: Print JWT_SECRET for debug
-        run: echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
