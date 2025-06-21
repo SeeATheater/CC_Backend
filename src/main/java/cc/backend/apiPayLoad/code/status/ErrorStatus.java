@@ -35,6 +35,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
     MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
 
+
     // MEMBER TICKET ERROR
     MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
     MEMBER_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "TICKET4001", "주문 수량이 적절하지 않습니다"),
@@ -44,6 +45,11 @@ public enum ErrorStatus implements BaseErrorCode {
 
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "IMAGE4000", "이미지를 찾을 수 없습니다."),
     NOT_FOUND_IN_S3(HttpStatus.NOT_FOUND, "S34000", "해당 이미지가 S3 내에 존재하지 않습니다."),
+
+
+    // ROUND ERROR
+    ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "ROUND4000", "존재하지 않는 회차 입니다"),
+
 
     //REPORT ERROR
     UNSUPPORTED_OBJECT_TYPE(HttpStatus.BAD_REQUEST, "REPORT4000", "지원하지 않는 신고 타입입니다."),
@@ -69,15 +75,12 @@ public enum ErrorStatus implements BaseErrorCode {
     ALREADY_REPORTED(HttpStatus.BAD_REQUEST, "REPORT4001", "이미 신고한 게시글입니다."),
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REPORT4002", "본인이 작성한 글/댓글은 신고할 수 없습니다."),
 
-    //NOTICE ERROR
-    MEMBERNOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBERNOTICE4001", "존재하지 않는 알림입니다."),
+
     // INQUIRY ERROR
-    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다."),
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다.");
 
-    // MEMBER LIKE ERROR
 
-    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE4001", "존재하지 않는 좋아요입니다."),
-    DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;
