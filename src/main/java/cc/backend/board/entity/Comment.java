@@ -4,6 +4,8 @@ import cc.backend.common.entity.BaseEntity;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE comment SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class Comment extends BaseEntity {
 
     @Id
@@ -75,11 +79,6 @@ public class Comment extends BaseEntity {
             throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
         }
         this.content = newContent;
-    }
-
-    public void softDelete() {
-        this.deleted = true;
-        this.content = "삭제된 댓글입니다.";
     }
 
     // Comment.java

@@ -26,6 +26,7 @@ public class BoardController {
 
     private final BoardService boardService;
 
+
     //TODO : 추후 @AuthenticationPrincipal 로 변환
     @Operation(summary = "게시글 작성 API", description = "게시글을 등록합니다.")
     @ApiResponse(responseCode = "200", description = "게시글 등록 성공",
@@ -88,5 +89,4 @@ public class BoardController {
         List<BoardDetailResponse> hotboards = boardService.getHotBoards();
         return ResponseEntity.ok(hotboards);
     }
-
 }

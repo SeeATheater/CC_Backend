@@ -87,7 +87,7 @@ public class CommentService {
         if (!comment.getMember().getId().equals(memberId)) {
             throw new GeneralException(ErrorStatus.COMMENT_ACCESS_DENIED);
         }
-        comment.softDelete(); // soft delete
+        commentRepository.delete(comment); // soft delete
 
         Board board = comment.getBoard();
         board.decreaseCommentCount();
