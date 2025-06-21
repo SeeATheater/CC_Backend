@@ -4,6 +4,7 @@ import cc.backend.board.dto.request.CommentRequest;
 import cc.backend.board.dto.response.CommentCreateResponse;
 import cc.backend.board.dto.response.CommentResponse;
 import cc.backend.board.service.CommentService;
+import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,10 +56,10 @@ public class CommentController {
     @PatchMapping("/{commentId}")
     public ResponseEntity<CommentCreateResponse> updateComment(
             @Parameter(description = "댓글 ID", required = true) @PathVariable Long commentId,
-            @Parameter(description = "회원 ID", required = true) @RequestParam Long memberId,
+            @Parameter(description = "회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "수정할 댓글 내용", required = true)
             @RequestBody String newContent){
-        CommentCreateResponse response = commentService.updateComment(memberId, commentId, newContent);
+        CommentCreateResponse response = commentService.updateComment(member.getId(), commentId, newContent);
         return ResponseEntity.ok(response);
     }
 
@@ -72,8 +74,8 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @Parameter(description = "댓글 ID", required = true) @PathVariable Long commentId,
-            @Parameter(description = "회원 ID", required = true) @RequestParam Long memberId)  {
-        commentService.deleteComment(memberId, commentId);
+            @Parameter(description = "회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member)  {
+        commentService.deleteComment(member.getId(), commentId);
         return ResponseEntity.ok().build();
     }
 
@@ -104,8 +106,8 @@ public class CommentController {
     @PostMapping("/{commentId}/like")
     public ResponseEntity<Integer> toggleCommentLike(
                                                      @Parameter(description = "댓글 ID", required = true) @PathVariable Long commentId,
-                                                     @Parameter(description = "회원 ID", required = true) @RequestParam Long memberId) {
-        int result = commentService.toggleCommentLike(commentId, memberId);
+                                                     @Parameter(description = "회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member ) {
+        int result = commentService.toggleCommentLike(commentId, member.getId());
         return ResponseEntity.ok(result);
     }
 

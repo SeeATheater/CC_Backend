@@ -1,7 +1,7 @@
 package cc.backend.board.entity;
 
-import cc.backend.common.entity.BaseEntity;
 import cc.backend.board.entity.enums.BoardType;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;

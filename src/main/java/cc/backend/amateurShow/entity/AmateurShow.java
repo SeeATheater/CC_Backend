@@ -1,7 +1,7 @@
 package cc.backend.amateurShow.entity;
 
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
-import cc.backend.common.entity.BaseEntity;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
@@ -54,7 +54,7 @@ public class AmateurShow extends BaseEntity {
 //    @Builder.Default
 //    private AmateurStatus amateurStatus = AmateurStatus.YET;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "member_id")
     private Member member;
 
@@ -85,6 +85,7 @@ public class AmateurShow extends BaseEntity {
     public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {
         this.name = name;
         this.place = place;
+        this.schedule = schedule;
         this.photoAlbums = photoAlbums;
     }
 
@@ -99,5 +100,4 @@ public class AmateurShow extends BaseEntity {
         if (dto.getSummary() != null) this.summary = dto.getSummary();
         if (dto.getPosterImageUrl() != null) this.posterImageUrl = dto.getPosterImageUrl();
     }
-
 }
