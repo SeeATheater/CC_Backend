@@ -55,17 +55,15 @@ jobs:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
           script_stop: true
-          env: |
-            TEST_ENV=hello
-            PROD_DB_URL=${{ secrets.PROD_DB_URL }}
-            PROD_DB_USERNAME=${{ secrets.PROD_DB_USERNAME }}
-            PROD_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
           script: |
-            echo "TEST_ENV: $TEST_ENV"
+            export PROD_DB_URL="${{ secrets.PROD_DB_URL }}"
+            export PROD_DB_USERNAME="${{ secrets.PROD_DB_USERNAME }}"
+            export PROD_DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
+            export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+            export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            export GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            echo "JWT_SECRET: $JWT_SECRET"
             cd /home/ubuntu/cicd
             chmod +x deploy.sh
             ./deploy.sh
