@@ -28,9 +28,6 @@ jobs:
         with:
           name: cicdsample
           path: build/libs/*.jar
-          
-      - name: Print JWT_SECRET for debug
-        run: echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
         
       - name: Copy jar file to remote
         uses: appleboy/scp-action@v0.1.7
@@ -59,6 +56,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script_stop: true
           env: |
+            TEST_ENV=hello
             PROD_DB_URL=${{ secrets.PROD_DB_URL }}
             PROD_DB_USERNAME=${{ secrets.PROD_DB_USERNAME }}
             PROD_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
@@ -67,6 +65,7 @@ jobs:
             GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
           script: |
+            echo "TEST_ENV: $TEST_ENV"
             cd /home/ubuntu/cicd
             chmod +x deploy.sh
             ./deploy.sh
