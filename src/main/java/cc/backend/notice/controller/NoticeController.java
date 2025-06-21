@@ -1,7 +1,7 @@
 package cc.backend.notice.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
-import cc.backend.notice.dto.NoticeResponseDTO;
+import cc.backend.notice.dto.MemberNoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;
 import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
@@ -17,17 +17,17 @@ import org.springframework.web.bind.annotation.*;
 public class NoticeController {
     private final NoticeService noticeService;
 
-    @PostMapping("hot/{boardId}")
-    @Operation(summary = "핫게 선정 알림 API", description = "핫게 선정 알려주는 API 입니다.")
-    public ApiResponse<NoticeResponseDTO.BoardNoticeResultDTO> notifyHotBoard(@PathVariable Long boardId){
-        return ApiResponse.onSuccess(noticeService.notifyHotBoard(boardId));
-    }
-
-    @PostMapping("comment/{boardId}")
-    @Operation(summary = "게시글 댓글 알림 API", description = "내가 쓴 게시글에 댓글달리면 알려주는 API 입니다.")
-    public ApiResponse<NoticeResponseDTO.BoardNoticeResultDTO> notifyCommentBoard(@PathVariable Long boardId){
-        return ApiResponse.onSuccess(noticeService.notifyCommentBoard(boardId));
-    }
+//    @GetMapping("")
+//    @Operation(summary = "알림 센터 API", description = "내게 온 알림 조회 API 입니다.")
+//    public ApiResponse<MemberNoticeResponseDTO.MemberNoticeDTO> notifyHotBoard(@PathVariable Long boardId){
+//        return ApiResponse.onSuccess(noticeService.notifyHotBoard(boardId));
+//    }
+//
+//    @PatchMapping("")
+//    @Operation(summary = "알림 읽기 API", description = "내게 온 알림 읽음 표시하는 API 입니다.")
+//    public ApiResponse<MemberNoticeResponseDTO.MemberNoticeDTO> notifyCommentBoard(@PathVariable Long boardId){
+//        return ApiResponse.onSuccess(noticeService.notifyCommentBoard(boardId));
+//    }
 
 
 

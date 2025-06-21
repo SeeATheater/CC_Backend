@@ -5,6 +5,7 @@ import cc.backend.board.entity.Board;
 import cc.backend.common.entity.BaseEntity;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
+import cc.backend.notice.entity.MemberNotice;
 import cc.backend.notice.entity.Notice;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
@@ -56,7 +57,7 @@ public class Member extends BaseEntity {
     private List<AmateurShow> amateurShows = new ArrayList<>();
 
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
-    private List<Notice> notices = new ArrayList<>();
+    private List<MemberNotice> memberNotices = new ArrayList<>();
 
     @Builder
     public Member(String username, String name, Role role, String address, String email, String phone,

@@ -14,9 +14,9 @@ public class PostEventListener {
     private final NoticeService noticeService;
 
     @EventListener
-    public NoticeResponseDTO.BoardNoticeResultDTO handlePostCreate(PostEvent event) {
+    public NoticeResponseDTO.NoticeDTO handlePostCreate(PostEvent event) {
 
-        System.out.println("게시글 올림! postId = " + event.getBoardId());// 알림 전송 등 로직
-        return noticeService.notifyHotBoard(event.getBoardId());
+        // 알림 전송 등 로직
+        return noticeService.notifyNewBoard(event);
     }
 }

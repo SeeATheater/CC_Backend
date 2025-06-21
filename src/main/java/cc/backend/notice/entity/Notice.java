@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,15 +30,13 @@ public class Notice extends BaseEntity {
 
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @OneToMany (mappedBy = "notice", cascade = CascadeType.ALL)
+    private List<MemberNotice> memberNotices = new ArrayList<>();
 
     @Builder
-    public Notice(NoticeType type, String title, String content, Member member) {
+    public Notice(NoticeType type, String title, String content, List<MemberNotice> memberNotices) {
         this.type = type;
         this.title = title ;
         this.content = content;
-        this.member = member;
     }
 }

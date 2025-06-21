@@ -56,7 +56,7 @@ public class CommentService {
         }
         commentRepository.save(comment);
 
-        eventPublisher.publishEvent(new CommentEvent(comment.getBoard().getId(), comment.getMember().getId()));   //이벤트 테스트
+        eventPublisher.publishEvent(new CommentEvent(comment.getBoard().getId(), comment.getMember().getId()));   //이벤트 생성
 
         board.increaseCommentCount();
 

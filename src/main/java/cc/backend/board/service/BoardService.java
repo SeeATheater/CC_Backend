@@ -12,6 +12,7 @@ import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
 import cc.backend.event.entity.PostEvent;
+import cc.backend.event.entity.PromoteHotEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -71,7 +72,9 @@ public class BoardService {
 
         boardRepository.save(board);
 
-        eventPublisher.publishEvent(new PostEvent(board.getId(), board.getMember().getId()));   //이벤트 테스트
+
+//        List<Member> likers = memberLikeRepository.findByLikeeId();  //liker = 좋아요 누른 사람, likee = 좋아요 당한 사람
+//        eventPublisher.publishEvent(new PostEvent(board.getId(), board.getMember().getId(), likers));   //좋아요한 멤버리스트 같이 줘야
 
         return BoardResponse.builder()
                 .boardId(board.getId())
@@ -195,6 +198,8 @@ public class BoardService {
                     .hotRegisteredAt(LocalDateTime.now())
                     .build();
             hotBoardRepository.save(hotBoard);
+
+            eventPublisher.publishEvent(new PromoteHotEvent(board.getId(), board.getMember().getId())); //알림 발송
         }
     }
 
