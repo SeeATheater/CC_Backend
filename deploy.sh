@@ -20,10 +20,6 @@ fi
 
 echo "[INFO] 실행할 JAR 파일: $JAR_FILE"
 
-# 환경변수 값 확인 (디버깅용, 실제 배포 시 민감정보는 주석처리 권장)
-echo "[DEBUG] JWT_SECRET: $JWT_SECRET"
-
-
 # 3. JAR 실행 (환경변수는 이미 세션에 세팅되어 있다고 가정)
 echo "[INFO] Spring Boot 애플리케이션 실행"
 nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
