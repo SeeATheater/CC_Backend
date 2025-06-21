@@ -2,7 +2,7 @@ package cc.backend.amateurShow.entity;
 
 import cc.backend.amateurShow.entity.enums.TicketType;
 import cc.backend.domain.common.BaseEntity;
-import cc.backend.member.entity.MemberTicket;
+import cc.backend.ticket.entity.MemberTicket;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
