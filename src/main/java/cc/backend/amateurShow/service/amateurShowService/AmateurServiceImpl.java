@@ -1,6 +1,7 @@
 package cc.backend.amateurShow.service.amateurShowService;
 
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
@@ -13,9 +14,9 @@ import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,6 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurCastingRepository amateurCastingRepository;
     private final AmateurNoticeRepository amateurNoticeRepository;
     private final AmateurTicketRepository amateurTicketRepository;
-    private final AmateurSummaryRepository amateurSummaryRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
 
@@ -36,21 +36,6 @@ public class AmateurServiceImpl implements AmateurService {
     @Override
     public AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
                                                                    AmateurEnrollRequestDTO requestDTO) {
-//        // 포스터 이미지
-//        String posterUrl = (posterImage != null) ?
-//                uuidFileService.createFile(posterImage, FilePath.AMATEUR).getFileUrl() : null;
-//
-//        // 캐스팅 이미지
-//        List<String> castingUrls = (castingImages != null) ?
-//                castingImages.stream()
-//                        .map(file->uuidFileService.createFile(file, FilePath.AMATEUR_CASTING).getFileUrl())
-//                        .toList() : null;
-//
-//        // 공지사항 이미지
-//        List<String> noticeUrls = (noticeImages != null) ?
-//                noticeImages.stream()
-//                        .map(file->uuidFileService.createFile(file, FilePath.AMATEUR_NOTICE).getFileUrl())
-//                        .toList() : null;
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
@@ -73,7 +58,7 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         // 공지사항
-        AmateurNotice amateurNotice = AmateurConverter.toAmateurNoticeEntity(requestDTO.getNoticeContent(), amateurShow);
+        AmateurNotice amateurNotice = AmateurConverter.toAmateurNoticeEntity(requestDTO.getNotice(), amateurShow);
         if (amateurNotice != null) {
             amateurNoticeRepository.save(amateurNotice);
         }
@@ -82,12 +67,6 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurTicket> tickets = AmateurConverter.toAmateurTicketEntity(requestDTO, amateurShow);
         if (!tickets.isEmpty()) {
             amateurTicketRepository.saveAll(tickets);
-        }
-
-        // 줄거리
-        AmateurSummary amateurSummary = AmateurConverter.toAmateurSummaryEntity(requestDTO.getSummaryContent(), amateurShow);
-        if (amateurSummary != null) {
-            amateurSummaryRepository.save(amateurSummary);
         }
 
         // 스태프
@@ -101,10 +80,173 @@ public class AmateurServiceImpl implements AmateurService {
         amateurRoundsRepository.saveAll(rounds);
     }
 
+    // 소극장 공연 수정
+    @Transactional
+    @Override
+    public AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long showId, AmateurUpdateRequestDTO requestDTO) {
+        AmateurShow amateurShow = amateurShowRepository.findByIdWithDetails(showId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        // 기본 정보 업데이트
+        amateurShow.updateInfo(requestDTO);
+
+        // Notice 업데이트
+        updateNotice(amateurShow, requestDTO.getNotice());
+
+        // Casting 업데이트
+        updateCasting(amateurShow, requestDTO.getCasting());
+
+        // Staff 업데이트
+        updateStaff(amateurShow, requestDTO.getStaff());
+
+        // Rounds 업데이트
+        updateRounds(amateurShow, requestDTO.getRounds());
+
+        // Tickets 업데이트
+        updateTickets(amateurShow, requestDTO.getTickets());
+
+        // 변경사항 저장
+        amateurShowRepository.save(amateurShow);
+
+        return AmateurConverter.toAmateurEnrollDTO(amateurShow);
+    }
+
+    private void updateNotice(AmateurShow amateurShow, AmateurUpdateRequestDTO.UpdateNotice noticeDTO) {
+        if (noticeDTO != null) {
+            AmateurNotice existing = amateurShow.getAmateurNotice();
+            if (existing != null) {
+                existing.update(noticeDTO);
+            } else {
+                AmateurNotice newNotice = AmateurConverter.toAmateurNoticeEntity(noticeDTO, amateurShow);
+                if (newNotice != null) {
+                    amateurNoticeRepository.save(newNotice);
+                }
+            }
+        }
+    }
+
+    private void updateCasting(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateCasting> dtos) {
+        if (dtos == null) return;
+
+        // 기존 캐스팅 리스트 Map화 (id -> entity)
+        Map<Long, AmateurCasting> existingMap = show.getAmateurCastingList().stream()
+                .collect(Collectors.toMap(AmateurCasting::getId, c -> c));
+
+        List<AmateurCasting> updatedList = new ArrayList<>();
+
+        for (AmateurUpdateRequestDTO.UpdateCasting dto : dtos) {
+            if (dto.getCastingId() != null && existingMap.containsKey(dto.getCastingId())) {
+                // 기존 객체 수정
+                AmateurCasting existing = existingMap.get(dto.getCastingId());
+                existing.update(dto);
+                updatedList.add(existing);
+                existingMap.remove(dto.getCastingId());
+            } else {
+                // 새 객체 추가
+                AmateurCasting newCasting = AmateurConverter.toSingleCasting(dto, show);
+                updatedList.add(newCasting);
+            }
+        }
+
+        // 삭제
+        for (AmateurCasting toRemove : existingMap.values()) {
+            show.getAmateurCastingList().remove(toRemove);
+        }
+
+        // 최종 리스트 갱신
+        show.getAmateurCastingList().clear();
+        show.getAmateurCastingList().addAll(updatedList);
+    }
+
+    private void updateStaff(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateStaff> dtos) {
+        if (dtos == null) return;
+        Map<Long, AmateurStaff> existingMap = show.getAmateurStaffList().stream()
+                .collect(Collectors.toMap(AmateurStaff::getId, s -> s));
+        List<AmateurStaff> updatedList = new ArrayList<>();
+
+        for (AmateurUpdateRequestDTO.UpdateStaff dto : dtos) {
+            if (dto.getStaffId() != null && existingMap.containsKey(dto.getStaffId())) {
+                AmateurStaff existing = existingMap.get(dto.getStaffId());
+                existing.update(dto);
+                updatedList.add(existing);
+                existingMap.remove(dto.getStaffId());
+            } else {
+                AmateurStaff newStaff = AmateurConverter.toSingleStaff(dto, show);
+                updatedList.add(newStaff);
+            }
+        }
+
+        for (AmateurStaff toRemove : existingMap.values()) {
+            show.getAmateurStaffList().remove(toRemove);
+        }
+        show.getAmateurStaffList().clear();
+        show.getAmateurStaffList().addAll(updatedList);
+    }
+
+    private void updateRounds(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateRounds> dtos) {
+        if (dtos == null) return;
+        Map<Long, AmateurRounds> existingMap = show.getAmateurRounds().stream()
+                .collect(Collectors.toMap(AmateurRounds::getId, r -> r));
+        List<AmateurRounds> updatedList = new ArrayList<>();
+
+        for (AmateurUpdateRequestDTO.UpdateRounds dto : dtos) {
+            if (dto.getRoundId() != null && existingMap.containsKey(dto.getRoundId())) {
+                AmateurRounds existing = existingMap.get(dto.getRoundId());
+                existing.update(dto);
+                updatedList.add(existing);
+                existingMap.remove(dto.getRoundId());
+            } else {
+                AmateurRounds newRound = AmateurConverter.toSingleRound(dto, show);
+                updatedList.add(newRound);
+            }
+        }
+
+        for (AmateurRounds toRemove : existingMap.values()) {
+            show.getAmateurRounds().remove(toRemove);
+        }
+        show.getAmateurRounds().clear();
+        show.getAmateurRounds().addAll(updatedList);
+    }
+
+    private void updateTickets(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateTickets> dtos) {
+        if (dtos == null) return;
+        Map<Long, AmateurTicket> existingMap = show.getAmateurTicketList().stream()
+                .collect(Collectors.toMap(AmateurTicket::getId, t -> t));
+        List<AmateurTicket> updatedList = new ArrayList<>();
+
+        for (AmateurUpdateRequestDTO.UpdateTickets dto : dtos) {
+            if (dto.getTicketId() != null && existingMap.containsKey(dto.getTicketId())) {
+                AmateurTicket existing = existingMap.get(dto.getTicketId());
+                existing.update(dto);
+                updatedList.add(existing);
+                existingMap.remove(dto.getTicketId());
+            } else {
+                AmateurTicket newTicket = AmateurConverter.toSingleTicket(dto, show);
+                updatedList.add(newTicket);
+            }
+        }
+
+        for (AmateurTicket toRemove : existingMap.values()) {
+            show.getAmateurTicketList().remove(toRemove);
+        }
+        show.getAmateurTicketList().clear();
+        show.getAmateurTicketList().addAll(updatedList);
+    }
+
+
+    // 소극장 공연 삭제
+    @Transactional
+    @Override
+    public void deleteShow(Long amateurShowId) {
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+        amateurShowRepository.delete(amateurShow);
+    }
+
     // 소극장 공연 단건 조회
     @Override
-    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurId) {
-        AmateurShow amateurShow = amateurShowRepository.findById(amateurId)
+    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurShowId) {
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         return AmateurConverter.toResponseDTO(amateurShow);

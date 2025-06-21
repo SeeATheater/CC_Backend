@@ -2,7 +2,7 @@ package cc.backend.member.entity;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.board.entity.Board;
-import cc.backend.common.entity.BaseEntity;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.notice.entity.MemberNotice;

@@ -1,5 +1,6 @@
 package cc.backend.amateurShow.entity;
 
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +21,15 @@ public class AmateurRounds {
 
     private LocalDateTime performanceDateTime;
 
+    private Integer totalTicket;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
+
+    public void update(AmateurUpdateRequestDTO.UpdateRounds dto) {
+        if (dto.getRoundNumber() != null) this.roundNumber = dto.getRoundNumber();
+        if (dto.getPerformanceDateTime() != null) this.performanceDateTime = dto.getPerformanceDateTime();
+        if (dto.getTotalTicket() != null) this.totalTicket = dto.getTotalTicket();
+    }
 }

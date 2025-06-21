@@ -31,7 +31,6 @@ public class MemberTicketServiceImpl implements MemberTicketService {
     private final AmateurCastingRepository amateurCastingRepository;
     private final AmateurNoticeRepository amateurNoticeRepository;
     private final AmateurTicketRepository amateurTicketRepository;
-    private final AmateurSummaryRepository amateurSummaryRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
 

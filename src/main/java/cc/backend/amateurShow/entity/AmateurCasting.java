@@ -1,5 +1,6 @@
 package cc.backend.amateurShow.entity;
 
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,7 @@ public class AmateurCasting extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String imageUrl;
+    private String castingImageUrl;
 
     private String actorName;
 
@@ -28,4 +29,9 @@ public class AmateurCasting extends BaseEntity {
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
 
+    public void update(AmateurUpdateRequestDTO.UpdateCasting dto) {
+        if (dto.getActorName() != null) this.actorName = dto.getActorName();
+        if (dto.getCastingName() != null) this.castingName = dto.getCastingName();
+        if (dto.getCastingImageUrl() != null) this.castingImageUrl = dto.getCastingImageUrl();
+    }
 }

@@ -1,6 +1,6 @@
 package cc.backend.amateurShow.entity;
 
-import cc.backend.amateurShow.entity.enums.TicketType;
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.ticket.entity.MemberTicket;
 import jakarta.persistence.*;
@@ -22,9 +22,6 @@ public class AmateurTicket extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private TicketType ticketType;
-
     private String discountName;
 
     private Integer price;
@@ -36,4 +33,8 @@ public class AmateurTicket extends BaseEntity {
     @OneToMany(mappedBy = "amateurTicket", cascade = CascadeType.ALL)
     private List<MemberTicket> memberTicketList = new ArrayList<>();
 
+    public void update(AmateurUpdateRequestDTO.UpdateTickets dto) {
+        if (dto.getDiscountName() != null) this.discountName = dto.getDiscountName();
+        if (dto.getPrice() != null) this.price = dto.getPrice();
+    }
 }
