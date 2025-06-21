@@ -28,7 +28,9 @@ jobs:
         with:
           name: cicdsample
           path: build/libs/*.jar
-
+      - name: Print JWT_SECRET for debug
+        run: echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+        
       - name: Copy jar file to remote
         uses: appleboy/scp-action@v0.1.7
         with:
