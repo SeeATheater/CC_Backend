@@ -1,6 +1,6 @@
 package cc.backend.amateurShow.entity;
 
-import cc.backend.common.entity.BaseEntity;
+import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
