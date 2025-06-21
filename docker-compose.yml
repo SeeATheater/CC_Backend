@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  app:
+    image: ddhi7/ccapp  # Docker Hub 이미지명
+    container_name: ccapp
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: always
