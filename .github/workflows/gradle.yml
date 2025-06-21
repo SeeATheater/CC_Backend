@@ -64,7 +64,8 @@ jobs:
             GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
           script: |
-            echo "JWT_SECRET: $JWT_SECRET"
             cd /home/ubuntu/cicd
             chmod +x deploy.sh
             ./deploy.sh
+      - name: Print JWT_SECRET for debug
+        run: echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
