@@ -1,8 +1,13 @@
 package cc.backend.config.jwt;
 
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -27,11 +33,14 @@ public class TokenProvider {
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 5;            // 5시간
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 
+    private final MemberRepository memberRepository;
+
     private final Key key;
 
-    public TokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public TokenProvider(@Value("${jwt.secret}") String secretKey, MemberRepository memberRepository) {
         log.info("JWT Secret Key (Generation): {}", secretKey); // Secret Key 출력
 
+        this.memberRepository = memberRepository;
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -73,6 +82,12 @@ public class TokenProvider {
         Claims claims = parseClaims(accessToken);
         log.info("🔍 클레임까지 옴 Claims: {}", claims);  // 여기서 claims 값을 확인
 
+        String email = claims.getSubject();
+
+        // Member 조회
+        Member member = memberRepository.findMemberByEmail(email)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
         // 🔍 auth 값이 존재하는 경우, GrantedAuthority로 변환
 //        String authorities = claims.get("auth", String.class);
 //        List<SimpleGrantedAuthority> grantedAuthorities = Collections.emptyList();
@@ -89,7 +104,7 @@ public class TokenProvider {
 //        return new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities());
 //
          //권한 정보 없이 UserDetails 생성
-        UserDetails principal = new User(claims.getSubject(), "", new ArrayList<>());
+        UserDetails principal = new CustomUserDetails(member);
 
         return new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities());
     }
