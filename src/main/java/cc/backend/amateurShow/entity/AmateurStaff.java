@@ -1,5 +1,6 @@
 package cc.backend.amateurShow.entity;
 
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +24,9 @@ public class AmateurStaff {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
+
+    public void update(AmateurUpdateRequestDTO.UpdateStaff dto) {
+        if (dto.getPosition() != null) this.position = dto.getPosition();
+        if (dto.getStaffName() != null) this.name = dto.getStaffName();
+    }
 }

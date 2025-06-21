@@ -36,6 +36,7 @@ public class AmateurShowResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Notice {
+            private Long noticeId;
             private String content;
             private String noticeImageUrl;
             private String timeInfo;
@@ -46,6 +47,7 @@ public class AmateurShowResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Tickets {
+            private Long ticketId;
             private String discountName;
             private Integer price;
         }
@@ -55,6 +57,7 @@ public class AmateurShowResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Casting {
+            private Long castingId;
             private String actorName;
             private String castingName;
             private String castingImageUrl;
@@ -65,6 +68,7 @@ public class AmateurShowResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Staff {
+            private Long staffId;
             private String position;
             private String staffName;
         }
@@ -74,6 +78,7 @@ public class AmateurShowResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Rounds {
+            private Long roundId;
             private Integer roundNumber;
             private LocalDateTime performanceDateTime;
             private Integer totalTicket;
