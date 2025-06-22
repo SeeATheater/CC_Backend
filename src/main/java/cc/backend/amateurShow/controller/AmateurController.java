@@ -11,6 +11,7 @@ import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -23,16 +24,16 @@ public class AmateurController {
     private final MemberService memberService;
     private final AmateurService amateurService;
 
-    @PostMapping(value = "/enroll/{memberId}")
+    @PostMapping(value = "/enroll")
     @Operation(summary = "소극장 공연 생성 API")
-    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@PathVariable("memberId") Long memberId, @RequestBody AmateurEnrollRequestDTO requestDTO)
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @RequestBody AmateurEnrollRequestDTO requestDTO)
     {
         //@RequestPart(name = "summaryImage", required = false) MultipartFile summaryImage){
         //Member member = memberService.getMemberByToken(authorizationHeader);
 
         //Member member = memberService.getMemberById(memberId); // 임시용
 
-        return ApiResponse.onSuccess(amateurService.enrollShow(memberId, requestDTO));
+        return ApiResponse.onSuccess(amateurService.enrollShow(member.getId(), requestDTO));
 
     }
 
