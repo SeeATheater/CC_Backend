@@ -2,6 +2,7 @@ package cc.backend.image.service;
 
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.config.s3.S3Service;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ImageService {
 
+    private final S3Service s3Service;
     private final ImageRepository imageRepository;
 
     /**
@@ -77,14 +79,14 @@ public class ImageService {
                 .build();
     }
 
-    // 이미지 삭제
+    // 이미지 삭제-s3 동시 삭제 지원
     @Transactional
-    public void deleteImage(Long imageId, Consumer<String> s3DeleteFunc) {
+    public void deleteImage(Long imageId) {
+
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
-
         // S3에서 객체 삭제
-        s3DeleteFunc.accept(image.getKeyName());
+        s3Service.deleteFile(image.getKeyName());
         // DB에서 이미지 정보 삭제
         imageRepository.delete(image);
     }

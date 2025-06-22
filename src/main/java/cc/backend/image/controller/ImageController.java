@@ -44,7 +44,7 @@ public class ImageController {
     @Operation(summary = "DB에서 이미지 삭제", description = "이미지 삭제 api ")
     @DeleteMapping("/delete/{imageId}")
     public ApiResponse<Void> deleteImage(@PathVariable Long imageId) {
-        imageService.deleteImage(imageId, s3Service::deleteFile);
+        imageService.deleteImage(imageId);
         return ApiResponse.onSuccess(null);
     }
 

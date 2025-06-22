@@ -29,8 +29,14 @@ public class PhotoAlbum extends BaseEntity {
     private AmateurShow amateurShow;
 
     @Builder
-    public PhotoAlbum(String content, String title, AmateurShow amateurShow) {
+    public PhotoAlbum(String content, AmateurShow amateurShow) {
         this.content = content;
         this.amateurShow = amateurShow;
+    }
+
+    public PhotoAlbum updatePhotoAlbum(String content, AmateurShow amateurShow) {
+        this.content = content;
+        this.amateurShow = amateurShow;
+        return this;
     }
 }

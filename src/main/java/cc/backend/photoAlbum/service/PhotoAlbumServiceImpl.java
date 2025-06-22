@@ -4,6 +4,7 @@ import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.config.s3.S3Service;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
@@ -38,6 +39,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     private final ImageRepository imageRepository;
     private final ImageService imageService;
     private final MemberRepository memberRepository;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -49,12 +51,10 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
-        PhotoAlbum newPhotoAlbum = PhotoAlbum.builder()
+        PhotoAlbum newPhotoAlbum = photoAlbumRepository.save(PhotoAlbum.builder()
                 .amateurShow(amateurShow)
                 .content(requestDTO.getContent())
-                .build();
-
-        PhotoAlbum photoAlbum = photoAlbumRepository.save(newPhotoAlbum);
+                .build());
 
         List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = requestDTO.getImageRequestDTOs()
                 .stream()
@@ -62,18 +62,18 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                         .keyName(dto.getKeyName())
                         .imageUrl(dto.getImageUrl())
                         .filePath(FilePath.photoAlbum)
-                        .contentId(photoAlbum.getId())
+                        .contentId(newPhotoAlbum.getId())
                         .memberId(member.getId())
                         .build()).toList();
 
         List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(fullImageRequestDTOs);
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
-                .photoAlbumId(photoAlbum.getId())
-                .amateurShowName(photoAlbum.getAmateurShow().getName())
-                .content(photoAlbum.getContent())
-                .place(photoAlbum.getAmateurShow().getPlace())
-                .schedule(photoAlbum.getAmateurShow().getSchedule())
+                .photoAlbumId(newPhotoAlbum.getId())
+                .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
+                .content(newPhotoAlbum.getContent())
+                .place(newPhotoAlbum.getAmateurShow().getPlace())
+                .schedule(newPhotoAlbum.getAmateurShow().getSchedule())
                 .imageResultDTOs(imageResultDTOs)
                 .build();
     }
@@ -150,5 +150,97 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         return singlePhotoAlbumDTOs;
 
+    }
+
+    @Override
+    @Transactional
+    public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
+
+        AmateurShow amateurShow = amateurShowRepository.findById(requestDTO.getAmateurShowId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
+
+        PhotoAlbum updatedPhotoAlbum = photoAlbumRepository.save(photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow));
+
+        // 기존 이미지들 가져오기
+        List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
+
+        // 프론트에서 받은 이미지 url 목록
+        List<String> newImageUrls = requestDTO.getImageRequestDTOs().stream()
+                .map(dto->dto.getImageUrl()).toList();
+
+        // 수정 후 사라진 사진들 - 삭제 대상 찾기
+        List<Image> toDelete = existingImages.stream()
+                .filter(img -> !newImageUrls.contains(img.getImageUrl()))
+                .toList();
+
+        // 삭제
+        toDelete.forEach(image -> {
+            imageService.deleteImage(image.getId());
+        });
+
+        List<String> existingUrls = existingImages.stream()
+                .map(Image::getImageUrl)
+                .toList();
+        List<ImageRequestDTO.PartialImageRequestDTO> imageDTOs = requestDTO.getImageRequestDTOs();
+        // 수정 후 새로 생긴 사진들 - 저장 대상 찾기
+        List<ImageRequestDTO.FullImageRequestDTO> toAdd = imageDTOs.stream()
+                .filter(imageDTO -> !existingUrls.contains(imageDTO.getImageUrl()))
+                .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
+                                .imageUrl(imageDTO.getImageUrl())
+                                .keyName(imageDTO.getKeyName())
+                                .filePath(FilePath.photoAlbum)
+                                .contentId(updatedPhotoAlbum.getId())
+                                .memberId(memberId)
+                                .build()).toList();
+
+        imageService.saveImages(toAdd);
+
+        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs =
+                imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId())
+                        .stream()
+                        .map(image -> ImageResponseDTO.ImageResultDTO.builder()
+                                .id(image.getId())
+                                .imageUrl(image.getImageUrl())
+                                .keyName(image.getKeyName())
+                                .filePath(FilePath.photoAlbum)
+                                .contentId(image.getContentId())
+                                .memberId(image.getMemberId())
+                                .uploadedAt(image.getUploadedAt())
+                                .build())
+                        .collect(Collectors.toList());
+
+        return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
+                .photoAlbumId(updatedPhotoAlbum.getId())
+                .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
+                .content(updatedPhotoAlbum.getContent())
+                .place(updatedPhotoAlbum.getAmateurShow().getPlace())
+                .schedule(updatedPhotoAlbum.getAmateurShow().getSchedule())
+                .imageResultDTOs(imageResultDTOs)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public String deletePhotoAlbum(Long photoAlbumId, Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+        PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
+
+        if(!photoAlbum.getAmateurShow().getMember().getId().equals(memberId)){
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
+
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
+        images.forEach(image -> imageService.deleteImage(image.getId()));
+
+        photoAlbumRepository.delete(photoAlbum);
+
+        return "삭제가 완료되었습니다.";
     }
 }

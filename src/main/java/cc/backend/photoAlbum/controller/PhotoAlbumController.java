@@ -46,4 +46,22 @@ public class PhotoAlbumController {
             @Parameter Long memberId){ //로그인 구현 시 토큰으로 받도록 수정
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(memberId));
     }
+
+    @PatchMapping("/{photoAlbumId}")
+    @Operation(summary = "사진첩 수정 API", description = "공연별 사진첩을 수정하는 API 입니다.")
+    public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultDTO> updatePhotoAlbum(
+            @PathVariable("photoAlbumId") Long photoAlbumId,
+            @RequestBody PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO,
+            @Parameter Long memberId) {
+        return ApiResponse.onSuccess(photoAlbumService.updatePhotoAlbum(photoAlbumId,requestDTO, memberId));
+    }
+
+    @DeleteMapping("/{photoAlbumId}")
+    @Operation(summary = "사진첩 삭제 API", description = "공연별 사진첩을 삭제하는 API 입니다.")
+    public ApiResponse<String> deletePhotoAlbum(
+            @PathVariable("photoAlbumId") Long photoAlbumId,
+            @Parameter Long memberId) {
+                return ApiResponse.onSuccess(photoAlbumService.deletePhotoAlbum(photoAlbumId, memberId));
+    }
+
 }
