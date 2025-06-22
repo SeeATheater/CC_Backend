@@ -35,7 +35,6 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
     MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
 
-
     // MEMBER TICKET ERROR
     MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
     MEMBER_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "TICKET4001", "주문 수량이 적절하지 않습니다"),

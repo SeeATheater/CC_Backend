@@ -2,11 +2,14 @@ package cc.backend.photoAlbum.entity;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.domain.common.BaseEntity;
+import cc.backend.image.entity.Image;
 import cc.backend.member.entity.Member;
+import cc.backend.notice.entity.MemberNotice;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -19,24 +22,15 @@ public class PhotoAlbum extends BaseEntity {
     @Column(nullable = false, columnDefinition = "bigint")
     private Long id;
 
-    @ElementCollection
-    @CollectionTable(name = "image_urls", joinColumns = @JoinColumn(name = "photo_album_id"))
-    private List<String> imageUrls;
-
     private String content;
-
-    private String title;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
 
-
     @Builder
-    public PhotoAlbum(List<String> imageUrls, String content, String title, AmateurShow amateurShow) {
-        this.imageUrls = imageUrls;
+    public PhotoAlbum(String content, String title, AmateurShow amateurShow) {
         this.content = content;
-        this.title = title;
         this.amateurShow = amateurShow;
     }
 }

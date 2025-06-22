@@ -1,5 +1,6 @@
 package cc.backend.config.s3;
 
+import cc.backend.image.FilePath;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +26,9 @@ public class S3Controller {
      */
     @Operation(summary = "Image 한 개 업로드용 url 요청 API", description = "image 하나 = url 하나 필요")
     @GetMapping("/presignedUrl")
-    public ResponseEntity<Map<String, String>> getPresignedUrl(@Parameter(description = "업로드할 이미지 파일의 확장자(jpg 또는 jpeg)", required = true) String imageExtension) {
-        Map<String, String> urlMap = s3Service.createPresignedUrl(imageExtension);
+    public ResponseEntity<Map<String, String>> getPresignedUrl(@Parameter(description = "업로드할 이미지 파일의 확장자(jpg 또는 jpeg)", required = true) String imageExtension ,
+                                                               @Parameter(description = "이미지 업로드하는 기능(board, photoAlbum)", required = true)FilePath filePath) {
+        Map<String, String> urlMap = s3Service.createPresignedUrl(imageExtension, filePath);
         return ResponseEntity.ok(urlMap);
     }
 
@@ -38,13 +40,14 @@ public class S3Controller {
     @PostMapping("/presignedUrls")
     @Operation(summary = "Image 여러 개 업로드용 url 요청 API", description = "업로드할 image 개수 만큼 url 필요")
     public ResponseEntity<List<Map<String, String>>> getPresignedUrls (@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "각 이미지의 확장자 jpg,jpeg,jpg ...를 따옴표 안에 나열", required = true)
-                                                                           @RequestBody List<@NotBlank String> extensions) {
+                                                                           @RequestBody List<@NotBlank String> extensions,
+                                                                       @Parameter(description = "이미지 업로드하는 기능(board, photoAlbum)", required = true)FilePath filePath) {
 
         if (extensions == null || extensions.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
 
-        List<Map<String, String>> urls = s3Service.createPresignedUrls(extensions);
+        List<Map<String, String>> urls = s3Service.createPresignedUrls(extensions, filePath);
         return ResponseEntity.ok(urls);
     }
 }

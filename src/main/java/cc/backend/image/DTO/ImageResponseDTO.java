@@ -1,5 +1,6 @@
 package cc.backend.image.DTO;
 
+import cc.backend.image.FilePath;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +17,9 @@ public class ImageResponseDTO {
         private Long id;
         private String keyName;
         private String  imageUrl;
-        private Long userId;
+        private FilePath filePath;
+        private Long contentId;
         private LocalDateTime uploadedAt;
+        private Long memberId;
     }
 }

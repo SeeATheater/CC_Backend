@@ -1,10 +1,10 @@
 package cc.backend.photoAlbum.dto;
 
+import cc.backend.image.DTO.ImageRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,10 +15,8 @@ public class PhotoAlbumRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreatePhotoAlbumDTO {
-
         private Long amateurShowId;
-        private String title;
         private String content;
-        private List<String> imageUrls;
+        private List<ImageRequestDTO.PartialImageRequestDTO> imageRequestDTOs;
     }
 }

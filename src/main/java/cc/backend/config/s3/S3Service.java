@@ -1,5 +1,6 @@
 package cc.backend.config.s3;
 
+import cc.backend.image.FilePath;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +40,10 @@ public class S3Service {
      * @return upload url, public url
      */
     //단일 객체 용 url - 사진 하나 올리기용
-    public Map<String, String> createPresignedUrl(String imageExtension) {
+    public Map<String, String> createPresignedUrl(String imageExtension, FilePath filePath) {
 
         String keyName = UUID.randomUUID() + "." + imageExtension;
-        keyName = keyName.replace("-", "");
+        keyName = filePath + "/" +  keyName.replace("-", "");
         String contentType = "image/" + imageExtension;
         Map<String, String> metadata = Map.of(
                 "fileType", contentType,
@@ -96,9 +97,9 @@ public class S3Service {
      * @param extensions 이미지 확장자 리스트 (ex: ["png", "jpg", "jpeg"])
      * @return keyName과 uploadUrl, publicUrl 리스트 반환
      */
-    public List<Map<String, String>> createPresignedUrls(List<String> extensions) {
+    public List<Map<String, String>> createPresignedUrls(List<String> extensions, FilePath filePath) {
         return extensions.stream()
-                .map(this::createPresignedUrl)
+                .map(ext -> createPresignedUrl(ext, filePath))
                 .collect(Collectors.toList());
     }
 

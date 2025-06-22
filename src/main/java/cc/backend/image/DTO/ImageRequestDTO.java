@@ -1,18 +1,33 @@
 package cc.backend.image.DTO;
 
+import cc.backend.image.FilePath;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+
 public class ImageRequestDTO {
-    private String keyName;
-    private Long userId;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PartialImageRequestDTO {
+        private String keyName;
+        private String imageUrl;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class FullImageRequestDTO {
+        private String keyName;
+        private String imageUrl;
+        private FilePath filePath;
+        private Long contentId;
+        private Long memberId;
+    }
 
 }

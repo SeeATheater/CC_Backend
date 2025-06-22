@@ -4,6 +4,7 @@ import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
+import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +31,14 @@ public class ImageService {
      * return ImageResultDTO
      */
     @Transactional
-    public ImageResponseDTO.ImageResultDTO saveImage(ImageRequestDTO requestDTO) {
-        String imageUrl = "https://ccbucket-0528.s3.ap-northeast-2.amazonaws.com/" + requestDTO.getKeyName();
+    public ImageResponseDTO.ImageResultDTO saveImage(ImageRequestDTO.FullImageRequestDTO requestDTO) {
         Image image = Image.builder()
-                .userId(requestDTO.getUserId())
                 .keyName(requestDTO.getKeyName())
-                .imageUrl(imageUrl)
+                .imageUrl(requestDTO.getImageUrl())
+                .filePath(requestDTO.getFilePath())
+                .contentId(requestDTO.getContentId())
                 .uploadedAt(LocalDateTime.now())
+                .memberId(requestDTO.getMemberId())
                 .build();
 
         Image newImage = imageRepository.save(image);
@@ -45,20 +47,22 @@ public class ImageService {
                 .id(newImage.getId())
                 .keyName(newImage.getKeyName())
                 .imageUrl(newImage.getImageUrl())
-                .userId(newImage.getUserId())
+                .filePath(newImage.getFilePath())
+                .contentId(newImage.getContentId())
                 .uploadedAt(newImage.getUploadedAt())
+                .memberId(newImage.getMemberId())
                 .build();
     }
 
     //다중 이미지 저장
     @Transactional
-    public List<ImageResponseDTO.ImageResultDTO> saveImages(List<ImageRequestDTO> requestDTOs){
+    public List<ImageResponseDTO.ImageResultDTO> saveImages(List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
         return requestDTOs.stream()
                 .map(this::saveImage)
                 .collect(Collectors.toList());
     }
 
-
+    // 이미지 단건 조회
     public ImageResponseDTO.ImageResultDTO getImage(Long imageId){
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
@@ -66,11 +70,14 @@ public class ImageService {
                 .id(image.getId())
                 .keyName(image.getKeyName())
                 .imageUrl(image.getImageUrl())
-                .userId(image.getUserId())
+                .filePath(image.getFilePath())
+                .contentId(image.getContentId())
                 .uploadedAt(image.getUploadedAt())
+                .memberId(image.getMemberId())
                 .build();
     }
 
+    // 이미지 삭제
     @Transactional
     public void deleteImage(Long imageId, Consumer<String> s3DeleteFunc) {
         Image image = imageRepository.findById(imageId)
