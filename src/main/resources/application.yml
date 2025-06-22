@@ -3,7 +3,7 @@ server:
   port: 8080
 spring:
   profiles:
-    default: prod # 기본 환경을 dev로
+    default: ${SPRING_PROFILES_ACTIVE} # 기본 실행 환경
   jpa:
     hibernate:
       ddl-auto: update
