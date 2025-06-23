@@ -3,6 +3,7 @@ package cc.backend.amateurShow.controller;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
+import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.MemberService;
@@ -33,6 +34,20 @@ public class AmateurController {
 
         return ApiResponse.onSuccess(amateurService.enrollShow(memberId, requestDTO));
 
+    }
+
+    @PatchMapping("/{amateurShowId}")
+    @Operation(summary = "소극장 공연 수정 API")
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@PathVariable Long amateurShowId, @RequestBody AmateurUpdateRequestDTO requestDTO) {
+
+        return ApiResponse.onSuccess(amateurService.updateShow(amateurShowId, requestDTO));
+    }
+
+    @DeleteMapping("/{amateurShowId}")
+    @Operation(summary = "소극장 공연 삭제 API")
+    public ApiResponse<String> deleteShow(@PathVariable Long amateurShowId) {
+        amateurService.deleteShow(amateurShowId);
+        return ApiResponse.onSuccess("삭제가 완료되었습니다.");
     }
 
     @GetMapping("/{amateurShowId}")

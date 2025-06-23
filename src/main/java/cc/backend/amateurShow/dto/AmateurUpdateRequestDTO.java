@@ -1,4 +1,5 @@
 package cc.backend.amateurShow.dto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmateurEnrollRequestDTO {
+public class AmateurUpdateRequestDTO {
     private String name; // 공연 이름
     private String place; // 공연장 주소
     private String schedule; // 공연 기간
@@ -19,16 +20,17 @@ public class AmateurEnrollRequestDTO {
     private String hashtag; // 해시태그
     private String summary; // 줄거리
     private String posterImageUrl; // 포스터 이미지 url
-    private Notice notice; // 공지사항 -> 일대일 맵핑
-    private List<Casting> casting; // 캐스팅 정보
-    private List<Tickets> tickets;
-    private List<Staff> staff; // 감독 및 스태프 정보
-    private List<Rounds> rounds;
+    private AmateurUpdateRequestDTO.UpdateNotice notice; // 공지사항 -> 일대일 맵핑
+    private List<UpdateCasting> casting; // 캐스팅 정보
+    private List<UpdateTickets> tickets;
+    private List<UpdateStaff> staff; // 감독 및 스태프 정보
+    private List<UpdateRounds> rounds;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Notice {
+    public static class UpdateNotice {
+        private Long noticeId;
         private String content;
         private String noticeImageUrl;
         private String timeInfo;
@@ -37,7 +39,8 @@ public class AmateurEnrollRequestDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Tickets {
+    public static class UpdateTickets {
+        private Long ticketId;
         private String discountName; // COMMON 또는 할인명 입력
         private Integer price;
     }
@@ -45,7 +48,8 @@ public class AmateurEnrollRequestDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Casting {
+    public static class UpdateCasting {
+        private Long castingId;
         private String actorName;
         private String castingName;
         private String castingImageUrl; // 캐스팅 이미지 url
@@ -54,7 +58,8 @@ public class AmateurEnrollRequestDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Staff {
+    public static class UpdateStaff {
+        private Long staffId;
         private String position;
         private String staffName;
     }
@@ -62,7 +67,8 @@ public class AmateurEnrollRequestDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Rounds {
+    public static class UpdateRounds {
+        private Long roundId;
         private Integer roundNumber;
         private LocalDateTime performanceDateTime;
         private Integer totalTicket;
