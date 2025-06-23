@@ -1,0 +1,72 @@
+package cc.backend.member;
+
+
+import cc.backend.config.jwt.CustomUserDetails;
+import cc.backend.config.jwt.TokenDTO;
+import cc.backend.config.jwt.TokenProvider;
+import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Set;
+
+@Tag(name = "DevAuth", description = "개발자용 토큰 발급 API")
+@RestController
+@RequestMapping("/login/dev")
+@RequiredArgsConstructor
+public class DevAuthController {
+
+    private final TokenProvider tokenProvider;
+    private final MemberRepository memberRepository;
+
+    // 허용된 dev 계정 목록
+    private static final Set<String> ALLOWED_EMAILS = Set.of(
+            "user@test.com",
+            "performer@test.com",
+            "admin@test.com"
+    );
+
+    @Operation(
+            summary = "개발자용 토큰 발급",
+            description = """
+            개발/테스트 환경에서만 사용할 수 있는 토큰 발급 API입니다.
+            <br><br>
+            <b>허용된 계정만 사용 가능합니다.</b><br>
+            - user@test.com<br>
+            - performer@test.com<br>
+            - admin@test.com
+            """
+    )
+    @PostMapping
+    public ResponseEntity<TokenDTO> devLogin(
+            @RequestParam String email
+    ) {
+        // 화이트리스트 체크
+        if (!ALLOWED_EMAILS.contains(email)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "허용되지 않은 계정입니다.");
+        }
+
+        Member member = memberRepository.findMemberByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계정이 존재하지 않습니다."));
+
+        CustomUserDetails userDetails = new CustomUserDetails(member);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+
+        TokenDTO tokenDto = tokenProvider.generateTokenDto(authentication);
+
+        return ResponseEntity.ok(tokenDto);
+    }
+}
