@@ -34,6 +34,11 @@ public class ImageService {
      */
     @Transactional
     public ImageResponseDTO.ImageResultDTO saveImage(ImageRequestDTO.FullImageRequestDTO requestDTO) {
+        //S3에 실제 존재하는 이미지인지 검증
+        if(!s3Service.doesObjectExist(requestDTO.getKeyName())) {
+            throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
+        }
+
         Image image = Image.builder()
                 .keyName(requestDTO.getKeyName())
                 .imageUrl(requestDTO.getImageUrl())

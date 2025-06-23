@@ -10,8 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -79,18 +78,23 @@ public class S3Service {
     }
 
     public void deleteFile(String keyName) {
-        try {
-            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                    .bucket(bucket2)
-                    .key(keyName)
-                    .build();
+        if(doesObjectExist(keyName)) {
+            try {
+                DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                        .bucket(bucket2)
+                        .key(keyName)
+                        .build();
 
-            s3Client.deleteObject(deleteObjectRequest);
-            log.info("Deleted file from S3: {}", keyName);
-        } catch (Exception e) {
-            log.error("Failed to delete file from S3: {}", keyName, e);
-            throw new RuntimeException("파일 삭제 실패: " + e.getMessage());
+                s3Client.deleteObject(deleteObjectRequest);
+                log.info("Deleted file from S3: {}", keyName);
+            } catch (Exception e) {
+                log.error("Failed to delete file from S3: {}", keyName, e);
+                throw new RuntimeException("파일 삭제 실패: " + e.getMessage());
+            }
+
         }
+        throw new RuntimeException("해당 파일이 S3에 존재하지 않음");
+
     }
 
     /**
@@ -102,6 +106,21 @@ public class S3Service {
         return extensions.stream()
                 .map(ext -> createPresignedUrl(ext, filePath))
                 .collect(Collectors.toList());
+    }
+
+
+    public boolean doesObjectExist(String keyName) {
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucket2)
+                    .key(keyName)
+                    .build();
+
+            s3Client.headObject(headObjectRequest);
+            return true;
+        } catch (S3Exception e) {
+            return false;
+        }
     }
 
 }

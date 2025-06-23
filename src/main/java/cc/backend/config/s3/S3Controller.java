@@ -50,4 +50,16 @@ public class S3Controller {
         List<Map<String, String>> urls = s3Service.createPresignedUrls(extensions, filePath);
         return ResponseEntity.ok(urls);
     }
+
+    @DeleteMapping("/{keyName}")
+    @Operation(summary = "keyName에 해당하는 파일 S3에서 삭제")
+    public void deleteFile(@PathVariable String keyName){
+        s3Service.deleteFile(keyName);
+    }
+
+    @GetMapping("")
+    @Operation(summary = "keyName에 해당하는 파일이 S3에 실제 존재하는지 확인")
+    public ResponseEntity<Boolean> doesObjectExist(@Parameter String keyName){
+        return ResponseEntity.ok(s3Service.doesObjectExist(keyName));
+    }
 }
