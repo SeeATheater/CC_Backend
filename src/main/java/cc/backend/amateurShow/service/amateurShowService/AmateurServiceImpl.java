@@ -13,6 +13,8 @@ import cc.backend.event.entity.CommentEvent;
 import cc.backend.event.entity.NewShowEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.memberLike.entity.MemberLike;
+import cc.backend.memberLike.repository.MemberLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
+    private final MemberLikeRepository memberLikeRepository;
     private final ApplicationEventPublisher eventPublisher; //이벤트 생성
 
     // 소극장 공연 등록
@@ -49,8 +52,17 @@ public class AmateurServiceImpl implements AmateurService {
         // 나머지도 저장
         saveRelatedEntity(requestDTO, amateurShow);
 
-//        List<Member> likers = memberLikeRepository.findByLikeeId(memberId).orElseThrow
-//        eventPublisher.publishEvent(new NewShowEvent(amateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
+        // 좋아요한 멤버리스트
+        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
+        // 좋아요한 멤버가 한 명 이상일 때만
+        if(!memberLikers.isEmpty()) {
+            List<Member> likers = memberLikers.stream()
+                    .map(MemberLike::getLiker)
+                    .collect(Collectors.toList());
+
+            eventPublisher.publishEvent(new NewShowEvent(amateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
+        }
+
         // response
         return AmateurConverter.toAmateurEnrollDTO(amateurShow);
     }

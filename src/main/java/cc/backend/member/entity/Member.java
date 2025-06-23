@@ -5,9 +5,9 @@ import cc.backend.board.entity.Board;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
+import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.notice.entity.MemberNotice;
 import cc.backend.notice.entity.Notice;
-import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.ticket.entity.MemberTicket;
 import jakarta.persistence.*;
 import lombok.*;
@@ -88,4 +88,12 @@ public class Member extends BaseEntity {
     public void reactivateMember(Member member) {
         this.active_status = ActiveStatus.ACTIVE;
     }
+
+    // --공연진 좋아요--
+    @OneToMany(mappedBy = "liker", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberLike> likesGiven = new ArrayList<>();
+
+    @OneToMany(mappedBy = "performer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberLike> likesReceived = new ArrayList<>();
+
 }
