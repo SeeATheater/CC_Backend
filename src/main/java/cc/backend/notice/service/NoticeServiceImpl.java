@@ -1,13 +1,17 @@
 package cc.backend.notice.service;
 
 import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.entity.Board;
+import cc.backend.board.entity.Comment;
 import cc.backend.board.repository.BoardRepository;
+import cc.backend.board.repository.CommentRepository;
 import cc.backend.event.entity.CommentEvent;
-import cc.backend.event.entity.PostEvent;
+import cc.backend.event.entity.NewShowEvent;
 import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.event.entity.ReplyEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.notice.dto.MemberNoticeResponseDTO;
@@ -23,8 +27,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.xml.stream.events.Comment;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,7 +39,8 @@ public class NoticeServiceImpl implements NoticeService {
     private final NoticeRepository noticeRepository;
     private final MemberRepository memberRepository;
     private final MemberNoticeRepository memberNoticeRepository;
-   // private final CommentRepository commentRepository;
+    private final AmateurShowRepository amateurShowRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     @Override
@@ -45,13 +50,11 @@ public class NoticeServiceImpl implements NoticeService {
         Member writer = memberRepository.findById(event.getWriterId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        String content = "GET board/" + boardId + " HTTP/1.1";
-
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
                 .type(NoticeType.BOARD)
-                .title("회원님의 게시글이 Hot 게시물로 선정되었습니다.")
-                .content(content)
+                .message("회원님의 게시글이 HOT 게시글에 등록되었습니다.")
+                .contentId(boardId)
                 .build()
         );
 
@@ -59,48 +62,46 @@ public class NoticeServiceImpl implements NoticeService {
                 MemberNotice.builder()
                         .member(writer)
                         .notice(newNotice)
-                        .build()
-        );
+                        .build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())
-                .message("회원님의 게시글이 Hot 게시물로 선정되었습니다.")
-                .noticeType(NoticeType.BOARD)
-                .count(1L)
+                .message(newNotice.getMessage())
+                .noticeType(newNotice.getType())
+                .contentId(boardId)
                 .createdAt(newNotice.getCreatedAt())
                 .build();
     }
 
     @Override
     @Transactional
-    public NoticeResponseDTO.NoticeDTO notifyCommentBoard(CommentEvent event) {
+    public NoticeResponseDTO.NoticeDTO notifyNewComment(CommentEvent event) {
         Long boardId = event.getBoardId();
 
         Member writer = memberRepository.findById(event.getWriterId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        String content = "GET board/" + boardId + "HTTP/1.1";   //board로 redirect 되는 url
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
 
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.BOARD)
-                        .title("회원님의 게시글에 댓글이 달렸습니다.")
-                        .content(content)
+                        .message("게시글" + board.getTitle() + "에 새로운 댓글이 달렸습니다.")
+                        .contentId(boardId)
                         .build()
         );
 
-         memberNoticeRepository.save(
-                MemberNotice.builder()
-                .member(writer)
-                .notice(newNotice)
-                .build()
-        );
+
+        memberNoticeRepository.save(MemberNotice.builder()
+                                 .notice(newNotice)
+                                 .member(writer).build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())
-                .message("회원님의 게시글에 댓글이 달렸습니다.")
-                .noticeType(NoticeType.BOARD)
-                .count(1L)
+                .message(newNotice.getMessage())
+                .noticeType(newNotice.getType())
+                .contentId(newNotice.getContentId())
                 .createdAt(newNotice.getCreatedAt())
                 .build();
 
@@ -108,18 +109,19 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     @Transactional
-    public NoticeResponseDTO.NoticeDTO notifyNewBoard(PostEvent event){
-        Long boardId = event.getBoardId();
+    public NoticeResponseDTO.NoticeDTO notifyNewShow(NewShowEvent event){
+        Long amateurShowId = event.getAmateurShowId();
+
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         List<Member> receivers = event.getMembers();
 
-        String content = "GET board/" + boardId + "HTTP/1.1";   //board로 redirect 되는 url
-
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
-                        .type(NoticeType.BOARD)
-                        .title(event.getWriterId() + "게시글이 올라왔습니다.")
-                        .content(content)
+                        .type(NoticeType.AMATEURSHOW)
+                        .message("소극장 공연" + amateurShow.getName()+ "등록 완료! 소극장 공연 페이지에서 확인해보세요!")
+                        .contentId(amateurShowId)
                         .build()
         );
 
@@ -129,47 +131,53 @@ public class NoticeServiceImpl implements NoticeService {
                                 .notice(newNotice)
                                 .member(member)
                                 .build())
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())
-                .message( "memberId" + event.getWriterId() + "가 올린 게시글 알림")
-                .noticeType(NoticeType.BOARD)
-                .count((long) receivers.size())
+                .message(newNotice.getMessage())
+                .noticeType(newNotice.getType())
+                .contentId(newNotice.getContentId())
                 .createdAt(newNotice.getCreatedAt())
                 .build();
 
     }
 
-//    @Override
-//    @Transactional
-//    public NoticeResponseDTO.BoardNoticeResultDTO notifyReplyBoard(Long commentId) {
-//        Comment comment = commentRepository.findById(boardId)
-//                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-//
-//        Long memberId = board.getMember().getId();
-//        Member member = memberRepository.findById(memberId)
-//                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-//
-//        String content = "urlLinkToComment";
-//
-//        Notice notice = Notice.builder()
-//                .type(NoticeType.BOARD)
-//                .title("회원님의 댓글에 대댓글이 달렸습니다.")
-//                .content(content)
-//                .member(member)
-//                .build();
-//
-//        Notice newNotice = noticeRepository.save(notice);
-//        return NoticeResponseDTO.BoardNoticeResultDTO.builder()
-//                .id(newNotice.getId())
-//                .noticeType(newNotice.getType())
-//                .title(newNotice.getTitle())
-//                .content(newNotice.getContent())
-//                .build();
-//
-//    }
+    @Override
+    @Transactional
+    public NoticeResponseDTO.NoticeDTO notifyNewReply(ReplyEvent event) {
+
+        Long commentId = event.getCommentId();
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
+
+        Long writerId = event.getWriterId();
+        Member writer = memberRepository.findById(writerId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Notice newNotice = noticeRepository.save(
+                Notice.builder()
+                    .type(NoticeType.BOARD)
+                    .message("댓글" + comment.getContent() + "에 새로운 대댓글이 달렸습니다.")
+                    .contentId(commentId)
+                    .build()
+        );
+
+        memberNoticeRepository.save(
+                        MemberNotice.builder()
+                                .notice(newNotice)
+                                .member(writer)
+                                .build());
+
+        return NoticeResponseDTO.NoticeDTO.builder()
+                .id(newNotice.getId())
+                .noticeType(newNotice.getType())
+                .message(newNotice.getMessage())
+                .contentId(newNotice.getContentId())
+                .createdAt(newNotice.getCreatedAt())
+                .build();
+
+    }
 
 
 }

@@ -34,4 +34,9 @@ public class MemberNotice extends BaseEntity {
         this.notice = notice;
         this.member = member;
     }
+
+    public MemberNotice updateIsRead(){
+        this.isread = true ;
+        return this;
+    }
 }

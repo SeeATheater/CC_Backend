@@ -19,6 +19,7 @@ public class MemberNoticeResponseDTO {
         private Long id;
         private NoticeType noticeType;
         private String message;
+        private Long contentId;
         private Boolean isread;
         private LocalDateTime createdAt;
 

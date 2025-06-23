@@ -18,7 +18,7 @@ public class NoticeResponseDTO {
         private Long id;
         private NoticeType noticeType;
         private String message;
-        private Long count;
+        private Long contentId;
         private LocalDateTime createdAt;
 
     }

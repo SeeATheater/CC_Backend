@@ -12,7 +12,7 @@ import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentLikeRepository;
 import cc.backend.board.repository.CommentRepository;
 import cc.backend.event.entity.CommentEvent;
-import cc.backend.event.entity.PostEvent;
+import cc.backend.event.entity.ReplyEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+    private final ApplicationEventPublisher eventPublisher; //이벤트 생성자
     //댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
@@ -45,6 +45,8 @@ public class CommentService {
         if (req.getParentCommentId() == null) {
             // 댓글
             comment = Comment.createComment(req.getContent(), member, board);
+
+            eventPublisher.publishEvent(new CommentEvent(boardId, comment.getMember().getId()));   //댓글 이벤트 생성
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
@@ -53,10 +55,12 @@ public class CommentService {
                 throw new GeneralException(ErrorStatus.COMMENT_DEPTH_EXCEEDED);
             }
             comment = Comment.createReply(req.getContent(), member, board, parent);
+
+            eventPublisher.publishEvent(new ReplyEvent(comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
         }
         commentRepository.save(comment);
 
-        eventPublisher.publishEvent(new CommentEvent(comment.getBoard().getId(), comment.getMember().getId()));   //이벤트 생성
+
 
         board.increaseCommentCount();
 

@@ -1,6 +1,5 @@
 package cc.backend.event.service;
 
-import cc.backend.event.entity.PostEvent;
 import cc.backend.event.entity.PromoteHotEvent;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;

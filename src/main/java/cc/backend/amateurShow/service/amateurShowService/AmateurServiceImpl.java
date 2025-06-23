@@ -9,9 +9,12 @@ import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.event.entity.CommentEvent;
+import cc.backend.event.entity.NewShowEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,7 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
+    private final ApplicationEventPublisher eventPublisher; //이벤트 생성
 
     // 소극장 공연 등록
     @Transactional
@@ -45,6 +49,8 @@ public class AmateurServiceImpl implements AmateurService {
         // 나머지도 저장
         saveRelatedEntity(requestDTO, amateurShow);
 
+//        List<Member> likers = memberLikeRepository.findByLikeeId(memberId).orElseThrow
+//        eventPublisher.publishEvent(new NewShowEvent(amateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
         // response
         return AmateurConverter.toAmateurEnrollDTO(amateurShow);
     }

@@ -26,17 +26,18 @@ public class Notice extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private NoticeType type;
 
-    private String title;
+    private String message;
 
-    private String content;
+    //boardId, amateurShowId 등 링크로 연결되는 대상 id
+    private Long contentId;
 
     @OneToMany (mappedBy = "notice", cascade = CascadeType.ALL)
     private List<MemberNotice> memberNotices = new ArrayList<>();
 
     @Builder
-    public Notice(NoticeType type, String title, String content, List<MemberNotice> memberNotices) {
+    public Notice(NoticeType type, String message, Long contentId) {
         this.type = type;
-        this.title = title ;
-        this.content = content;
+        this.message = message ;
+        this.contentId = contentId;
     }
 }
