@@ -9,6 +9,7 @@ import cc.backend.member.entity.Member;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,7 +34,6 @@ public class AmateurConverter {
 
     // --소극장 공연 생성 response--
     public static AmateurEnrollResponseDTO.AmateurEnrollResult toAmateurEnrollDTO(AmateurShow amateurShow) {
-
         // Notice
         AmateurShowResponseDTO.AmateurShowResult.Notice notice = null;
         if (amateurShow.getAmateurNotice() != null) {
@@ -47,42 +47,50 @@ public class AmateurConverter {
         }
 
         // Casting
-        List<AmateurShowResponseDTO.AmateurShowResult.Casting> castings = amateurShow.getAmateurCastingList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Casting> castings = Optional.ofNullable(amateurShow.getAmateurCastingList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(c -> AmateurShowResponseDTO.AmateurShowResult.Casting.builder()
                         .castingId(c.getId())
                         .actorName(c.getActorName())
                         .castingName(c.getCastingName())
                         .castingImageUrl(c.getCastingImageUrl())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
         // Staff
-        List<AmateurShowResponseDTO.AmateurShowResult.Staff> staff = amateurShow.getAmateurStaffList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Staff> staff = Optional.ofNullable(amateurShow.getAmateurStaffList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(s -> AmateurShowResponseDTO.AmateurShowResult.Staff.builder()
                         .staffId(s.getId())
                         .position(s.getPosition())
                         .staffName(s.getName())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
         // Rounds
-        List<AmateurShowResponseDTO.AmateurShowResult.Rounds> rounds = amateurShow.getAmateurRounds().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Rounds> rounds = Optional.ofNullable(amateurShow.getAmateurRounds())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(r -> AmateurShowResponseDTO.AmateurShowResult.Rounds.builder()
                         .roundId(r.getId())
                         .roundNumber(r.getRoundNumber())
                         .performanceDateTime(r.getPerformanceDateTime())
                         .totalTicket(r.getTotalTicket())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
         // Tickets
-        List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = amateurShow.getAmateurTicketList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = Optional.ofNullable(amateurShow.getAmateurTicketList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(t -> AmateurShowResponseDTO.AmateurShowResult.Tickets.builder()
                         .ticketId(t.getId())
                         .discountName(t.getDiscountName())
                         .price(t.getPrice())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
         return AmateurEnrollResponseDTO.AmateurEnrollResult.builder()
                 .amateurShowId(amateurShow.getId())
@@ -220,7 +228,6 @@ public class AmateurConverter {
 
     // --소극장 공연 단건 조회 response--
     public static AmateurShowResponseDTO.AmateurShowResult toResponseDTO(AmateurShow amateurShow) {
-
         AmateurNotice amateurNotice = amateurShow.getAmateurNotice();
         AmateurShowResponseDTO.AmateurShowResult.Notice notice = null;
         if (amateurNotice != null) {
@@ -232,15 +239,19 @@ public class AmateurConverter {
                     .build();
         }
 
-        List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = amateurShow.getAmateurTicketList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Tickets> tickets = Optional.ofNullable(amateurShow.getAmateurTicketList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(t -> AmateurShowResponseDTO.AmateurShowResult.Tickets.builder()
                         .ticketId(t.getId())
                         .discountName(t.getDiscountName())
                         .price(t.getPrice())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
-        List<AmateurShowResponseDTO.AmateurShowResult.Casting> castings = amateurShow.getAmateurCastingList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Casting> castings = Optional.ofNullable(amateurShow.getAmateurCastingList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(c -> AmateurShowResponseDTO.AmateurShowResult.Casting.builder()
                         .castingId(c.getId())
                         .actorName(c.getActorName())
@@ -249,7 +260,9 @@ public class AmateurConverter {
                         .build())
                 .collect(Collectors.toList());
 
-        List<AmateurShowResponseDTO.AmateurShowResult.Staff> staff = amateurShow.getAmateurStaffList().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Staff> staff = Optional.ofNullable(amateurShow.getAmateurStaffList())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(s -> AmateurShowResponseDTO.AmateurShowResult.Staff.builder()
                         .staffId(s.getId())
                         .position(s.getPosition())
@@ -257,7 +270,9 @@ public class AmateurConverter {
                         .build())
                 .collect(Collectors.toList());
 
-        List<AmateurShowResponseDTO.AmateurShowResult.Rounds> rounds = amateurShow.getAmateurRounds().stream()
+        List<AmateurShowResponseDTO.AmateurShowResult.Rounds> rounds = Optional.ofNullable(amateurShow.getAmateurRounds())
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(r -> AmateurShowResponseDTO.AmateurShowResult.Rounds.builder()
                         .roundId(r.getId())
                         .roundNumber(r.getRoundNumber())
