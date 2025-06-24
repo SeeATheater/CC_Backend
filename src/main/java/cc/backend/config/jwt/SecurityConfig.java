@@ -28,6 +28,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowCredentials(true);
+                    // 실제 배포 환경 도메인
+                    config.addAllowedOrigin("https://seeatheater.site");
+                    config.addAllowedOrigin("https://www.seeatheater.site");
+                    // 개발 환경
                     config.addAllowedOrigin("http://localhost:8080"); // '*' 대신 명시적 출처 사용
                     config.addAllowedOrigin("http://localhost:5173"); // '*' 대신 명시적 출처 사용
                     //config.addAllowedOrigin("*");
