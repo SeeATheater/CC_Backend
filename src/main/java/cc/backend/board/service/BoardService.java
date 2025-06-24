@@ -11,7 +11,7 @@ import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
-import cc.backend.event.entity.PostEvent;
+import cc.backend.event.entity.PromoteHotEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -70,8 +70,6 @@ public class BoardService {
 
 
         boardRepository.save(board);
-
-        eventPublisher.publishEvent(new PostEvent(board.getId(), board.getMember().getId()));   //이벤트 테스트
 
         return BoardResponse.builder()
                 .boardId(board.getId())
@@ -195,6 +193,8 @@ public class BoardService {
                     .hotRegisteredAt(LocalDateTime.now())
                     .build();
             hotBoardRepository.save(hotBoard);
+
+            eventPublisher.publishEvent(new PromoteHotEvent(board.getId(), board.getMember().getId())); //핫게 이벤트 생성
         }
     }
 

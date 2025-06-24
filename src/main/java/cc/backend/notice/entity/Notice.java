@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,19 +26,18 @@ public class Notice extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private NoticeType type;
 
-    private String title;
+    private String message;
 
-    private String content;
+    //boardId, amateurShowId 등 링크로 연결되는 대상 id
+    private Long contentId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @OneToMany (mappedBy = "notice", cascade = CascadeType.ALL)
+    private List<MemberNotice> memberNotices = new ArrayList<>();
 
     @Builder
-    public Notice(NoticeType type, String title, String content, Member member) {
+    public Notice(NoticeType type, String message, Long contentId) {
         this.type = type;
-        this.title = title ;
-        this.content = content;
-        this.member = member;
+        this.message = message ;
+        this.contentId = contentId;
     }
 }

@@ -7,18 +7,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-public class NoticeResponseDTO {
+public class MemberNoticeResponseDTO {
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class NoticeDTO {
+    public static class MemberNoticeDTO {
 
         private Long id;
         private NoticeType noticeType;
         private String message;
         private Long contentId;
+        private Boolean isread;
         private LocalDateTime createdAt;
 
     }
