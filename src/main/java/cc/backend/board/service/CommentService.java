@@ -46,7 +46,7 @@ public class CommentService {
             // 댓글
             comment = Comment.createComment(req.getContent(), member, board);
 
-            eventPublisher.publishEvent(new CommentEvent(boardId, comment.getMember().getId()));   //댓글 이벤트 생성
+            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId()));   //댓글 이벤트 생성
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
