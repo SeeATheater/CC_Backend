@@ -1,5 +1,6 @@
 package cc.backend.photoAlbum.dto;
 
+import cc.backend.image.DTO.ImageResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,20 +20,19 @@ public class PhotoAlbumResponseDTO {
         private String amateurShowName;
         private String schedule;
         private String place;
-        private String title;
         private String content;
-        private List<String> imageUrls;
+        private List<ImageResponseDTO.ImageResultDTO> imageResultDTOs;
     }
 
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class PhotoAlbumListDTO {
-
-        private List<PhotoAlbumResultDTO> photoAlbumDTOs;
-        private String firstImageUrl;
-        private Integer total;
+    public static class SinglePhotoAlbumDTO {
+        private Long photoAlbumId;
+        private String amateurShowName;
+        private String place;
+        private String imageUrl;
     }
 
 }
