@@ -11,6 +11,7 @@ import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -67,7 +68,7 @@ public class AmateurController {
 
     @GetMapping("/ongoing")
     @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
-    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowOngoing>> getShowOngoing(Pageable pageable) {
+    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowOngoing>> getShowOngoing(@ParameterObject Pageable pageable) {
         return ApiResponse.onSuccess(amateurService.getShowOngoing(pageable));
     }
 
