@@ -96,4 +96,16 @@ public class AmateurShowResponseDTO {
         private LocalDateTime performanceDateTime;
         private String posterImageUrl;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AmateurShowOngoing { // 현재 진행중인 (오늘 제외) 소극장 공연 리스트 조회
+        private Long amateurShowId;
+        private String name;
+        private String place;
+        private LocalDateTime performanceDateTime;
+        private String posterImageUrl;
+    }
 }

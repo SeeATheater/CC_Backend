@@ -2,6 +2,8 @@ package cc.backend.amateurShow.repository;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.member.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,12 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
             WHERE DATE(r.performanceDateTime) = CURRENT_DATE
            """)
     List<AmateurShow> findAllWithRoundsToday();
+
+    @Query("""
+            SELECT DISTINCT a 
+            FROM AmateurShow a 
+            JOIN a.amateurRounds r 
+            WHERE DATE(r.performanceDateTime) > CURRENT_DATE
+           """)
+    Page<AmateurShow> findAllOngoingExceptToday(Pageable pageable);
 }

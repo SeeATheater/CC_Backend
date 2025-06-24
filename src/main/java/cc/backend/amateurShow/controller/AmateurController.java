@@ -11,6 +11,8 @@ import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,11 +65,11 @@ public class AmateurController {
         return ApiResponse.onSuccess(amateurService.getShowToday());
     }
 
-//    @GetMapping("/ongoing")
-//    @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
-//    public ApiResponse<AmateurShowResponseDTO.AmateurShowOngoing> getShowOngoing() {
-//        return ApiResponse.onSuccess(amateurService.getShowOngoing());
-//    }
+    @GetMapping("/ongoing")
+    @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
+    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowOngoing>> getShowOngoing(Pageable pageable) {
+        return ApiResponse.onSuccess(amateurService.getShowOngoing(pageable));
+    }
 
 
 }

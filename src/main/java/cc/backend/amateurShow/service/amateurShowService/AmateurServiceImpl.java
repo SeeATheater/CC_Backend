@@ -12,6 +12,9 @@ import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -278,5 +281,33 @@ public class AmateurServiceImpl implements AmateurService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 현재 진행중인 소극장 공연 리스트 조회
+    @Override
+    public Page<AmateurShowResponseDTO.AmateurShowOngoing> getShowOngoing(Pageable pageable) {
+        Page<AmateurShow> shows = amateurShowRepository.findAllOngoingExceptToday(pageable);
+
+        // entity를 DTO로 변환
+        List<AmateurShowResponseDTO.AmateurShowOngoing> result = shows.stream()
+                .map(show -> {
+                    Optional<LocalDateTime> nextRound = show.getAmateurRounds().stream()
+                            .map(AmateurRounds::getPerformanceDateTime)
+                            .filter(dt -> dt.toLocalDate().isAfter(LocalDate.now()))
+                            .min(Comparator.naturalOrder());
+
+                    return AmateurShowResponseDTO.AmateurShowOngoing.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .place(show.getPlace())
+                            .performanceDateTime(nextRound.orElse(null))
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
+                // 공연일 가장 빠른 순서로 정렬
+                .sorted(Comparator.comparing(AmateurShowResponseDTO.AmateurShowOngoing::getPerformanceDateTime))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(result, pageable, shows.getTotalElements());
     }
 }
