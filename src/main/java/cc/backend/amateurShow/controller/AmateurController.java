@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @Tag(name = "소극장 공연")
 @RestController
@@ -26,21 +28,13 @@ public class AmateurController {
 
     @PostMapping(value = "/enroll")
     @Operation(summary = "소극장 공연 생성 API")
-    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @RequestBody AmateurEnrollRequestDTO requestDTO)
-    {
-        //@RequestPart(name = "summaryImage", required = false) MultipartFile summaryImage){
-        //Member member = memberService.getMemberByToken(authorizationHeader);
-
-        //Member member = memberService.getMemberById(memberId); // 임시용
-
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @RequestBody AmateurEnrollRequestDTO requestDTO) {
         return ApiResponse.onSuccess(amateurService.enrollShow(member.getId(), requestDTO));
-
     }
 
     @PatchMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 수정 API")
     public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@PathVariable Long amateurShowId, @RequestBody AmateurUpdateRequestDTO requestDTO) {
-
         return ApiResponse.onSuccess(amateurService.updateShow(amateurShowId, requestDTO));
     }
 
@@ -54,7 +48,26 @@ public class AmateurController {
     @GetMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 조회 - 단건")
     public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@PathVariable Long amateurShowId){
-        //Member member = memberService.getMemberByToken(authorizationHeader);
         return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
     }
+
+//    @GetMapping("/ranking")
+//    @Operation(summary = "소극장 공연 랭킹 조회 API")
+//    public ApiResponse<AmateurShowResponseDTO.AmateurShowRanking> getShowRanking() {
+//        return ApiResponse.onSuccess(amateurService.getShowRanking());
+//    }
+
+    @GetMapping("/today")
+    @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowToday>> getShowToday() {
+        return ApiResponse.onSuccess(amateurService.getShowToday());
+    }
+
+//    @GetMapping("/ongoing")
+//    @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
+//    public ApiResponse<AmateurShowResponseDTO.AmateurShowOngoing> getShowOngoing() {
+//        return ApiResponse.onSuccess(amateurService.getShowOngoing());
+//    }
+
+
 }

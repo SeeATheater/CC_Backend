@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -250,5 +252,31 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         return AmateurConverter.toResponseDTO(amateurShow);
+    }
+
+    // 오늘 진행하는 소극장 공연 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowToday> getShowToday() {
+        List<AmateurShow> shows = amateurShowRepository.findAllWithRoundsToday();
+
+        // 엔티티를 dto로
+        return shows.stream()
+                .map(show -> {
+                    // 오늘 날짜인 회차 중 가장 빠른 거 하나 선택
+                    LocalDate today = LocalDate.now();
+                    Optional<LocalDateTime> todayRoundTime = show.getAmateurRounds().stream()
+                            .map(AmateurRounds::getPerformanceDateTime)
+                            .filter(dt -> dt.toLocalDate().isEqual(today))
+                            .min(Comparator.naturalOrder());
+
+                    return AmateurShowResponseDTO.AmateurShowToday.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .place(show.getPlace())
+                            .performanceDateTime(todayRoundTime.orElse(null))
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

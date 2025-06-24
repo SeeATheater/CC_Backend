@@ -19,4 +19,12 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
 
     @Query("SELECT DISTINCT a FROM AmateurShow a LEFT JOIN FETCH a.amateurRounds WHERE a.member = :member")
     List<AmateurShow> findAllByMemberWithRounds(@Param("member") Member member);
+
+    @Query("""
+            SELECT DISTINCT a 
+            FROM AmateurShow a 
+            JOIN a.amateurRounds r 
+            WHERE DATE(r.performanceDateTime) = CURRENT_DATE
+           """)
+    List<AmateurShow> findAllWithRoundsToday();
 }

@@ -84,4 +84,16 @@ public class AmateurShowResponseDTO {
             private Integer totalTicket;
         }
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AmateurShowToday { // 오늘 진행하는 소극장 공연 리스트 조회
+        private Long amateurShowId; // 소극장 공연 id
+        private String name; // 공연 이름
+        private String place; // 공연장 주소
+        private LocalDateTime performanceDateTime;
+        private String posterImageUrl;
+    }
 }
