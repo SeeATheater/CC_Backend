@@ -1,6 +1,7 @@
 #application.yml
 server:
   port: 8080
+  forward-headers-strategy: native
 spring:
   profiles:
     default: ${SPRING_PROFILES_ACTIVE} # 기본 실행 환경
