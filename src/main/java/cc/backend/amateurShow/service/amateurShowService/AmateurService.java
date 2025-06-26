@@ -4,9 +4,9 @@ import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
-import cc.backend.member.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,4 +17,8 @@ public interface AmateurService {
     AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurId);
     AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long showId, AmateurUpdateRequestDTO requestDTO);
     void deleteShow(Long amateurShowId);
+    List<AmateurShowResponseDTO.AmateurShowList> getShowToday();
+    Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable);
+    List<AmateurShowResponseDTO.AmateurShowList> getShowRanking();
+    List<AmateurShowResponseDTO.AmateurShowList> getShowClosing();
 }
