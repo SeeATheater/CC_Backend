@@ -93,7 +93,7 @@ public class AmateurShowResponseDTO {
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
         private String place; // 공연장 주소
-        private LocalDateTime performanceDateTime;
+        private String schedule;
         private String posterImageUrl;
     }
 
@@ -105,7 +105,7 @@ public class AmateurShowResponseDTO {
         private Long amateurShowId;
         private String name;
         private String place;
-        private LocalDateTime performanceDateTime;
+        private String schedule;
         private String posterImageUrl;
     }
 
