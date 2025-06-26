@@ -13,7 +13,5 @@ import java.time.LocalDateTime;
 @Getter
 public class MemberTicketCreateRequestDTO {
     private Long memberId;              // 예매자
-    //private Long amateurTicketId;       // 공연 티켓 ID
     private int quantity;               // 수량
-    private LocalDateTime performanceDateTime; // 관람일시
 }

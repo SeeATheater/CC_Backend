@@ -32,4 +32,12 @@ public class AmateurRounds {
         if (dto.getPerformanceDateTime() != null) this.performanceDateTime = dto.getPerformanceDateTime();
         if (dto.getTotalTicket() != null) this.totalTicket = dto.getTotalTicket();
     }
+
+    public void decreaseTotalTicket(int quantity) {
+        if (this.totalTicket == null) {
+            this.totalTicket = 0;
+        }
+        this.totalTicket -= quantity;
+    }
+
 }

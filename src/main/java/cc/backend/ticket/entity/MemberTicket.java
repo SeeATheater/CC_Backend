@@ -1,5 +1,6 @@
 package cc.backend.ticket.entity;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
@@ -45,11 +46,13 @@ public class MemberTicket extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @ManyToOne
+    @JoinColumn(name = "amateur_round_id")
+    private AmateurRounds amateurRound;
+
     public void updateReservationStatus(ReservationStatus reservationStatus) {
         this.reservationStatus = reservationStatus;
     }
 
-    public void updateMemberTicket(ReservationStatus reservationStatus) {
-        this.reservationStatus = reservationStatus;
-    }
+
 }
