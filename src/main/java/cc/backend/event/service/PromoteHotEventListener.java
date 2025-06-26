@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PromoteHotEventListner {
+public class PromoteHotEventListener {
     private final NoticeService noticeService;
 
     @EventListener
