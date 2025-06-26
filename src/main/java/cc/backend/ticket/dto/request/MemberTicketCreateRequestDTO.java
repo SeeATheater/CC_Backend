@@ -12,6 +12,5 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 public class MemberTicketCreateRequestDTO {
-    private Long memberId;              // 예매자
     private int quantity;               // 수량
 }

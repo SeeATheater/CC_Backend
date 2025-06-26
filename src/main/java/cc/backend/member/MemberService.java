@@ -17,7 +17,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
 
-    public MyPageResponseDTO getMyPage(Long  memberId){
+    public MyPageResponseDTO getMyPage(Long memberId){
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         return MyPageResponseDTO.builder()
