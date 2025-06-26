@@ -1,5 +1,8 @@
 package cc.backend.memberLike.service;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
+import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
@@ -11,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +26,7 @@ import java.util.stream.Collectors;
 public class MemberLikeServiceImpl implements MemberLikeService {
     private final MemberLikeRepository memberLikeRepository;
     private final MemberRepository memberRepository;
+    private final AmateurShowRepository amateurShowRepository;
 
     // 공연진 좋아요
     @Override
@@ -66,12 +73,26 @@ public class MemberLikeServiceImpl implements MemberLikeService {
         Member liker = getMemberById(memberId);
 
         return liker.getLikesGiven().stream()
+                .sorted(Comparator.comparing(
+                        like -> findSoonestEndingShowDateForPerformer(like.getPerformer()),
+                        // 공연이 없는 경우(LocalDateTime.MAX)는 맨 뒤로, 그 외에는 날짜 오름차순
+                        Comparator.naturalOrder()
+                ))
                 .map(like -> MemberLikeResponseDTO.builder()
                         .memberLikeId(like.getMemberLikeId())
                         .performerId(like.getPerformer().getId())
                         .performerName(like.getPerformer().getName())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private LocalDateTime findSoonestEndingShowDateForPerformer(Member performer) {
+        return amateurShowRepository.findAllByMemberWithRounds(performer).stream()
+                .flatMap(show -> show.getAmateurRounds().stream())
+                .map(AmateurRounds::getPerformanceDateTime)
+                .filter(date -> date.isAfter(LocalDateTime.now()))
+                .min(Comparator.naturalOrder())
+                .orElse(LocalDateTime.MAX);
     }
 
     private Member getMemberById(Long id) {

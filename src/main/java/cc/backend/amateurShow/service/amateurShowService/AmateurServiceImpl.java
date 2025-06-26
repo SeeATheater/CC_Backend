@@ -9,17 +9,22 @@ import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.event.entity.CommentEvent;
 import cc.backend.event.entity.NewShowEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -268,5 +273,126 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         return AmateurConverter.toResponseDTO(amateurShow);
+    }
+
+    // 오늘 진행하는 소극장 공연 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowToday() {
+        LocalDate today = LocalDate.now();
+        List<AmateurShow> allShows = amateurShowRepository.findAll();
+
+        // 오늘 날짜를 가진 회차가 있는 공연만
+        return allShows.stream()
+                .filter(show -> show.getAmateurRounds().stream()
+                        .anyMatch(round -> round.getPerformanceDateTime().toLocalDate().equals(today)))
+                .distinct()
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // schedule 파싱하기
+    private Optional<LocalDate[]> parseSchedule(String schedule) {
+        try {
+            if (schedule == null || !schedule.contains("~")) return Optional.empty();
+
+            String[] parts = schedule.split("~"); // ~ 기준으로 자르고
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+            LocalDate start = LocalDate.parse(parts[0].trim(), formatter); // 시작일
+            LocalDate end = LocalDate.parse(parts[1].trim(), formatter); // 종료일
+
+            return Optional.of(new LocalDate[]{start, end});
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    // 현재 진행중인 소극장 공연 리스트 조회
+    @Override
+    public Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        List<AmateurShow> allShows = amateurShowRepository.findAll();
+
+        List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
+                // 오늘 날짜가 schedule 기간 내에 포함된 공연 필터링
+                .filter(show -> parseSchedule(show.getSchedule())
+                        .map(dates -> !today.isBefore(dates[0]) && !today.isAfter(dates[1]))
+                        .orElse(false))
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                // 공연 시작일 기준 오름차순 정렬
+                .sorted(Comparator.comparing(show -> parseSchedule(show.getSchedule())
+                        .map(dates -> dates[0])
+                        .orElse(LocalDate.MAX)))
+                .collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), result.size());
+        return new PageImpl<>(result.subList(start, end), pageable, result.size());
+    }
+
+    // 소극장 공연 랭킹 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking() {
+        LocalDate today = LocalDate.now();
+        List<AmateurShow> shows = amateurShowRepository.findAll();
+
+        return shows.stream()
+                .filter(show -> parseSchedule(show.getSchedule())
+                        .map(dates -> !today.isAfter(dates[1]))  // 종료일이 오늘 이후인 경우만
+                        .orElse(false))
+                .sorted(Comparator
+                        .comparing(AmateurShow::getTotalSoldTicket, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(show -> parseSchedule(show.getSchedule())
+                                .map(dates -> dates[0])
+                                .orElse(LocalDate.MAX)))
+                .limit(10)
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // 오늘 마감인 소극장 공연 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing() {
+        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        List<AmateurShowResponseDTO.AmateurShowList> result = new ArrayList<>();
+
+        for (AmateurShow show : allShows) {
+            // 각 공연의 회차들 중 젤 마지막 회차 날짜 구하기
+            Optional<LocalDate> lastDate = show.getAmateurRounds().stream()
+                    .map(r -> r.getPerformanceDateTime().toLocalDate()) // 회차 날짜만 추출
+                    .max(Comparator.naturalOrder()); // 젤 늦은 날짜 추출
+
+            if (lastDate.isPresent() && lastDate.get().isEqual(today)) { // 마지막 회차 날짜가 오늘인 경우
+                result.add(AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build());
+            }
+        }
+
+        return result;
     }
 }

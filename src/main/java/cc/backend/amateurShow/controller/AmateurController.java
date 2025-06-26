@@ -11,7 +11,13 @@ import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @Tag(name = "소극장 공연")
@@ -23,23 +29,15 @@ public class AmateurController {
     private final MemberService memberService;
     private final AmateurService amateurService;
 
-    @PostMapping(value = "/enroll/{memberId}")
+    @PostMapping(value = "/enroll")
     @Operation(summary = "소극장 공연 생성 API")
-    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@PathVariable("memberId") Long memberId, @RequestBody AmateurEnrollRequestDTO requestDTO)
-    {
-        //@RequestPart(name = "summaryImage", required = false) MultipartFile summaryImage){
-        //Member member = memberService.getMemberByToken(authorizationHeader);
-
-        //Member member = memberService.getMemberById(memberId); // 임시용
-
-        return ApiResponse.onSuccess(amateurService.enrollShow(memberId, requestDTO));
-
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @RequestBody AmateurEnrollRequestDTO requestDTO) {
+        return ApiResponse.onSuccess(amateurService.enrollShow(member.getId(), requestDTO));
     }
 
     @PatchMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 수정 API")
     public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@PathVariable Long amateurShowId, @RequestBody AmateurUpdateRequestDTO requestDTO) {
-
         return ApiResponse.onSuccess(amateurService.updateShow(amateurShowId, requestDTO));
     }
 
@@ -53,7 +51,30 @@ public class AmateurController {
     @GetMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 조회 - 단건")
     public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@PathVariable Long amateurShowId){
-        //Member member = memberService.getMemberByToken(authorizationHeader);
         return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
+    }
+
+    @GetMapping("/ranking")
+    @Operation(summary = "소극장 공연 랭킹 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking() {
+        return ApiResponse.onSuccess(amateurService.getShowRanking());
+    }
+
+    @GetMapping("/today")
+    @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowToday() {
+        return ApiResponse.onSuccess(amateurService.getShowToday());
+    }
+
+    @GetMapping("/ongoing")
+    @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
+    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowList>> getShowOngoing(@ParameterObject Pageable pageable) {
+        return ApiResponse.onSuccess(amateurService.getShowOngoing(pageable));
+    }
+
+    @GetMapping("/closing")
+    @Operation(summary = "오늘 마감인 공연 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowClosing() {
+        return ApiResponse.onSuccess(amateurService.getShowClosing());
     }
 }
