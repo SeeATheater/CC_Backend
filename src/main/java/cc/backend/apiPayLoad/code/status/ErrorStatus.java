@@ -59,6 +59,9 @@ public enum ErrorStatus implements BaseErrorCode {
     // PHOTOALBUM ERROR
     PHOTOALBUM_NOT_FOUND(HttpStatus.NOT_FOUND, "PHOTOALBUM4000", "존재하지 않는 사진첩입니다."),
 
+    // ROUND ERROR
+    ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "ROUND4000", "존재하지 않는 회차입니다."),
+
     //BOARD ERROR
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "BOARD4001", "게시글이 존재하지 않습니다."),
     BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "BOARD4002", "수정/삭제 권한이 없습니다."),

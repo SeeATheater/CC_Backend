@@ -3,6 +3,8 @@ package cc.backend.ticket.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
+import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
@@ -37,27 +39,41 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
     @Override
     @Transactional
-    public MemberTicketCreateResponseDTO create(Long amateurTicketId, MemberTicketCreateRequestDTO requestDTO) {
+    public MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, MemberTicketCreateRequestDTO requestDTO) {
         Member member = memberRepository.findById(requestDTO.getMemberId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
+        AmateurRounds round = amateurRoundsRepository.findById(amateurRoundId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND));
+
+        if(requestDTO.getQuantity() > round.getTotalTicket()) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
+        }
+
         AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
+
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
 
         MemberTicket ticket = MemberTicket.builder()
                 .member(member)
                 .amateurTicket(amateurTicket)
+                .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
                 .reserveDate(LocalDateTime.now())
-                .performanceDateTime(requestDTO.getPerformanceDateTime())
-                .cancelAvailableUntil(requestDTO.getPerformanceDateTime().minusDays(1).withHour(17))
+                .performanceDateTime(round.getPerformanceDateTime())
+                .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
                 .reservationStatus(ReservationStatus.RESERVED)
                 .build();
 
         MemberTicket saved = memberTicketRepository.save(ticket);
+        round.decreaseTotalTicket(requestDTO.getQuantity());
+
+        amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
+
+
 
         return MemberTicketCreateResponseDTO.builder()
                 .ticketId(saved.getId())
@@ -93,16 +109,16 @@ public class MemberTicketServiceImpl implements MemberTicketService {
     }
 
     @Override
-    public MemberTicketResponseDTO getMyTicket(Long memberId, Long ticketId) {
-        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, ticketId)
+    public MemberTicketResponseDTO getMyTicket(Long memberId, Long memberTicketId) {
+        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, memberTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
         return MemberTicketResponseDTO.from(memberTicket);
     }
 
     @Override
     @Transactional
-    public MemberTicketResponseDTO cancelTicket(Long memberId, Long ticketId) {
-        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, ticketId)
+    public MemberTicketResponseDTO cancelTicket(Long memberId, Long memberTicketId) {
+        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, memberTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
         if (memberTicket.getReservationStatus().equals(ReservationStatus.CANCELLED)) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_CANCELED);

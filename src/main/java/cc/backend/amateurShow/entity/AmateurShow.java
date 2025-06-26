@@ -50,6 +50,8 @@ public class AmateurShow extends BaseEntity {
 
     private String posterImageUrl;
 
+    private Integer totalSoldTicket;
+
 //    @Enumerated(EnumType.STRING)
 //    @Builder.Default
 //    private AmateurStatus amateurStatus = AmateurStatus.YET;
@@ -99,5 +101,12 @@ public class AmateurShow extends BaseEntity {
         if (dto.getHashtag() != null) this.hashtag = dto.getHashtag();
         if (dto.getSummary() != null) this.summary = dto.getSummary();
         if (dto.getPosterImageUrl() != null) this.posterImageUrl = dto.getPosterImageUrl();
+    }
+
+    public void increaseSoldTicket(int quantity) {
+        if (this.totalSoldTicket == null) {
+            this.totalSoldTicket = 0;
+        }
+        this.totalSoldTicket += quantity;
     }
 }
