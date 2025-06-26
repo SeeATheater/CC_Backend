@@ -89,34 +89,10 @@ public class AmateurShowResponseDTO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class AmateurShowToday { // 오늘 진행하는 소극장 공연 리스트 조회
+    public static class AmateurShowList { // 극장 공연 리스트 조회
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
         private String place; // 공연장 주소
-        private String schedule;
-        private String posterImageUrl;
-    }
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class AmateurShowOngoing { // 현재 진행중인 (오늘 제외) 소극장 공연 리스트 조회
-        private Long amateurShowId;
-        private String name;
-        private String place;
-        private String schedule;
-        private String posterImageUrl;
-    }
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class AmateurShowRanking { // 소극장 공연 랭킹 리스트 조회
-        private Long amateurShowId;
-        private String name;
-        private String place;
         private String schedule;
         private String posterImageUrl;
     }

@@ -277,7 +277,7 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 오늘 진행하는 소극장 공연 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowToday> getShowToday() {
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowToday() {
         LocalDate today = LocalDate.now();
         List<AmateurShow> allShows = amateurShowRepository.findAll();
 
@@ -286,7 +286,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .filter(show -> show.getAmateurRounds().stream()
                         .anyMatch(round -> round.getPerformanceDateTime().toLocalDate().equals(today)))
                 .distinct()
-                .map(show -> AmateurShowResponseDTO.AmateurShowToday.builder()
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
                         .place(show.getPlace())
@@ -315,16 +315,16 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 현재 진행중인 소극장 공연 리스트 조회
     @Override
-    public Page<AmateurShowResponseDTO.AmateurShowOngoing> getShowOngoing(Pageable pageable) {
+    public Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable) {
         LocalDate today = LocalDate.now();
         List<AmateurShow> allShows = amateurShowRepository.findAll();
 
-        List<AmateurShowResponseDTO.AmateurShowOngoing> result = allShows.stream()
+        List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
                 // 오늘 날짜가 schedule 기간 내에 포함된 공연 필터링
                 .filter(show -> parseSchedule(show.getSchedule())
                         .map(dates -> !today.isBefore(dates[0]) && !today.isAfter(dates[1]))
                         .orElse(false))
-                .map(show -> AmateurShowResponseDTO.AmateurShowOngoing.builder()
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
                         .place(show.getPlace())
@@ -344,7 +344,7 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 소극장 공연 랭킹 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowRanking> getShowRanking() {
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking() {
         LocalDate today = LocalDate.now();
         List<AmateurShow> shows = amateurShowRepository.findAll();
 
@@ -358,7 +358,7 @@ public class AmateurServiceImpl implements AmateurService {
                                 .map(dates -> dates[0])
                                 .orElse(LocalDate.MAX)))
                 .limit(10)
-                .map(show -> AmateurShowResponseDTO.AmateurShowRanking.builder()
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
                         .place(show.getPlace())
@@ -366,5 +366,33 @@ public class AmateurServiceImpl implements AmateurService {
                         .posterImageUrl(show.getPosterImageUrl())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    // 오늘 마감인 소극장 공연 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing() {
+        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        List<AmateurShowResponseDTO.AmateurShowList> result = new ArrayList<>();
+
+        for (AmateurShow show : allShows) {
+            // 각 공연의 회차들 중 젤 마지막 회차 날짜 구하기
+            Optional<LocalDate> lastDate = show.getAmateurRounds().stream()
+                    .map(r -> r.getPerformanceDateTime().toLocalDate()) // 회차 날짜만 추출
+                    .max(Comparator.naturalOrder()); // 젤 늦은 날짜 추출
+
+            if (lastDate.isPresent() && lastDate.get().isEqual(today)) { // 마지막 회차 날짜가 오늘인 경우
+                result.add(AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build());
+            }
+        }
+
+        return result;
     }
 }

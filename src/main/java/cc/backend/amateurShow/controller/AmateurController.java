@@ -56,21 +56,25 @@ public class AmateurController {
 
     @GetMapping("/ranking")
     @Operation(summary = "소극장 공연 랭킹 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowRanking>> getShowRanking() {
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking() {
         return ApiResponse.onSuccess(amateurService.getShowRanking());
     }
 
     @GetMapping("/today")
     @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowToday>> getShowToday() {
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowToday() {
         return ApiResponse.onSuccess(amateurService.getShowToday());
     }
 
     @GetMapping("/ongoing")
     @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
-    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowOngoing>> getShowOngoing(@ParameterObject Pageable pageable) {
+    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowList>> getShowOngoing(@ParameterObject Pageable pageable) {
         return ApiResponse.onSuccess(amateurService.getShowOngoing(pageable));
     }
 
-
+    @GetMapping("/closing")
+    @Operation(summary = "오늘 마감인 공연 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowClosing() {
+        return ApiResponse.onSuccess(amateurService.getShowClosing());
+    }
 }
