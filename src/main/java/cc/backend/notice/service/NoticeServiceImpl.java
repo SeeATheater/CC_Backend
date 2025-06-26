@@ -120,7 +120,7 @@ public class NoticeServiceImpl implements NoticeService {
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.AMATEURSHOW)
-                        .message("소극장 공연" + amateurShow.getName()+ "등록 완료! 소극장 공연 페이지에서 확인해보세요!")
+                        .message("소극장 공연 " + amateurShow.getName()+ " 등록 완료! 소극장 공연 페이지에서 확인해보세요!")
                         .contentId(amateurShowId)
                         .build()
         );
