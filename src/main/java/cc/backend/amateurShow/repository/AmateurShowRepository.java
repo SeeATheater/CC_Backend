@@ -37,4 +37,6 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
             WHERE DATE(r.performanceDateTime) > CURRENT_DATE
            """)
     Page<AmateurShow> findAllOngoingExceptToday(Pageable pageable);
+
+    List<AmateurShow> findTop10ByOrderByTotalSoldTicketDesc();
 }

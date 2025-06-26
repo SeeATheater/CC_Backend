@@ -54,11 +54,11 @@ public class AmateurController {
         return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
     }
 
-//    @GetMapping("/ranking")
-//    @Operation(summary = "소극장 공연 랭킹 조회 API")
-//    public ApiResponse<AmateurShowResponseDTO.AmateurShowRanking> getShowRanking() {
-//        return ApiResponse.onSuccess(amateurService.getShowRanking());
-//    }
+    @GetMapping("/ranking")
+    @Operation(summary = "소극장 공연 랭킹 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowRanking>> getShowRanking() {
+        return ApiResponse.onSuccess(amateurService.getShowRanking());
+    }
 
     @GetMapping("/today")
     @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")

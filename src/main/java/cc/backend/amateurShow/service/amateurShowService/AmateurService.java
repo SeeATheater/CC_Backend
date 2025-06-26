@@ -19,4 +19,5 @@ public interface AmateurService {
     void deleteShow(Long amateurShowId);
     List<AmateurShowResponseDTO.AmateurShowToday> getShowToday();
     Page<AmateurShowResponseDTO.AmateurShowOngoing> getShowOngoing(Pageable pageable);
+    List<AmateurShowResponseDTO.AmateurShowRanking> getShowRanking();
 }

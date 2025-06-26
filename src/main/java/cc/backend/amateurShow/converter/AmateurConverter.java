@@ -27,7 +27,6 @@ public class AmateurConverter {
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
                 .posterImageUrl(requestDTO.getPosterImageUrl())
-                .soldTicket(0)
                 .build();
     }
 

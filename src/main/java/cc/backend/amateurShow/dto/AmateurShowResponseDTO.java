@@ -108,4 +108,16 @@ public class AmateurShowResponseDTO {
         private LocalDateTime performanceDateTime;
         private String posterImageUrl;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AmateurShowRanking { // 소극장 공연 랭킹 리스트 조회
+        private Long amateurShowId;
+        private String name;
+        private String place;
+        private String schedule;
+        private String posterImageUrl;
+    }
 }

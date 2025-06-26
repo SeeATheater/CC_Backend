@@ -328,4 +328,20 @@ public class AmateurServiceImpl implements AmateurService {
 
         return new PageImpl<>(result, pageable, shows.getTotalElements());
     }
+
+    // 소극장 공연 랭킹 리스트 조회
+    @Override
+    public List<AmateurShowResponseDTO.AmateurShowRanking> getShowRanking() {
+        List<AmateurShow> shows = amateurShowRepository.findTop10ByOrderByTotalSoldTicketDesc();
+
+        return shows.stream()
+                .map(show -> AmateurShowResponseDTO.AmateurShowRanking.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .place(show.getPlace())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }
