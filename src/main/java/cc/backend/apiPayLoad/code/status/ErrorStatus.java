@@ -54,8 +54,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // AMATEUR TICKET ERROR
     AMATEUR_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURTICKET4000", "존재하지 않는 소극장 공연 티켓입니다."),
     AMATEUR_TICKET_STOCK(HttpStatus.BAD_REQUEST, "AMATEURTICKET4001", "주문 수량은 최소 1개 이상이어야 합니다."),
-
-
+    AMATEUR_SHOW_MISMATCH(HttpStatus.NOT_FOUND, "AMATEURTICKET4002", "회차와 티켓에 해당하는 공연이 일치하지 않습니다."),
     // PHOTOALBUM ERROR
     PHOTOALBUM_NOT_FOUND(HttpStatus.NOT_FOUND, "PHOTOALBUM4000", "존재하지 않는 사진첩입니다."),
 

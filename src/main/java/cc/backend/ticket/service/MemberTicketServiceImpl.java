@@ -42,19 +42,26 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
     @Override
     @Transactional
-    public MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Long memberId, MemberTicketCreateRequestDTO requestDTO) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException((ErrorStatus.MEMBER_NOT_AUTHORIZED)));
+    public MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO) {
+
+        AmateurShow show = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         AmateurRounds round = amateurRoundsRepository.findById(amateurRoundId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND));
 
+        AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
+
+        // 해당 회차와 티켓에 해당하는 공연이 일치 하는지
+        if (!amateurTicket.getAmateurShow().getId().equals(amateurShowId) || !round.getAmateurShow().getId().equals(amateurShowId)) {
+            throw new GeneralException(ErrorStatus.AMATEUR_SHOW_MISMATCH);
+        }
+
+        // 현재 예약하려는 티켓의 수량이 해당 회차의 재고수량을 초과하지 않는지
         if(requestDTO.getQuantity() > round.getTotalTicket()) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
         }
-
-        AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
 
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
@@ -80,7 +87,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), member));
 
         return MemberTicketCreateResponseDTO.builder()
-                .ticketId(saved.getId())
+                .memberTicketId(saved.getId())
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .place(amateurTicket.getAmateurShow().getPlace())
                 .quantity(saved.getQuantity())
@@ -152,6 +159,19 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                         t.getPrice()
                 )).toList();
     }
+
+    @Override
+    public AmateurShowSimpleDTO getSimpleAmateurShow(Long amateurShowId){
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+        return AmateurShowSimpleDTO.builder()
+                .amateurShowId(amateurShowId)
+                .name(amateurShow.getName())
+                .place(amateurShow.getPlace())
+                .posterImageUrl(amateurShow.getPosterImageUrl())
+                .build();
+    }
+
 
 
 

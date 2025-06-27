@@ -17,13 +17,20 @@ import java.util.List;
 @Tag(name = "소극장 공연 티켓")
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/tickets")
 public class MemberTicketController {
 
-    private final MemberService memberService;
     private final MemberTicketService memberTicketService;
 
-    @GetMapping("/tickets/{amateurShowId}/selectRound")
-    @Operation(summary = "소극장 공연 티켓 예매 첫화면")
+    @GetMapping("{amateurShowId}/showSimple")
+    @Operation(summary = "소극장 공연 티켓 예매 - 공연 정보 간략 보기 API")
+    public ApiResponse<AmateurShowSimpleDTO> getSimpleAmateurShow(@PathVariable Long amateurShowId,
+                                                                  @AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(memberTicketService.getSimpleAmateurShow(amateurShowId));
+    }
+
+    @GetMapping("{amateurShowId}/selectRound")
+    @Operation(summary = "소극장 공연 티켓 예매 첫화면 - 회차(날짜) 선택 API")
     public ApiResponse<List<RoundsListDTO>> getAmateurRounds(@PathVariable Long amateurShowId,
                                                              @AuthenticationPrincipal(expression = "member") Member member){
 
@@ -31,8 +38,8 @@ public class MemberTicketController {
 
     }
 
-    @GetMapping("/tickets/{amateurShowId}/selectTicket")
-    @Operation(summary = "소극장 공연 티켓 예매 두번재 화면")
+    @GetMapping("{amateurShowId}/selectTicket")
+    @Operation(summary = "소극장 공연 티켓 예매 두번재 화면 - 티켓 종류 선택 API")
     public ApiResponse<List<AmateurTicketListDTO>> getAmateurTicketList(@PathVariable Long amateurShowId,
                                                                     @AuthenticationPrincipal(expression = "member") Member member){
 
@@ -40,17 +47,20 @@ public class MemberTicketController {
 
     }
 
-    @PostMapping("/rounds/{amateurRoundId}/tickets/{amateurTicketId}")
+    @PostMapping("{amateurShowId}/reserve")
     @Operation(summary = "소극장 공연 티켓 생성 API")
-    public ApiResponse<MemberTicketCreateResponseDTO> createMemberTicket(@PathVariable Long amateurRoundId,
-                                                                         @PathVariable Long amateurTicketId,
-                                                                         @AuthenticationPrincipal(expression = "member") Member member,
-                                                                         @RequestBody MemberTicketCreateRequestDTO requestDTO) {
-        return ApiResponse.onSuccess(memberTicketService.createTicket(amateurRoundId, amateurTicketId, member.getId(), requestDTO));
-
+    public ApiResponse<MemberTicketCreateResponseDTO> createMemberTicket(
+            @PathVariable Long amateurShowId,
+            @RequestParam Long amateurRoundId,
+            @RequestParam Long amateurTicketId,
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @RequestBody MemberTicketCreateRequestDTO requestDTO) {
+        return ApiResponse.onSuccess(
+                memberTicketService.createTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
+        );
     }
 
-    @GetMapping("/tickets")
+    @GetMapping("/list")
     @Operation(summary = "내 티켓 리스트 조회 API")
     public ApiResponse<List<MemberTicketListResponseDTO>> getMyTicketList(
             @AuthenticationPrincipal(expression = "member") Member member,
@@ -60,7 +70,7 @@ public class MemberTicketController {
         return ApiResponse.onSuccess(tickets);
     }
 
-    @GetMapping("tickets/{memberTicketId}")
+    @GetMapping("{memberTicketId}/getMyTicket")
     @Operation(summary = "내 티켓 단건 조회 API")
     public ApiResponse<MemberTicketResponseDTO> getMyTicket(@PathVariable Long memberTicketId,
                                                             @AuthenticationPrincipal(expression = "member") Member member) {
@@ -69,7 +79,7 @@ public class MemberTicketController {
         return ApiResponse.onSuccess(myTicket);
     }
 
-    @PatchMapping("tickets/{memberTicketId}")
+    @PatchMapping("{memberTicketId}/cancel")
     @Operation(summary = "티켓 예약 취소하기 API")
     public ApiResponse<MemberTicketResponseDTO> cancelTicket(@PathVariable Long memberTicketId,
                                                              @AuthenticationPrincipal(expression = "member") Member member) {
