@@ -3,10 +3,8 @@ package cc.backend.ticket.controller;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.MemberService;
 import cc.backend.member.entity.Member;
-import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
+import cc.backend.ticket.dto.response.*;
 import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
-import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
-import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import cc.backend.ticket.service.MemberTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +21,24 @@ public class MemberTicketController {
 
     private final MemberService memberService;
     private final MemberTicketService memberTicketService;
+
+    @GetMapping("/tickets/{amateurShowId}/selectRound")
+    @Operation(summary = "소극장 공연 티켓 예매 첫화면")
+    public ApiResponse<List<RoundsListDTO>> getAmateurRounds(@PathVariable Long amateurShowId,
+                                                             @AuthenticationPrincipal(expression = "member") Member member){
+
+        return ApiResponse.onSuccess(memberTicketService.getRoundsList(member.getId(), amateurShowId));
+
+    }
+
+    @GetMapping("/tickets/{amateurShowId}/selectTicket")
+    @Operation(summary = "소극장 공연 티켓 예매 두번재 화면")
+    public ApiResponse<List<AmateurTicketListDTO>> getAmateurTicketList(@PathVariable Long amateurShowId,
+                                                                    @AuthenticationPrincipal(expression = "member") Member member){
+
+        return ApiResponse.onSuccess(memberTicketService.getAmateurTicketList(member.getId(), amateurShowId));
+
+    }
 
     @PostMapping("/rounds/{amateurRoundId}/tickets/{amateurTicketId}")
     @Operation(summary = "소극장 공연 티켓 생성 API")

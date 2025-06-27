@@ -14,10 +14,8 @@ import cc.backend.event.entity.PromoteHotEvent;
 import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
+import cc.backend.ticket.dto.response.*;
 import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
-import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
-import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
@@ -131,6 +129,28 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         }
         memberTicket.updateReservationStatus(ReservationStatus.CANCELLED);
         return MemberTicketResponseDTO.from(memberTicket);
+    }
+
+    @Override
+    public List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId){
+        List<AmateurRounds> rounds = amateurRoundsRepository.findByAmateurShowId(amateurShowId);
+        return rounds.stream()
+                .map(r -> new RoundsListDTO(
+                        r.getId(),
+                        r.getRoundNumber(),
+                        r.getPerformanceDateTime()
+                )).toList();
+    }
+
+    @Override
+    public List<AmateurTicketListDTO> getAmateurTicketList(Long memberId, Long amateurShowId){
+        List<AmateurTicket> tickets = amateurTicketRepository.findByAmateurShowId(amateurShowId);
+        return tickets.stream()
+                .map(t -> new AmateurTicketListDTO(
+                        t.getId(),
+                        t.getDiscountName(),
+                        t.getPrice()
+                )).toList();
     }
 
 
