@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MemberTicketResponseDTO {
 
-    //private String posterUrl;
+    private String posterImageUrl;
     private Long memberTicketId;
     private String showTitle;
     private int quantity;
@@ -24,7 +24,7 @@ public class MemberTicketResponseDTO {
 
     public static MemberTicketResponseDTO from(MemberTicket ticket) {
         return MemberTicketResponseDTO.builder()
-                //.posterUrl(ticket.getAmateurTicket().getAmateurShow().getPosterUrl())
+                .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
                 .memberTicketId(ticket.getId())
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
                 .place(ticket.getAmateurTicket().getAmateurShow().getPlace())
