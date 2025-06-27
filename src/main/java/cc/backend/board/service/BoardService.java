@@ -41,7 +41,7 @@ public class BoardService {
     private final HotBoardRepository hotBoardRepository;
     private final MemberRepository memberRepository;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+    private final ApplicationEventPublisher eventPublisher;
 
     // 게시글 작성
     //TODO : 이미지 업로드 코드 추가

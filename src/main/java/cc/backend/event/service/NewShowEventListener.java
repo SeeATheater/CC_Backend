@@ -15,7 +15,6 @@ public class NewShowEventListener {
     @EventListener
     public NoticeResponseDTO.NoticeDTO handleAmateurShowCreate(NewShowEvent event) {
 
-        // 알림 전송 등 로직
         return noticeService.notifyNewShow(event);
     }
 }

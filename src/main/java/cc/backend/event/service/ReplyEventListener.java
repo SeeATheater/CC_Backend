@@ -15,7 +15,6 @@ public class ReplyEventListener {
     @EventListener
     public NoticeResponseDTO.NoticeDTO handleReplyCreate(ReplyEvent event) {
 
-        // 알림 전송 등 로직
         return noticeService.notifyNewReply(event);
     }
 }

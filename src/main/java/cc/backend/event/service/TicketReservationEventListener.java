@@ -1,21 +1,21 @@
 package cc.backend.event.service;
 
-import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.event.entity.ReplyEvent;
+import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.procedure.ProcedureOutputs;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PromoteHotEventListener {
+public class TicketReservationEventListener {
     private final NoticeService noticeService;
 
     @EventListener
-    public NoticeResponseDTO.NoticeDTO handleHotPromote(PromoteHotEvent event) {
+    public NoticeResponseDTO.NoticeDTO handleReservation(TicketReservationEvent event) {
 
-        return noticeService.notifyHotBoard(event);
+        return noticeService.notifyTicketReservation(event);
     }
 }
