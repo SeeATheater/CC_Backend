@@ -3,6 +3,7 @@ package cc.backend.board.service;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.request.BoardRequest;
+import cc.backend.board.dto.request.BoardSearchRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
@@ -171,6 +172,33 @@ public class BoardService {
                 .sorted(Comparator.comparing(hb -> hb.getBoard().getCreatedAt()))
                 .map(hb -> BoardDetailResponse.from(hb.getBoard()))
                 .collect(Collectors.toList());
+    }
+
+    //TODO : 햔재는 Type에 따라 검색 (추후 통합 검색 변경될 수 있음)
+    //게시판 검색
+    @Transactional(readOnly = true)
+    public Slice<BoardDetailResponse> searchBoards(BoardSearchRequest request) {
+        if (request.getKeyword() == null || request.getKeyword().trim().isEmpty()) {
+            // 검색어가 없으면 일반 조회
+            return getBoards(request.getBoardType(), request.getPage(), request.getSize());
+        }
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("id").descending());
+        Slice<Board> boardSlice;
+
+        if (request.getBoardType() == BoardType.NORMAL) {
+            // 일반게시판: 제목 + 내용 검색
+            boardSlice = boardRepository.searchNormalBoards(
+                    request.getBoardType(), request.getKeyword(), pageable);
+        } else if (request.getBoardType() == BoardType.PROMOTION) {
+            // 홍보게시판: 제목 + 내용 + 작성자 검색
+            boardSlice = boardRepository.searchPromotionBoards(
+                    request.getBoardType(), request.getKeyword(), pageable);
+        } else {
+            throw new GeneralException(ErrorStatus.INVALID_BOARD_TYPE);
+        }
+
+        return boardSlice.map(BoardDetailResponse::from);
     }
 
     // --------------- 내부 메서드 ------------
