@@ -39,8 +39,13 @@ jwt:
   secret: ${JWT_SECRET}
 
 logging:
-  pattern:
-    console: "[%d{HH:mm:ss.SSS}][%-5level][%logger.%method:line%line] - %msg%n"
   level:
     org:
-      springframework: DEBUG
+      springframework:
+        security:
+          oauth2: DEBUG
+          web: DEBUG
+        web:
+          client: DEBUG
+    root: INFO
+
