@@ -39,6 +39,7 @@ jobs:
 
       # 6. docker-compose.yml EC2로 복사
       - name: Copy docker-compose.yml to EC2
+        if: github.event_name == 'push'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
@@ -49,6 +50,7 @@ jobs:
 
       # 7. EC2에서 Docker Compose로 배포 (down 추가)
       - name: Deploy on EC2
+        if: github.event_name == 'push'
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
