@@ -13,6 +13,11 @@ import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
 import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.image.DTO.ImageRequestDTO;
+import cc.backend.image.DTO.ImageResponseDTO;
+import cc.backend.image.FilePath;
+import cc.backend.image.entity.Image;
+import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -28,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -41,15 +47,13 @@ public class BoardService {
     private final BoardLikeRepository boardLikeRepository;
     private final HotBoardRepository hotBoardRepository;
     private final MemberRepository memberRepository;
+    private final ImageService imageService;
 
     private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
 
     // 게시글 작성
-    //TODO : 이미지 업로드 코드 추가
     @Transactional
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
-
-
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() ->  new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
@@ -59,27 +63,46 @@ public class BoardService {
             throw new GeneralException(ErrorStatus.ONLY_PERFORMER_CAN_WRITE_PROMOTION);
         }
 
+        //contentId 얻기 위해 먼저 게시글 저장
         Board board = Board.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .imgUrls(dto.getImgUrls())
                 .boardType(dto.getBoardType())
                 .likeCount(0)
                 .commentCount(0)
                 .member(member)
                 .build();
 
+        Board savedBoard = boardRepository.save(board);
 
-        boardRepository.save(board);
+        //이미지 저장
+        List<String> imgUrls = new ArrayList<>();
+        if (dto.getImageRequestDTOs() != null && !dto.getImageRequestDTOs().isEmpty()) {
+            List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = dto.getImageRequestDTOs()
+                    .stream()
+                    .map(imageDto -> ImageRequestDTO.FullImageRequestDTO.builder()
+                            .keyName(imageDto.getKeyName())
+                            .imageUrl(imageDto.getImageUrl())
+                            .filePath(FilePath.board) // FilePath enum 사용
+                            .contentId(savedBoard.getId()) // 저장된 게시글 ID 사용
+                            .memberId(memberId)
+                            .build())
+                    .collect(Collectors.toList());
+
+            List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(fullImageRequestDTOs);
+            imgUrls = savedImages.stream()
+                    .map(ImageResponseDTO.ImageResultDTO::getImageUrl)
+                    .collect(Collectors.toList());
+        }
 
         return BoardResponse.builder()
-                .boardId(board.getId())
-                .boardType(board.getBoardType())
-                .title(board.getTitle())
-                .content(board.getContent())
-                .imgUrls(board.getImgUrls())
-                .createdAt(board.getCreatedAt())
-                .updatedAt(board.getUpdatedAt())
+                .boardId(savedBoard.getId())
+                .boardType(savedBoard.getBoardType())
+                .title(savedBoard.getTitle())
+                .content(savedBoard.getContent())
+                .imgUrls(imgUrls) // 응답에 포함
+                .createdAt(savedBoard.getCreatedAt())
+                .updatedAt(savedBoard.getUpdatedAt())
                 .build();
     }
 
@@ -94,14 +117,16 @@ public class BoardService {
             throw new GeneralException(ErrorStatus.BOARD_ACCESS_DENIED);
         }
 
-        board.update(dto.getTitle(), dto.getContent(), dto.getImgUrls(), dto.getBoardType());
+        board.update(dto.getTitle(), dto.getContent(), dto.getBoardType());
 
         return BoardResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .imgUrls(board.getImgUrls())
+                .imgUrls(board.getImages().stream()
+                        .map(Image::getImageUrl)
+                        .collect(Collectors.toList()))
                 .createdAt(board.getCreatedAt())
                 .updatedAt(board.getUpdatedAt())
                 .build();

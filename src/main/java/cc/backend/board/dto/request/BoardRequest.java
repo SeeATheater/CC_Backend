@@ -1,6 +1,7 @@
 package cc.backend.board.dto.request;
 
 import cc.backend.board.entity.enums.BoardType;
+import cc.backend.image.DTO.ImageRequestDTO;
 import lombok.Getter;
 
 import java.util.List;
@@ -9,6 +10,6 @@ import java.util.List;
 public class BoardRequest {
     private String title;
     private String content;
-    private List<String> imgUrls;
     private BoardType boardType;
+    private List<ImageRequestDTO.FullImageRequestDTO> imageRequestDTOs;
 }

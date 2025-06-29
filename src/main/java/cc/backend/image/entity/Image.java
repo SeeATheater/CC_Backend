@@ -1,7 +1,9 @@
 package cc.backend.image.entity;
 
 import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.board.entity.Board;
 import cc.backend.image.FilePath;
+import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +34,7 @@ public class Image {
     private FilePath filePath;
 
     // board 와 photoAlbum 각각의 id (매핑없이 식별용)
+    @Column(name = "content_id")
     private Long contentId;
 
     // 업로드 시간
