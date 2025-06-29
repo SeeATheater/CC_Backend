@@ -76,16 +76,18 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     @Transactional
     public NoticeResponseDTO.NoticeDTO notifyNewComment(CommentEvent event) {
-        Long boardId = event.getBoardId();
-
-        Member writer = memberRepository.findById(event.getWriterId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-
-        Board board = boardRepository.findById(boardId)
+        Board board = boardRepository.findById(event.getBoardId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-
+        Member boardWriter = memberRepository.findById(event.getBoardWriterId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         Comment comment = commentRepository.findById(event.getCommentId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
+        Member commentWriter = memberRepository.findById(event.getCommentWriterId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if(boardWriter.equals(commentWriter)) {
+            return null;
+        }
 
         String preview = comment.getContent().length() > 15 ? comment.getContent().substring(0, 15) + "..." : comment.getContent();
 
@@ -93,13 +95,13 @@ public class NoticeServiceImpl implements NoticeService {
                 Notice.builder()
                         .type(NoticeType.COMMENT)
                         .message("게시글 '" + board.getTitle() + "'에 새로운 댓글이 달렸습니다.\n" + '"' + preview + '"')
-                        .contentId(boardId)
+                        .contentId(event.getBoardId())
                         .build()
         );
 
         memberNoticeRepository.save(MemberNotice.builder()
                                  .notice(newNotice)
-                                 .member(writer).build());
+                                 .member(commentWriter).build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())
@@ -155,8 +157,14 @@ public class NoticeServiceImpl implements NoticeService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
         Comment reply = commentRepository.findById(event.getReplyId())
                 .orElseThrow(()-> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
-        Member writer = memberRepository.findById(event.getWriterId())
+        Member commentWriter = memberRepository.findById(event.getCommentWriterId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        Member replyWriter = memberRepository.findById(event.getReplyWriterId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if(commentWriter.equals(replyWriter)){
+            return null;
+        }
 
         String commentPreview = comment.getContent().length() > 15 ? comment.getContent().substring(0, 15) + "..." : comment.getContent();
         String replyPreview = reply.getContent().length() > 15 ? reply.getContent().substring(0, 15) + "..." : reply.getContent();
@@ -172,7 +180,7 @@ public class NoticeServiceImpl implements NoticeService {
         memberNoticeRepository.save(
                         MemberNotice.builder()
                                 .notice(newNotice)
-                                .member(writer)
+                                .member(commentWriter)
                                 .build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
