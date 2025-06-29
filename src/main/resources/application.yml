@@ -50,6 +50,10 @@ logging:
           client: DEBUG
     root: INFO
 
+kakaopay:
+  secret-key: ${KAKAOPAY_SECRET_KEY}
+  cid: TC0ONETIME
+  base-url: https://open-api.kakaopay.com
 management:
   endpoints:
     web:
