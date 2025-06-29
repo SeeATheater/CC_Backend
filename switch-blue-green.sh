@@ -1,85 +1,101 @@
 #!/bin/bash
-# switch-blue-green.sh
+# 🔄 개선된 블루그린 배포 스크립트
 
 set -e
 
 NGINX_CONF="/etc/nginx/sites-available/default"
 
-echo "🚀 블루그린 배포 시작"
+# 📝 로깅 함수
+log() {
+    echo "[$(date '+%H:%M:%S')] $1"
+}
 
-# 현재 활성 환경 확인 (현재 활성 환경이 Green 인지)
-IS_GREEN=$(grep -c "server localhost:8081 down;" $NGINX_CONF || echo "0")
+log "🚀 블루그린 배포 시작"
 
-if [ "$IS_GREEN" -eq "0" ]; then
-    echo "### BLUE => GREEN 전환 ###"
+# 🔍 현재 활성 환경 정확히 감지
+BLUE_DOWN=$(grep -c "server localhost:8081 down;" $NGINX_CONF || echo "0")
+GREEN_DOWN=$(grep -c "server localhost:8082 down;" $NGINX_CONF || echo "0")
 
-    echo "📦 Green 이미지 pull 및 컨테이너 시작"
-    docker compose pull app-green
-    docker compose up -d app-green
+log "🔍 현재 상태 - Blue down: $BLUE_DOWN, Green down: $GREEN_DOWN"
 
-    echo "🏥 Green 환경 헬스체크"
-    for i in {1..30}; do
-        echo "health check 시도 $i/30..."
-        sleep 3
-
-        if curl -f http://localhost:8082/actuator/health > /dev/null 2>&1; then
-            echo "✅ Green 환경 헬스체크 성공"
-            break
-        fi
-
-        if [ $i -eq 30 ]; then
-            echo "❌ Green 환경 헬스체크 실패"
-            exit 1
-        fi
-    done
-
-    echo "🔄Nginx 설정을 Green으로 변경"
-    sudo sed -i 's/server localhost:8081;/server localhost:8081 down;/' $NGINX_CONF
-    sudo sed -i 's/server localhost:8082 down;/server localhost:8082;/' $NGINX_CONF
-
-    echo "⚙️ Nginx 설정 테스트 및 재로드"
-    sudo nginx -t && sudo systemctl reload nginx
-
-    echo "🛑 Blue 컨테이너 중지"
-    docker compose stop app-blue
-
-    echo "🎉 🟢GREEN 환경 전환 완료!"
-
+if [ "$BLUE_DOWN" -eq "1" ]; then
+    # Blue가 down 상태 = Green이 활성 → Blue로 전환
+    CURRENT_ENV="GREEN"
+    TARGET_ENV="BLUE"
+    TARGET_PORT="8081"
+    TARGET_SERVICE="app-blue"
+    STOP_SERVICE="app-green"
+    log "🟢 GREEN → 🔵 BLUE"
+    
+elif [ "$GREEN_DOWN" -eq "1" ]; then
+    # Green이 down 상태 = Blue가 활성 → Green으로 전환
+    CURRENT_ENV="BLUE"
+    TARGET_ENV="GREEN"
+    TARGET_PORT="8082"
+    TARGET_SERVICE="app-green"
+    STOP_SERVICE="app-blue"
+    log "🔵 BLUE → 🟢 GREEN"
+    
 else
-    echo "### GREEN => BLUE 전환 ###"
-
-    echo "📦 Blue 이미지 pull 및 컨테이너 시작"
-    docker compose pull app-blue
-    docker compose up -d app-blue
-
-    echo "🏥 Blue 환경 헬스체크"
-    for i in {1..30}; do
-        echo "health check 시도 $i/30..."
-        sleep 3
-
-        if curl -f http://localhost:8081/actuator/health > /dev/null 2>&1; then
-            echo "✅ Blue 환경 헬스체크 성공"
-            break
-        fi
-
-        if [ $i -eq 30 ]; then
-            echo "❌ Blue 환경 헬스체크 실패"
-            exit 1
-        fi
-    done
-
-    echo "🔄 Nginx 설정을 Blue로 변경"
-    sudo sed -i 's/server localhost:8082;/server localhost:8082 down;/' $NGINX_CONF
-    sudo sed -i 's/server localhost:8081 down;/server localhost:8081;/' $NGINX_CONF
-
-    echo "⚙️ Nginx 설정 테스트 및 재로드"
-    sudo nginx -t && sudo systemctl reload nginx
-
-    echo "🛑Green 컨테이너 중지"
-    docker compose stop app-green
-
-    echo "🎉 🔵BLUE 환경 전환 완료!"
+    # 초기 상태 또는 둘 다 활성 → Green으로 전환
+    CURRENT_ENV="BLUE"
+    TARGET_ENV="GREEN"
+    TARGET_PORT="8082"
+    TARGET_SERVICE="app-green"
+    STOP_SERVICE="app-blue"
+    log "🔧 초기 상태 감지 → 🟢 GREEN으로 전환"
 fi
 
-echo "🧹 사용하지 않는 이미지 정리"
+log "🎯 $CURRENT_ENV → $TARGET_ENV 전환 시작"
+
+# 📦 새 환경 배포
+log "📦 $TARGET_ENV 컨테이너 준비 중..."
+docker compose pull $TARGET_SERVICE
+docker compose up -d $TARGET_SERVICE
+
+# 🏥 헬스체크
+log "🏥 $TARGET_ENV 헬스체크 진행 중..."
+for i in {1..30}; do
+    printf "   ⏳ 시도 %d/30...\r" $i
+    sleep 3
+    
+    if curl -f http://localhost:$TARGET_PORT/actuator/health > /dev/null 2>&1; then
+        echo ""
+        log "✅ $TARGET_ENV 환경 헬스체크 성공!"
+        break
+    fi
+    
+    if [ $i -eq 30 ]; then
+        echo ""
+        log "❌ $TARGET_ENV 헬스체크 실패 - 배포 중단"
+        exit 1
+    fi
+done
+
+# 🔄 트래픽 전환
+log "🔄 트래픽을 $TARGET_ENV로 전환 중..."
+if [ "$TARGET_ENV" = "GREEN" ]; then
+    # Blue → Green 전환
+    sudo sed -i 's/server localhost:8081;/server localhost:8081 down;/' $NGINX_CONF
+    sudo sed -i 's/server localhost:8082 down;/server localhost:8082;/' $NGINX_CONF
+else
+    # Green → Blue 전환
+    sudo sed -i 's/server localhost:8082;/server localhost:8082 down;/' $NGINX_CONF
+    sudo sed -i 's/server localhost:8081 down;/server localhost:8081;/' $NGINX_CONF
+fi
+
+# ⚙️ Nginx 설정 적용
+log "⚙️  Nginx 설정 적용 중..."
+sudo nginx -t && sudo systemctl reload nginx
+
+# 🛑 기존 환경 정리
+log "🛑 $CURRENT_ENV 컨테이너 정리 중..."
+docker compose stop $STOP_SERVICE
+
+log "🎉 $TARGET_ENV 환경 전환 완료!"
+
+# 🧹 정리
+log "🧹 미사용 이미지 정리 중..."
 docker image prune -f
+
+log "✨ 블루그린 배포 성공!"
