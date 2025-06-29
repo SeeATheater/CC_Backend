@@ -54,5 +54,13 @@ public class MemberTicket extends BaseEntity {
         this.reservationStatus = reservationStatus;
     }
 
+    // --카카오 결제--
+    @Column(name = "kakao_tid")
+    private String kakaoTid; // 결제 승인 후 저장용
+
+    public void updateTid(String tid) {
+        this.kakaoTid = tid;
+    }
+
 
 }
