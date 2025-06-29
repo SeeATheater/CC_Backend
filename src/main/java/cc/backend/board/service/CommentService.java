@@ -35,10 +35,10 @@ public class CommentService {
     private final ApplicationEventPublisher eventPublisher; //이벤트 생성자
     //댓글 작성
     @Transactional
-    public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
+    public CommentCreateResponse createComment(Long boardId, Long memberId, CommentRequest req) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-        Member member = memberRepository.findById(req.getMemberId())
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         Comment comment;
@@ -56,10 +56,9 @@ public class CommentService {
             }
             comment = Comment.createReply(req.getContent(), member, board, parent);
 
-            eventPublisher.publishEvent(new ReplyEvent(comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
+            eventPublisher.publishEvent(new ReplyEvent(comment.getId(),  parent.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
         }
         commentRepository.save(comment);
-
 
 
         board.increaseCommentCount();

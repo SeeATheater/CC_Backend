@@ -147,26 +147,35 @@ public class NoticeServiceImpl implements NoticeService {
     @Transactional
     public NoticeResponseDTO.NoticeDTO notifyNewReply(ReplyEvent event) {
 
-        Long commentId = event.getCommentId();
-        Comment comment = commentRepository.findById(commentId)
+        // 부모 댓글 조회
+        Long parentCommentId = event.getParentCommentId();
+        Comment parentComment  = commentRepository.findById(parentCommentId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
 
-        Long writerId = event.getWriterId();
-        Member writer = memberRepository.findById(writerId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        // 부모 댓글 작성자 (알림 받을 사람)
+        Member parentCommentWriter = parentComment.getMember();
+        if (!memberRepository.existsById(parentCommentWriter.getId())) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_FOUND);
+        }
+
+        // 자기 자신에게 알림 X
+        if (parentCommentWriter.getId().equals(event.getReplyWriterId())) {
+            return null;
+        }
+
 
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
                     .type(NoticeType.BOARD)
-                    .message("댓글" + comment.getContent() + "에 새로운 대댓글이 달렸습니다.")
-                    .contentId(commentId)
+                    .message("댓글" + parentComment.getContent() + "에 새로운 대댓글이 달렸습니다.")
+                    .contentId(parentCommentId) // 부모 댓글 ID (사용자가 클릭 시 이동할 댓글)
                     .build()
         );
 
         memberNoticeRepository.save(
                         MemberNotice.builder()
                                 .notice(newNotice)
-                                .member(writer)
+                                .member(parentCommentWriter)
                                 .build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
