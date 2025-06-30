@@ -1,6 +1,7 @@
 package cc.backend.board.controller;
 
 import cc.backend.board.dto.request.BoardRequest;
+import cc.backend.board.dto.request.BoardSearchRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.enums.BoardType;
@@ -29,7 +30,6 @@ public class BoardController {
     private final BoardService boardService;
 
 
-    //TODO : 추후 @AuthenticationPrincipal 로 변환
     @Operation(summary = "게시글 작성 API", description = "게시글을 등록합니다.")
     @ApiResponse(responseCode = "200", description = "게시글 등록 성공",
             content = @Content(schema = @Schema(implementation = BoardResponse.class)))
@@ -85,10 +85,30 @@ public class BoardController {
         int result = boardService.toggleLike(boardId, member.getId());
         return ResponseEntity.ok(result);
     }
+
     @Operation(summary = "핫게시판 조회 API", description = "핫게시판(좋아요 10개 이상) 목록을 조회합니다.")
     @GetMapping("/hot")
     public ResponseEntity<List<BoardDetailResponse>> getHotBoards(){
         List<BoardDetailResponse> hotboards = boardService.getHotBoards();
         return ResponseEntity.ok(hotboards);
+    }
+
+    @Operation(summary = "게시글 검색", description = "게시판 타입별로 검색합니다. 일반게시판은 제목+내용, 홍보게시판은 제목+내용+작성자를 검색합니다.")
+    @GetMapping("/search")
+    public ResponseEntity<Slice<BoardDetailResponse>> searchBoards(
+            @Parameter(description = "검색 키워드", example = "검색어") @RequestParam(required = false) String keyword,
+            @Parameter(description = "게시판 타입", required = true) @RequestParam BoardType boardType,
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size) {
+
+        BoardSearchRequest request = BoardSearchRequest.builder()
+                .keyword(keyword)
+                .boardType(boardType)
+                .page(page)
+                .size(size)
+                .build();
+
+        Slice<BoardDetailResponse> result = boardService.searchBoards(request);
+        return ResponseEntity.ok(result);
     }
 }
