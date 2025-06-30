@@ -28,7 +28,7 @@ public class Notice extends BaseEntity {
 
     private String message;
 
-    //boardId, amateurShowId 등 링크로 연결되는 대상 id
+    //boardId, amateurShowId, ticketId 등 링크로 연결되는 대상 id
     private Long contentId;
 
     @OneToMany (mappedBy = "notice", cascade = CascadeType.ALL)

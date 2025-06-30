@@ -8,6 +8,7 @@ import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
+import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ public class ImageService {
 
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * 프론트에서 S3 업로드 완료 후 호출
@@ -33,9 +35,11 @@ public class ImageService {
      * return ImageResultDTO
      */
     @Transactional
-    public ImageResponseDTO.ImageResultDTO saveImage(ImageRequestDTO.FullImageRequestDTO requestDTO) {
+    public ImageResponseDTO.ImageResultDTO saveImage(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO) {
+
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         //S3에 실제 존재하는 이미지인지 검증
-        if(!s3Service.doesObjectExist(requestDTO.getKeyName())) {
+        if(!s3Service.doesObjectExist(requestDTO.getKeyName(), memberId)) {
             throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
         }
 
@@ -63,14 +67,16 @@ public class ImageService {
 
     //다중 이미지 저장
     @Transactional
-    public List<ImageResponseDTO.ImageResultDTO> saveImages(List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
+    public List<ImageResponseDTO.ImageResultDTO> saveImages(Long memberId, List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
         return requestDTOs.stream()
-                .map(this::saveImage)
+                .map(requestDTO-> saveImage(memberId, requestDTO))
                 .collect(Collectors.toList());
     }
 
     // 이미지 단건 조회
-    public ImageResponseDTO.ImageResultDTO getImage(Long imageId){
+    public ImageResponseDTO.ImageResultDTO getImage(Long imageId, Long memberId){
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
         return ImageResponseDTO.ImageResultDTO.builder()
@@ -86,12 +92,12 @@ public class ImageService {
 
     // 이미지 삭제-s3 동시 삭제 지원
     @Transactional
-    public void deleteImage(Long imageId) {
+    public void deleteImage(Long imageId, Long memberId) {
 
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
         // S3에서 객체 삭제
-        s3Service.deleteFile(image.getKeyName());
+        s3Service.deleteFile(image.getKeyName(), memberId);
         // DB에서 이미지 정보 삭제
         imageRepository.delete(image);
     }

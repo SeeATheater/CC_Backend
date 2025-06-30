@@ -1,5 +1,6 @@
 package cc.backend.ticket.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,6 +10,8 @@ import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
@@ -19,6 +22,7 @@ import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Override
@@ -71,7 +76,8 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
         amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
 
-
+        //티켓 예매 알림 이벤트 생성
+        eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), member));
 
         return MemberTicketCreateResponseDTO.builder()
                 .ticketId(saved.getId())
