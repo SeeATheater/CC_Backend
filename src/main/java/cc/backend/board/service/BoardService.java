@@ -24,6 +24,7 @@ import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BoardService {
 
     private final BoardRepository boardRepository;
@@ -214,9 +216,7 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
-    //TODO : 햔재는 Type에 따라 검색 (추후 통합 검색 변경될 수 있음)
     //게시판 검색
-    @Transactional(readOnly = true)
     public Slice<BoardDetailResponse> searchBoards(BoardSearchRequest request) {
         if (request.getKeyword() == null || request.getKeyword().trim().isEmpty()) {
             // 검색어가 없으면 일반 조회
@@ -225,17 +225,28 @@ public class BoardService {
 
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("id").descending());
         Slice<Board> boardSlice;
-
-        if (request.getBoardType() == BoardType.NORMAL) {
-            // 일반게시판: 제목 + 내용 검색
-            boardSlice = boardRepository.searchNormalBoards(
-                    request.getBoardType(), request.getKeyword(), pageable);
-        } else if (request.getBoardType() == BoardType.PROMOTION) {
-            // 홍보게시판: 제목 + 내용 + 작성자 검색
-            boardSlice = boardRepository.searchPromotionBoards(
-                    request.getBoardType(), request.getKeyword(), pageable);
-        } else {
-            throw new GeneralException(ErrorStatus.INVALID_BOARD_TYPE);
+        try {
+            if (request.getBoardType() == BoardType.NORMAL) {
+                // 일반게시판: 제목 + 내용 검색
+                boardSlice = boardRepository.searchNormalBoardsWithFullText(
+                        request.getBoardType().name(), request.getKeyword(), pageable);
+            } else if (request.getBoardType() == BoardType.PROMOTION) {
+                // 홍보게시판: 제목 + 내용 + 작성자 검색
+                boardSlice = boardRepository.searchPromotionBoardsWithFullText(
+                        request.getBoardType().name(), request.getKeyword(), pageable);
+            } else {
+                throw new GeneralException(ErrorStatus.INVALID_BOARD_TYPE);
+            }
+        } catch (Exception e) {
+            // Full-Text Search 실패 시 기존 LIKE 검색으로 fallback
+            log.warn("Full-Text Search failed, falling back to LIKE search: {}", e.getMessage());
+            if (request.getBoardType() == BoardType.NORMAL) {
+                boardSlice = boardRepository.searchNormalBoards(
+                        request.getBoardType(), request.getKeyword(), pageable);
+            } else {
+                boardSlice = boardRepository.searchPromotionBoards(
+                        request.getBoardType(), request.getKeyword(), pageable);
+            }
         }
 
         return boardSlice.map(BoardDetailResponse::from);
