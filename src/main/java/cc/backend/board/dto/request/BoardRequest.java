@@ -11,5 +11,5 @@ public class BoardRequest {
     private String title;
     private String content;
     private BoardType boardType;
-    private List<ImageRequestDTO.FullImageRequestDTO> imageRequestDTOs;
+    private List<ImageRequestDTO.PartialImageRequestDTO> imageRequestDTOs;
 }
