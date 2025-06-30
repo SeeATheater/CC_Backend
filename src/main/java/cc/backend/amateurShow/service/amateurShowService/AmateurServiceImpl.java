@@ -52,7 +52,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         AmateurShow amateurShow = AmateurConverter.toAmateurShowEntity(member, requestDTO);
-        amateurShowRepository.save(amateurShow);
+        AmateurShow newAmateurShow = amateurShowRepository.save(amateurShow);
 
         // 나머지도 저장
         saveRelatedEntity(requestDTO, amateurShow);
@@ -65,7 +65,7 @@ public class AmateurServiceImpl implements AmateurService {
                     .map(MemberLike::getLiker)
                     .collect(Collectors.toList());
 
-            eventPublisher.publishEvent(new NewShowEvent(amateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
+            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
         }
 
         // response

@@ -1,5 +1,5 @@
 package cc.backend.notice.entity.enums;
 
 public enum NoticeType {
-    AMATEURSHOW, BOARD, AD
+    AMATEURSHOW, HOT, COMMENT, REPLY, TICKET, REMIND, AD
 }

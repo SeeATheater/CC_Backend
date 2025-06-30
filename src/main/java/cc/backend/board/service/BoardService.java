@@ -49,7 +49,7 @@ public class BoardService {
     private final MemberRepository memberRepository;
     private final ImageService imageService;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+    private final ApplicationEventPublisher eventPublisher;
 
     // 게시글 작성
     @Transactional
