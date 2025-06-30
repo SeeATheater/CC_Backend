@@ -49,7 +49,7 @@ public class BoardService {
     private final MemberRepository memberRepository;
     private final ImageService imageService;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+    private final ApplicationEventPublisher eventPublisher;
 
     // 게시글 작성
     @Transactional
@@ -74,33 +74,33 @@ public class BoardService {
                 .build();
 
         Board savedBoard = boardRepository.save(board);
-
-        //이미지 저장
-        List<String> imgUrls = new ArrayList<>();
-        if (dto.getImageRequestDTOs() != null && !dto.getImageRequestDTOs().isEmpty()) {
-            List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = dto.getImageRequestDTOs()
-                    .stream()
-                    .map(imageDto -> ImageRequestDTO.FullImageRequestDTO.builder()
-                            .keyName(imageDto.getKeyName())
-                            .imageUrl(imageDto.getImageUrl())
-                            .filePath(FilePath.board) // FilePath enum 사용
-                            .contentId(savedBoard.getId()) // 저장된 게시글 ID 사용
-                            .memberId(memberId)
-                            .build())
-                    .collect(Collectors.toList());
-
-            List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(fullImageRequestDTOs);
-            imgUrls = savedImages.stream()
-                    .map(ImageResponseDTO.ImageResultDTO::getImageUrl)
-                    .collect(Collectors.toList());
-        }
+//
+//        //이미지 저장
+//        List<String> imgUrls = new ArrayList<>();
+//        if (dto.getImageRequestDTOs() != null && !dto.getImageRequestDTOs().isEmpty()) {
+//            List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = dto.getImageRequestDTOs()
+//                    .stream()
+//                    .map(imageDto -> ImageRequestDTO.FullImageRequestDTO.builder()
+//                            .keyName(imageDto.getKeyName())
+//                            .imageUrl(imageDto.getImageUrl())
+//                            .filePath(FilePath.board) // FilePath enum 사용
+//                            .contentId(savedBoard.getId()) // 저장된 게시글 ID 사용
+//                            .memberId(memberId)
+//                            .build())
+//                    .collect(Collectors.toList());
+//
+//            List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(fullImageRequestDTOs);
+//            imgUrls = savedImages.stream()
+//                    .map(ImageResponseDTO.ImageResultDTO::getImageUrl)
+//                    .collect(Collectors.toList());
+//        }
 
         return BoardResponse.builder()
                 .boardId(savedBoard.getId())
                 .boardType(savedBoard.getBoardType())
                 .title(savedBoard.getTitle())
                 .content(savedBoard.getContent())
-                .imgUrls(imgUrls) // 응답에 포함
+//                .imgUrls(imgUrls) // 응답에 포함
                 .createdAt(savedBoard.getCreatedAt())
                 .updatedAt(savedBoard.getUpdatedAt())
                 .build();

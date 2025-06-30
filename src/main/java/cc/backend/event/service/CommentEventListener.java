@@ -15,7 +15,6 @@ public class CommentEventListener {
     @EventListener
     public NoticeResponseDTO.NoticeDTO handleCommentCreate(CommentEvent event) {
 
-        // 알림 전송 등 로직
         return noticeService.notifyNewComment(event);
     }
 }

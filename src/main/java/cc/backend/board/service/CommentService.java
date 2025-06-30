@@ -47,7 +47,7 @@ public class CommentService {
             comment = Comment.createComment(req.getContent(), member, board);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId()));   //댓글 이벤트 생성
+            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId()));   //댓글 이벤트 생성
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
@@ -58,7 +58,7 @@ public class CommentService {
             comment = Comment.createReply(req.getContent(), member, board, parent);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new ReplyEvent(comment.getId(),  parent.getId(), memberId)); //대댓글 이벤트 생성
+            eventPublisher.publishEvent(new ReplyEvent(parent.getId(), parent.getMember().getId(), comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
         }
 
 
