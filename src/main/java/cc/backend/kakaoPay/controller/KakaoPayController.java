@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/kakaoPay")
 public class KakaoPayController {
 
     private final KakaoPayService kakaoPayService;
@@ -27,10 +28,10 @@ public class KakaoPayController {
     // 결제 승인 요청 (카카오페이 redirect 후 호출)
     @GetMapping("/approve")
     @Operation(summary = "카카오페이 결제 승인", description = "카카오페이 결제 승인 요청을 처리합니다.")
-    public Mono<KakaoPayApproveResponseDTO> approve(@RequestParam String pg_token,
-                                                    @RequestParam("partnerOrderId") String partnerOrderId,
-                                                    @RequestParam String tid,
+    public Mono<KakaoPayApproveResponseDTO> approve(@RequestParam("partner_order_id") String partnerOrderId,
+                                                    @RequestParam("pg_token") String pgToken,
                                                     @AuthenticationPrincipal(expression = "member") Member member) {
-        return kakaoPayService.approve(tid, partnerOrderId, String.valueOf(member.getId()), pg_token);
+        System.out.println("🧪 member: " + member);
+        return kakaoPayService.approve(partnerOrderId, pgToken, String.valueOf(member.getId()));
     }
 }
