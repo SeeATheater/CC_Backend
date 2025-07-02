@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 🔍 검색 성능 테스트
+  k6-search:
+    image: grafana/k6:latest
+    container_name: k6-search-test
+    volumes:
+      - ./scripts:/scripts
+      - ./results:/results
+    environment:
+      # 🌐 기본 설정
+      - BASE_URL=https://api.seeatheater.site
+      - TEST_EMAIL=user@test.com  # 허용된 dev 계정
+
+      # 🔍 검색 테스트 전용 설정
+      - SEARCH_USERS=15
+      - SEARCH_DURATION=3m
+      - SEARCH_RAMP_TIME=1m
+
+      # 📊 검색 성능 임계값
+      - SEARCH_RESPONSE_TIME_THRESHOLD=2000
+      - SEARCH_ERROR_RATE_THRESHOLD=0.05
+
+      # 📁 결과 출력
+      - K6_OUT=json=/results/search-results.json
+    command: run /scripts/search-performance-test.js
+    profiles:
+      - search
+
+  # 🔥 검색 스파이크 테스트
+  k6-search-spike:
+    image: grafana/k6:latest
+    container_name: k6-search-spike-test
+    volumes:
+      - ./scripts:/scripts
+      - ./results:/results
+    environment:
+      - BASE_URL=https://api.seeatheater.site
+      - TEST_EMAIL=user@test.com
+      - K6_OUT=json=/results/search-spike-results.json
+    command: run --stage 30s:50 --stage 1m:50 --stage 30s:0 /scripts/search-performance-test.js
+    profiles:
+      - search-spike
+
+#  # 👤 다른 계정으로 테스트
+#  k6-search-performer:
+#    image: grafana/k6:latest
+#    container_name: k6-search-performer-test
+#    volumes:
+#      - ./scripts:/scripts
+#      - ./results:/results
+#    environment:
+#      - BASE_URL=https://api.seeatheater.site
+#      - TEST_EMAIL=performer@test.com  # 공연자 계정으로 테스트
+#      - K6_OUT=json=/results/search-performer-results.json
+#    command: run /scripts/search-performance-test.js
+#    profiles:
+#      - performer
+
+networks:
+  k6-network:
+    driver: bridge

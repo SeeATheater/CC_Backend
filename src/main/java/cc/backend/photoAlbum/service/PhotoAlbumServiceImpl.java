@@ -66,7 +66,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                         .memberId(member.getId())
                         .build()).toList();
 
-        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(fullImageRequestDTOs);
+        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(newPhotoAlbum.getId())
@@ -109,11 +109,15 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId){ //로그인 구현 시 member로 받도록 수정
-        Member member = memberRepository.findById(memberId)
+    public List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId){
+        //로그인 검사
+        memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberId(memberId);
+        Member performer = memberRepository.findById(performerId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberId(performerId);
 
         List<PhotoAlbum> photoAlbums = amateurShows.stream()
                         .flatMap(amateurShow -> photoAlbumRepository.findAllByAmateurShowId(amateurShow.getId()).stream())
@@ -122,7 +126,6 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         List<Image> images = photoAlbums.stream()
                 .flatMap(photoAlbum -> imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbum.getId()).stream())
                 .collect(Collectors.toList());
-
 
         List<Long> photoAlbumIds = images.stream()
                 .map(Image::getContentId)
@@ -155,7 +158,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     @Override
     @Transactional
     public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId){
-        Member member = memberRepository.findById(memberId)
+        memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
@@ -180,7 +183,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         // 삭제
         toDelete.forEach(image -> {
-            imageService.deleteImage(image.getId());
+            imageService.deleteImage(image.getId(), memberId);
         });
 
         List<String> existingUrls = existingImages.stream()
@@ -198,7 +201,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                                 .memberId(memberId)
                                 .build()).toList();
 
-        imageService.saveImages(toAdd);
+        imageService.saveImages(memberId, toAdd);
 
         List<ImageResponseDTO.ImageResultDTO> imageResultDTOs =
                 imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId())
@@ -237,7 +240,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         }
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
-        images.forEach(image -> imageService.deleteImage(image.getId()));
+        images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
 
         photoAlbumRepository.delete(photoAlbum);
 

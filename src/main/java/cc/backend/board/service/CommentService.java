@@ -35,31 +35,35 @@ public class CommentService {
     private final ApplicationEventPublisher eventPublisher; //이벤트 생성자
     //댓글 작성
     @Transactional
-    public CommentCreateResponse createComment(Long boardId, CommentRequest req) {
+    public CommentCreateResponse createComment(Long boardId, Long memberId, CommentRequest req) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-        Member member = memberRepository.findById(req.getMemberId())
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         Comment comment;
         if (req.getParentCommentId() == null) {
             // 댓글
             comment = Comment.createComment(req.getContent(), member, board);
+            commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId()));   //댓글 이벤트 생성
+            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId()));   //댓글 이벤트 생성
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
                     .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
+            // 부모 댓글이 해당 게시글에 속한 댓글인지 확인
+            if (!parent.getBoard().getId().equals(boardId)) {
+                throw new GeneralException(ErrorStatus.COMMENT_BOARD_MISMATCH);
+            }
             if (parent.getDepth() != 0) {
                 throw new GeneralException(ErrorStatus.COMMENT_DEPTH_EXCEEDED);
             }
             comment = Comment.createReply(req.getContent(), member, board, parent);
+            commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new ReplyEvent(comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
+            eventPublisher.publishEvent(new ReplyEvent(parent.getId(), parent.getMember().getId(), comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
         }
-        commentRepository.save(comment);
-
 
 
         board.increaseCommentCount();

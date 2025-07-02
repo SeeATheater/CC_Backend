@@ -2,12 +2,14 @@ package cc.backend.board.entity;
 
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.domain.common.BaseEntity;
+import cc.backend.image.entity.Image;
 import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -33,9 +35,6 @@ public class Board extends BaseEntity {
     @Column(nullable = false)
     private BoardType boardType; //NORMAL, PROMOTION
 
-    @ElementCollection
-    private List<String> imgUrls;
-
     private int likeCount;
 
     private int commentCount = 0;
@@ -45,15 +44,21 @@ public class Board extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id")
+    @Where(clause = "file_path = 'board'")
+    private List<Image> images = new ArrayList<>();
+
     @Builder.Default
     @Column(nullable = false)
     private boolean deleted = false;
 
+
+
     // ----- method -----
-    public void update(String title, String content, List<String> imgUrls, BoardType boardType) {
+    public void update(String title, String content, BoardType boardType) {
         this.title = title;
         this.content = content;
-        this.imgUrls = imgUrls;
         this.boardType = boardType;
     }
 

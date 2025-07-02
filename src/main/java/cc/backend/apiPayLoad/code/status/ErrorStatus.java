@@ -68,9 +68,11 @@ public enum ErrorStatus implements BaseErrorCode {
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "BOARD4001", "게시글이 존재하지 않습니다."),
     BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "BOARD4002", "수정/삭제 권한이 없습니다."),
     ONLY_PERFORMER_CAN_WRITE_PROMOTION(HttpStatus.FORBIDDEN, "BOARD4003", "홍보게시판은 Performer만 작성할 수 있습니다."),
+    INVALID_BOARD_TYPE(HttpStatus.BAD_REQUEST, "BOARD4004", "유효하지 않은 게시판 타입입니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT4001", "댓글이 존재하지 않습니다."),
     COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMENT4002", "댓글 수정/삭제 권한이 없습니다."),
     COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, "COMMENT4003", "대댓글의 depth는 1까지만 허용됩니다."),
+    COMMENT_BOARD_MISMATCH(HttpStatus.BAD_REQUEST, "COMMENT4004", "해당 댓글은 이 게시글에 속하지 않습니다."),
     ALREADY_REPORTED(HttpStatus.BAD_REQUEST, "REPORT4001", "이미 신고한 게시글입니다."),
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REPORT4002", "본인이 작성한 글/댓글은 신고할 수 없습니다."),
 

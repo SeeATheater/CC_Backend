@@ -38,9 +38,10 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentCreateResponse> createComment(
             @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal(expression = "member") Member member,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "댓글 생성 요청 DTO", required = true)
             @RequestBody CommentRequest request)  {
-        CommentCreateResponse response = commentService.createComment(boardId,request);
+        CommentCreateResponse response = commentService.createComment(boardId,member.getId(),request);
         return ResponseEntity.ok(response);
     }
 

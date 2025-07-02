@@ -10,13 +10,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PromoteHotEventListner {
+public class PromoteHotEventListener {
     private final NoticeService noticeService;
 
     @EventListener
     public NoticeResponseDTO.NoticeDTO handleHotPromote(PromoteHotEvent event) {
 
-        // 알림 전송 등 로직
         return noticeService.notifyHotBoard(event);
     }
 }

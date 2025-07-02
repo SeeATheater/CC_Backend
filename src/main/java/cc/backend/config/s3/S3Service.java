@@ -1,6 +1,10 @@
 package cc.backend.config.s3;
 
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.image.FilePath;
+import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +32,10 @@ public class S3Service {
     private final S3Presigner s3Presigner;
 
     private final S3Client s3Client;
+    private final MemberRepository memberRepository;
 
-    private static final String BUCKET_DOMAIN = "https://ccbucket-0528.s3.ap-northeast-2.amazonaws.com/";
+    @Value("${AWS_BUCKET_DOMAIN")
+    private String BUCKET_DOMAIN;
 
     @Value("${AWS_S3_BUCKET}")
     private String bucket2;
@@ -40,7 +46,9 @@ public class S3Service {
      * @return upload url, public url
      */
     //단일 객체 용 url - 사진 하나 올리기용
-    public Map<String, String> createPresignedUrl(String imageExtension, FilePath filePath) {
+    public Map<String, String> createPresignedUrl(String imageExtension, FilePath filePath, Long memberId) {
+
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         String keyName = UUID.randomUUID() + "." + imageExtension;
         keyName = filePath + "/" +  keyName.replace("-", "");
@@ -77,8 +85,11 @@ public class S3Service {
         return map;
     }
 
-    public void deleteFile(String keyName) {
-        if(doesObjectExist(keyName)) {
+    public void deleteFile(String keyName, Long memberId) {
+
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        if(doesObjectExist(keyName, memberId)) {
             try {
                 DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                         .bucket(bucket2)
@@ -102,14 +113,17 @@ public class S3Service {
      * @param extensions 이미지 확장자 리스트 (ex: ["png", "jpg", "jpeg"])
      * @return keyName과 uploadUrl, publicUrl 리스트 반환
      */
-    public List<Map<String, String>> createPresignedUrls(List<String> extensions, FilePath filePath) {
+    public List<Map<String, String>> createPresignedUrls(List<String> extensions, FilePath filePath, Long memberId) {
         return extensions.stream()
-                .map(ext -> createPresignedUrl(ext, filePath))
+                .map(ext -> createPresignedUrl(ext, filePath, memberId))
                 .collect(Collectors.toList());
     }
 
 
-    public boolean doesObjectExist(String keyName) {
+    public boolean doesObjectExist(String keyName, Long memberId) {
+
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         try {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
                     .bucket(bucket2)

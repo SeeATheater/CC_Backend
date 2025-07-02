@@ -3,6 +3,7 @@ package cc.backend.board.service;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.request.BoardRequest;
+import cc.backend.board.dto.request.BoardSearchRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
@@ -12,11 +13,18 @@ import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
 import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.image.DTO.ImageRequestDTO;
+import cc.backend.image.DTO.ImageResponseDTO;
+import cc.backend.image.FilePath;
+import cc.backend.image.entity.Image;
+import cc.backend.image.repository.ImageRepository;
+import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -34,57 +43,76 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final HotBoardRepository hotBoardRepository;
     private final MemberRepository memberRepository;
+    private final ImageService imageService;
+    private final ImageRepository imageRepository;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 테스트
+    private final ApplicationEventPublisher eventPublisher;
 
     // 게시글 작성
-    //TODO : 이미지 업로드 코드 추가
     @Transactional
     public BoardResponse createBoard(Long memberId, BoardRequest dto) {
 
-
-
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() ->  new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         // 홍보게시판은 Performer만 작성 가능
         if (dto.getBoardType() == BoardType.PROMOTION && member.getRole() != Role.PERFORMER) {
             throw new GeneralException(ErrorStatus.ONLY_PERFORMER_CAN_WRITE_PROMOTION);
         }
 
+        //contentId 얻기 위해 먼저 게시글 저장
         Board board = Board.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .imgUrls(dto.getImgUrls())
                 .boardType(dto.getBoardType())
                 .likeCount(0)
                 .commentCount(0)
                 .member(member)
                 .build();
 
+        Board savedBoard = boardRepository.save(board);
 
-        boardRepository.save(board);
+        //이미지 저장
+        List<String> imgUrls = new ArrayList<>();
+        if (dto.getImageRequestDTOs() != null && !dto.getImageRequestDTOs().isEmpty()) {
+            List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = dto.getImageRequestDTOs()
+                    .stream()
+                    .map(imageDto -> ImageRequestDTO.FullImageRequestDTO.builder()
+                            .keyName(imageDto.getKeyName())
+                            .imageUrl(imageDto.getImageUrl())
+                            .filePath(FilePath.board) // FilePath enum 사용
+                            .contentId(savedBoard.getId()) // 저장된 게시글 ID 사용
+                            .memberId(memberId)
+                            .build())
+                    .collect(Collectors.toList());
+
+            List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(memberId, fullImageRequestDTOs);
+            imgUrls = savedImages.stream()
+                    .map(ImageResponseDTO.ImageResultDTO::getImageUrl)
+                    .collect(Collectors.toList());
+        }
 
         return BoardResponse.builder()
-                .boardId(board.getId())
-                .boardType(board.getBoardType())
-                .title(board.getTitle())
-                .content(board.getContent())
-                .imgUrls(board.getImgUrls())
-                .createdAt(board.getCreatedAt())
-                .updatedAt(board.getUpdatedAt())
+                .boardId(savedBoard.getId())
+                .boardType(savedBoard.getBoardType())
+                .title(savedBoard.getTitle())
+                .content(savedBoard.getContent())
+                .imgUrls(imgUrls) // 응답에 포함
+                .createdAt(savedBoard.getCreatedAt())
+                .updatedAt(savedBoard.getUpdatedAt())
                 .build();
     }
 
     //게시글 수정
     @Transactional
-   public  BoardResponse updateBoard( Long memberId, Long boardId, BoardRequest dto) {
+    public BoardResponse updateBoard(Long memberId, Long boardId, BoardRequest dto) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
 
@@ -93,14 +121,24 @@ public class BoardService {
             throw new GeneralException(ErrorStatus.BOARD_ACCESS_DENIED);
         }
 
-        board.update(dto.getTitle(), dto.getContent(), dto.getImgUrls(), dto.getBoardType());
+        board.update(dto.getTitle(), dto.getContent(), dto.getBoardType());
+
+        // 이미지 수정 처리
+        if (dto.getImageRequestDTOs() != null) {
+            updateBoardImages(board, dto.getImageRequestDTOs(), memberId);
+        }
+
+        // 수정된 이미지 URL 목록 조회
+        List<String> updatedImgUrls = board.getImages().stream()
+                .map(Image::getImageUrl)
+                .collect(Collectors.toList());
 
         return BoardResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .imgUrls(board.getImgUrls())
+                .imgUrls(updatedImgUrls)
                 .createdAt(board.getCreatedAt())
                 .updatedAt(board.getUpdatedAt())
                 .build();
@@ -118,6 +156,11 @@ public class BoardService {
         if (!board.getMember().getId().equals(memberId)) {
             throw new GeneralException(ErrorStatus.BOARD_ACCESS_DENIED);
         }
+
+        // 게시글과 연관된 이미지들 삭제
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId);
+        images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
+
         boardRepository.delete(board); //soft delete
     }
 
@@ -132,8 +175,8 @@ public class BoardService {
     //게시글 상세 조회
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoard(Long boardId) {
-        Board board=boardRepository.findById(boardId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         return BoardDetailResponse.from(board);
     }
 
@@ -173,6 +216,42 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
+    //게시판 검색
+    public Slice<BoardDetailResponse> searchBoards(BoardSearchRequest request) {
+        if (request.getKeyword() == null || request.getKeyword().trim().isEmpty()) {
+            // 검색어가 없으면 일반 조회
+            return getBoards(request.getBoardType(), request.getPage(), request.getSize());
+        }
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("id").descending());
+        Slice<Board> boardSlice;
+        try {
+            if (request.getBoardType() == BoardType.NORMAL) {
+                // 일반게시판: 제목 + 내용 검색
+                boardSlice = boardRepository.searchNormalBoardsWithFullText(
+                        request.getBoardType().name(), request.getKeyword(), pageable);
+            } else if (request.getBoardType() == BoardType.PROMOTION) {
+                // 홍보게시판: 제목 + 내용 + 작성자 검색
+                boardSlice = boardRepository.searchPromotionBoardsWithFullText(
+                        request.getBoardType().name(), request.getKeyword(), pageable);
+            } else {
+                throw new GeneralException(ErrorStatus.INVALID_BOARD_TYPE);
+            }
+        } catch (Exception e) {
+            // Full-Text Search 실패 시 기존 LIKE 검색으로 fallback
+            log.warn("Full-Text Search failed, falling back to LIKE search: {}", e.getMessage());
+            if (request.getBoardType() == BoardType.NORMAL) {
+                boardSlice = boardRepository.searchNormalBoards(
+                        request.getBoardType(), request.getKeyword(), pageable);
+            } else {
+                boardSlice = boardRepository.searchPromotionBoards(
+                        request.getBoardType(), request.getKeyword(), pageable);
+            }
+        }
+
+        return boardSlice.map(BoardDetailResponse::from);
+    }
+
     // --------------- 내부 메서드 ------------
     //핫게시판 선정 로직
     private void promoteToHotBoard(Board board) {
@@ -199,5 +278,46 @@ public class BoardService {
     }
 
 
+    // 게시글 이미지 수정 처리 메서드
+    private void updateBoardImages(Board board, List<ImageRequestDTO.PartialImageRequestDTO> newImageDTOs, Long memberId) {
+        // 기존 이미지들 가져오기
+        List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, board.getId());
 
+        // 프론트에서 받은 새로운 이미지 URL 목록
+        List<String> newImageUrls = newImageDTOs.stream()
+                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl)
+                .collect(Collectors.toList());
+
+        // 삭제 대상 찾기 (기존 이미지 중 새로운 목록에 없는 것들)
+        List<Image> toDelete = existingImages.stream()
+                .filter(img -> !newImageUrls.contains(img.getImageUrl()))
+                .collect(Collectors.toList());
+
+        // 삭제 처리
+        toDelete.forEach(image -> {
+            imageService.deleteImage(image.getId(), memberId);
+        });
+
+        // 기존 이미지 URL 목록
+        List<String> existingUrls = existingImages.stream()
+                .map(Image::getImageUrl)
+                .collect(Collectors.toList());
+
+        // 추가 대상 찾기 (새로운 이미지 중 기존에 없는 것들)
+        List<ImageRequestDTO.FullImageRequestDTO> toAdd = newImageDTOs.stream()
+                .filter(imageDTO -> !existingUrls.contains(imageDTO.getImageUrl()))
+                .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
+                        .imageUrl(imageDTO.getImageUrl())
+                        .keyName(imageDTO.getKeyName())
+                        .filePath(FilePath.board)
+                        .contentId(board.getId())
+                        .memberId(memberId)
+                        .build())
+                .collect(Collectors.toList());
+
+        // 새로운 이미지들 저장
+        if (!toAdd.isEmpty()) {
+            imageService.saveImages(memberId, toAdd);
+        }
+    }
 }
