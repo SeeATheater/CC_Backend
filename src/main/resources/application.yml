@@ -19,6 +19,7 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
             scope:
               - email
               - profile
@@ -53,3 +54,11 @@ kakaopay:
   secret-key: ${KAKAOPAY_SECRET_KEY}
   cid: TC0ONETIME
   base-url: https://open-api.kakaopay.com
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
