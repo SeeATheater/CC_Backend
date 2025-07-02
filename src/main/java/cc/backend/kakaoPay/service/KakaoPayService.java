@@ -50,7 +50,7 @@ public class KakaoPayService {
                             .quantity(memberTicket.getQuantity())
                             .totalAmount(memberTicket.getTotalPrice())
                             .taxFreeAmount(0)
-                            .approvalUrl("http://localhost:8080/kakaoPay/approve/" + ticketId)
+                            .approvalUrl("http://localhost:8080/kakaoPay/approve?partner_order_id=" + ticketId)
                             .cancelUrl("http://localhost:8080/kakaoPay/cancel")
                             .failUrl("http://localhost:8080/kakaoPay/fail")
                             .build();
@@ -77,14 +77,13 @@ public class KakaoPayService {
                 });
     }
 
-    public Mono<KakaoPayApproveResponseDTO> approve(String partnerOrderId, String pgToken, String partnerUserId) {
+    public Mono<KakaoPayApproveResponseDTO> approve(String partnerOrderId, String pgToken) {
 
         // partnerOrderId로 MemberTicket 조회
         return Mono.fromCallable(() -> memberTicketRepository.findById(Long.valueOf(partnerOrderId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(memberTicket -> {
-
                     if (memberTicket.getReservationStatus().equals(ReservationStatus.RESERVED)) {
                         return Mono.error(new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_RESERVED));
                     }
@@ -94,6 +93,8 @@ public class KakaoPayService {
                     if (tid == null) {
                         return Mono.error(new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND));
                     }
+
+                    String partnerUserId = memberTicket.getMember().getId().toString(); // 멤버를 DB에서 추적하기
 
                     KakaoPayApproveRequestDTO requestDTO = new KakaoPayApproveRequestDTO(
                             cid, tid, partnerOrderId, partnerUserId, pgToken
