@@ -63,14 +63,14 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
-                .reservationStatus(ReservationStatus.RESERVED)
+                .reservationStatus(ReservationStatus.PENDING) // PENDING 으로
                 .build();
 
         MemberTicket saved = memberTicketRepository.save(ticket);
-        round.decreaseTotalTicket(requestDTO.getQuantity());
-
-        amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
-
+//        round.decreaseTotalTicket(requestDTO.getQuantity());
+//
+//        amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
+//
 
 
         return MemberTicketCreateResponseDTO.builder()
