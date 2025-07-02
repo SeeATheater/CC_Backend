@@ -19,4 +19,7 @@ public class KakaoPayReadyResponseDTO {
 
     @JsonProperty("next_redirect_mobile_url")
     private String nextRedirectMobileUrl; // 요청 클라이언트가 pc 웹일 경우 redirect url
+
+    @JsonProperty("created_at")
+    private String createdAt; // 결제 준비 요청 시간
 }
