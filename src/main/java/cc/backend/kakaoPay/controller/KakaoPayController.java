@@ -31,7 +31,6 @@ public class KakaoPayController {
     public Mono<KakaoPayApproveResponseDTO> approve(@RequestParam("partner_order_id") String partnerOrderId,
                                                     @RequestParam("pg_token") String pgToken,
                                                     @AuthenticationPrincipal(expression = "member") Member member) {
-        System.out.println("🧪 member: " + member);
         return kakaoPayService.approve(partnerOrderId, pgToken, String.valueOf(member.getId()));
     }
 }
