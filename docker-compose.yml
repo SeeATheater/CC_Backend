@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 블루 배포
   app-blue:
@@ -9,7 +7,7 @@ services:
       - "8081:8080"
     env_file:
       - .env
-    restart: always
+    restart: "no"
 
   app-green:
     #그린 배포
@@ -19,4 +17,4 @@ services:
       - "8082:8080"
     env_file:
       - .env
-    restart: always
+    restart: "no"
