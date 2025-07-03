@@ -25,6 +25,7 @@ if [ "$BLUE_DOWN" -eq "1" ]; then
     TARGET_PORT="8081"
     TARGET_SERVICE="app-blue"
     STOP_SERVICE="app-green"
+    STOP_CONTAINER="ccapp-green"
     log "🟢 GREEN → 🔵 BLUE"
     
 elif [ "$GREEN_DOWN" -eq "1" ]; then
@@ -34,6 +35,7 @@ elif [ "$GREEN_DOWN" -eq "1" ]; then
     TARGET_PORT="8082"
     TARGET_SERVICE="app-green"
     STOP_SERVICE="app-blue"
+    STOP_CONTAINER="ccapp-blue"
     log "🔵 BLUE → 🟢 GREEN"
     
 else
@@ -43,6 +45,7 @@ else
     TARGET_PORT="8082"
     TARGET_SERVICE="app-green"
     STOP_SERVICE="app-blue"
+    STOP_CONTAINER="ccapp-blue"
     log "🔧 초기 상태 감지 → 🟢 GREEN으로 전환"
 fi
 
@@ -90,7 +93,31 @@ sudo nginx -t && sudo systemctl reload nginx
 
 # 🛑 기존 환경 정리
 log "🛑 $CURRENT_ENV 컨테이너 정리 중..."
-docker compose stop $STOP_SERVICE
+
+
+# 먼저 docker compose로 시도
+log "   📦 Docker Compose로 $STOP_SERVICE 중지 시도..."
+if docker compose stop $STOP_SERVICE; then
+    log "   ✅ Docker Compose로 성공적으로 중지됨"
+else
+    log "   ⚠️  Docker Compose 중지 실패, 직접 컨테이너 중지 시도..."
+
+    # 컨테이너가 실행 중인지 확인
+    if docker ps --format "table {{.Names}}" | grep -q "^$STOP_CONTAINER$"; then
+        log "   🔍 $STOP_CONTAINER 컨테이너 발견, 직접 중지 중..."
+        if docker stop $STOP_CONTAINER; then
+            log "   ✅ $STOP_CONTAINER 컨테이너 성공적으로 중지됨"
+        else
+            log "   ❌ $STOP_CONTAINER 컨테이너 중지 실패"
+        fi
+    else
+        log "   ℹ️  $STOP_CONTAINER 컨테이너가 이미 중지되어 있음"
+    fi
+fi
+
+log "🔍 최종 컨테이너 상태 확인..."
+RUNNING_CONTAINERS=$(docker ps --format "table {{.Names}}\t{{.Status}}" | grep ccapp || echo "없음")
+log "   실행 중인 ccapp 컨테이너: $RUNNING_CONTAINERS"
 
 log "🎉 $TARGET_ENV 환경 전환 완료!"
 
