@@ -113,7 +113,7 @@ public class KakaoPayService {
                             )
                             .bodyToMono(KakaoPayApproveResponseDTO.class)
                             .flatMap(response ->
-                                    Mono.fromRunnable(() -> kakaoPayBusinessService.handleApprovedTicket(tid, partnerOrderId))
+                                    Mono.fromRunnable(() -> kakaoPayBusinessService.handleApprovedTicket(partnerOrderId))
                                             .subscribeOn(Schedulers.boundedElastic())
                                             .thenReturn(response)
                             );

@@ -16,7 +16,7 @@ public class KakaoPayBusinessService {
 
     private final MemberTicketRepository memberTicketRepository;
 
-    public void handleApprovedTicket(String tid, String partnerOrderId) {
+    public void handleApprovedTicket(String partnerOrderId) {
         MemberTicket ticket = memberTicketRepository.findWithTicketAndShowById(Long.valueOf(partnerOrderId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
@@ -24,12 +24,8 @@ public class KakaoPayBusinessService {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_RESERVED);
         }
 
-        ticket.updateTid(tid);
         ticket.updateReservationStatus(ReservationStatus.RESERVED);
         ticket.getAmateurRound().decreaseTotalTicket(ticket.getQuantity());
         ticket.getAmateurTicket().getAmateurShow().increaseSoldTicket(ticket.getQuantity());
     }
 }
-
-
-
