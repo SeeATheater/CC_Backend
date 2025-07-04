@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🔄 개선된 블루그린 배포 스크립트
+# 🔄 블루그린 배포 스크립트
 
 set -e
 
@@ -56,6 +56,7 @@ log "📦 $TARGET_ENV 컨테이너 준비 중..."
 
 # 기존의 target 컨테이너 제거
 log "   🗑️ 기존 $TARGET_ENV 컨테이너 제거 중..."
+docker stop $TARGET_CONTAINER 2>/dev/null || true
 docker compose rm -f $TARGET_SERVICE 2>/dev/null || true
 
 docker compose pull $TARGET_SERVICE
