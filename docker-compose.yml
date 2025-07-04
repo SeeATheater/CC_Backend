@@ -2,12 +2,13 @@ services:
   # 블루 배포
   app-blue:
     image: ddhi7/ccapp:latest #이미지는 동일 이미지 사용 : (깃허브 플젝 -> ccapp 이미지)
-    container_name: ccapp-blue
+    container_name: ccapp-blue -> 태그 다르게..
     ports:
       - "8081:8080"
     env_file:
       - .env
-    restart: "no"
+    restart: unless-stopped
+    pull_policy: always
 
   app-green:
     #그린 배포
@@ -17,4 +18,5 @@ services:
       - "8082:8080"
     env_file:
       - .env
-    restart: "no"
+    restart: unless-stopped
+    pull_policy: always

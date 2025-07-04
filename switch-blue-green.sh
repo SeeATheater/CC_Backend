@@ -53,8 +53,16 @@ log "🎯 $CURRENT_ENV → $TARGET_ENV 전환 시작"
 
 # 📦 새 환경 배포
 log "📦 $TARGET_ENV 컨테이너 준비 중..."
+
+# 기존의 target 컨테이너 제거
+log "   🗑️ 기존 $TARGET_ENV 컨테이너 제거 중..."
+docker compose rm -f $TARGET_SERVICE 2>/dev/null || true
+
 docker compose pull $TARGET_SERVICE
-docker compose up -d $TARGET_SERVICE
+
+#새 target 컨테이너 생성
+log "   🚀 새 $TARGET_ENV 컨테이너 시작 중..."
+docker compose up -d --force-recreate $TARGET_SERVICE
 
 # 🏥 헬스체크
 log "🏥 $TARGET_ENV 헬스체크 진행 중..."
@@ -91,7 +99,7 @@ fi
 log "⚙️  Nginx 설정 적용 중..."
 sudo nginx -t && sudo systemctl reload nginx
 
-# 🛑 기존 환경 정리
+# 🛑 current 컨테이너 정리
 log "🛑 $CURRENT_ENV 컨테이너 정리 중..."
 
 
