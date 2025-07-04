@@ -9,6 +9,7 @@ services:
       - .env
     restart: unless-stopped
     pull_policy: always
+    mem_limit: 400m
 
   app-green:
     #그린 배포
@@ -20,3 +21,4 @@ services:
       - .env
     restart: unless-stopped
     pull_policy: always
+    mem_limit: 400m
