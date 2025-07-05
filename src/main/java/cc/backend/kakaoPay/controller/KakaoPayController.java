@@ -21,7 +21,7 @@ public class KakaoPayController {
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
     @Operation(summary = "카카오페이 결제 준비", description = "카카오페이 결제창 URL을 발급합니다.")
-    public Mono<KakaoPayReadyResponseDTO> ready(@RequestParam Long ticketId,
+    public KakaoPayReadyResponseDTO ready(@RequestParam Long ticketId,
                                                 @AuthenticationPrincipal(expression = "member") Member member) {
         return kakaoPayService.ready(ticketId, String.valueOf(member.getId()));
     }
@@ -29,7 +29,7 @@ public class KakaoPayController {
     // 결제 승인 요청 (카카오페이 redirect 후 호출)
     @GetMapping("/approve")
     @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "결제 완료 후 카카오 서버에서 approval_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
-    public Mono<KakaoPayApproveResponseDTO> approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
+    public KakaoPayApproveResponseDTO approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
                                                     @RequestParam("pg_token") String pgToken) {
 
         return kakaoPayService.approve(partnerOrderId, pgToken);

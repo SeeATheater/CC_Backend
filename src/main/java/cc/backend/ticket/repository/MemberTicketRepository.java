@@ -4,6 +4,8 @@ import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -33,4 +35,7 @@ public interface MemberTicketRepository extends JpaRepository<MemberTicket, Long
             "amateurRound"
     })
     Optional<MemberTicket> findWithTicketAndShowById(Long id);
+
+    @Query("SELECT mt.amateurRound.id FROM MemberTicket mt WHERE mt.id = :ticketId")
+    Long findAmateurRoundIdById(@Param("ticketId") Long ticketId);
 }
