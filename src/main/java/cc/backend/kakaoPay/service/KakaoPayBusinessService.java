@@ -42,7 +42,6 @@ public class KakaoPayBusinessService {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_RESERVED);
         }
 
-
         // 락이 걸린 그 회차 기준으로 재고 확인 (동시성 문제 해결)
         if (amateurRounds.getTotalTicket() < memberTicket.getQuantity()) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
