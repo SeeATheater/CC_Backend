@@ -35,7 +35,4 @@ public interface MemberTicketRepository extends JpaRepository<MemberTicket, Long
             "amateurRound"
     })
     Optional<MemberTicket> findWithTicketAndShowById(Long id);
-
-    @Query("SELECT mt.amateurRound.id FROM MemberTicket mt WHERE mt.id = :ticketId")
-    Long findAmateurRoundIdById(@Param("ticketId") Long ticketId);
 }
