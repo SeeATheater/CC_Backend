@@ -4,10 +4,7 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +25,6 @@ class KakaoPayBusinessServiceConcurrencyTest {
     private KakaoPayService kakaoPayService;
 
     @Autowired
-    private KakaoPayBusinessService kakaoPayBusinessService;
-
-    @Autowired
-    private MemberTicketRepository memberTicketRepository;
-
-    @Autowired
     private AmateurRoundsRepository amateurRoundsRepository;
 
     @Autowired
@@ -42,89 +33,64 @@ class KakaoPayBusinessServiceConcurrencyTest {
     @Autowired
     private EntityManager em;
 
-    private Long roundId;
-    private List<Long> ticketIds;
-
-    // 동시성 테스트를 위한 데이터 초기화
-    @BeforeEach
-    void setUp() {
-
-        roundId = 66L;
-        ticketIds = List.of(17L, 20L, 21L);
-
-        transactionTemplate.executeWithoutResult(status -> {
-            // 재고 1개로 설정
-            em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 1 WHERE a.id = :id")
-                    .setParameter("id", roundId)
-                    .executeUpdate();
-
-            // 모든 티켓의 요청 수량을 1로, 상태를 PENDING으로 설정
-            em.createQuery("UPDATE MemberTicket m SET m.reservationStatus = :status, m.quantity = 1 WHERE m.id IN :ids")
-                    .setParameter("status", ReservationStatus.PENDING)
-                    .setParameter("ids", ticketIds)
-                    .executeUpdate();
-
-            em.flush();
-            em.clear();
-        });
-    }
-
     @Test
     @DisplayName("시나리오 1: 재고보다 많은 수량으로 결제 준비 요청 시, 예외가 발생해야 한다.")
     void ready_Fails_When_Stock_Is_Insufficient() {
 
-        // given: DB 상태 직접 설정
-        Long targetTicketId = ticketIds.get(0);
+        // given: 회차에 남은 재고는 1개, 사용자는 2개 구매 요청
+        Long roundId = 66L;
+        Long targetTicketId = 17L;
+
         transactionTemplate.executeWithoutResult(status -> {
-            // 재고는 1개로 유지
             em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 1 WHERE a.id = :id")
-                    .setParameter("id", roundId)
-                    .executeUpdate();
-
-            // 특정 티켓의 요청 수량만 2개로 변경
+                    .setParameter("id", roundId).executeUpdate();
             em.createQuery("UPDATE MemberTicket m SET m.quantity = 2 WHERE m.id = :id")
-                    .setParameter("id", targetTicketId)
-                    .executeUpdate();
+                    .setParameter("id", targetTicketId).executeUpdate();
         });
 
-        // when & then: kakaoPayService.ready()를 호출하면 예외가 발생하는지 검증
-        GeneralException exception = assertThrows(GeneralException.class, () -> {
-            kakaoPayService.ready(targetTicketId, "test-user-1");
-        });
+        // when & then: 결제 준비 요청 시 재고 부족 예외가 발생하는지 검증
+        GeneralException exception = assertThrows(GeneralException.class,
+                () -> kakaoPayService.ready(targetTicketId, "test-user-1"));
 
         assertEquals(ErrorStatus.MEMBER_TICKET_STOCK, exception.getCode());
     }
 
     @Test
-    @DisplayName("시나리오 2: 동시에 마지막 재고 승인 요청 시, 단 한 명만 성공해야 한다.")
-    void approve_Succeeds_Only_Once_Under_Concurrency() throws InterruptedException {
+    @DisplayName("시나리오 2: 동시에 마지막 재고에 대해 결제 준비 요청 시, 단 한 명만 성공해야 한다.")
+    void concurrentReady_With_One_Stock_Only_One_Succeeds() {
 
-        // given: 재고 1개, 3명의 사용자가 각 1개씩 구매하려는 상황 (BeforeEach에서 설정됨)
-        int threadCount = 3;
+        // given: 재고 1개, 3명의 사용자가 각각 1개씩 동시에 구매하려는 상황
+        Long roundId = 66L;
+        List<Long> ticketIds = List.of(17L, 28L, 29L);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 1 WHERE a.id = :id")
+                    .setParameter("id", roundId).executeUpdate();
+            em.createQuery("UPDATE MemberTicket m SET m.quantity = 1 WHERE m.id IN :ids")
+                    .setParameter("ids", ticketIds).executeUpdate();
+        });
+
+        int threadCount = 3; // 스레드 3개
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(1);
 
-        AtomicInteger successCount = new AtomicInteger(0);
-        AtomicInteger failCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0); // 성공한 사용자 수
+        AtomicInteger failCount = new AtomicInteger(0); // 실패한 사용자 수
         List<Future<?>> futures = new ArrayList<>();
 
-        // when: 3개의 스레드가 동시에 kakaoPayBusinessService.handleApprovedTicket() 호출
+        // when: 3개의 스레드가 동시에 결제 준비 요청
         for (Long ticketId : ticketIds) {
-            String partnerOrderId = String.valueOf(ticketId);
-
             futures.add(executor.submit(() -> {
                 try {
                     latch.await(); // 모든 스레드가 동시에 시작하도록 대기
-                    kakaoPayBusinessService.handleApprovedTicket(partnerOrderId);
-                    successCount.incrementAndGet();
+                    kakaoPayService.ready(ticketId, "concurrent-user");
+                    successCount.incrementAndGet(); // 성공한 사용자 카운트
                 } catch (GeneralException e) {
-                    // 재고 부족 또는 이미 처리된 티켓 예외가 발생하면 실패로 간주
-                    if (e.getCode().equals(ErrorStatus.MEMBER_TICKET_STOCK) ||
-                            e.getCode().equals(ErrorStatus.MEMBER_TICKET_ALREADY_RESERVED)) {
-                        failCount.incrementAndGet();
+                    if (e.getCode().equals(ErrorStatus.MEMBER_TICKET_STOCK)) {
+                        failCount.incrementAndGet(); // 실패한 사용자 카운트
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }));
         }
@@ -132,25 +98,75 @@ class KakaoPayBusinessServiceConcurrencyTest {
         latch.countDown(); // 모든 스레드 동시 실행
 
         for (Future<?> f : futures) {
-            try {
-                f.get(); // 각 스레드가 끝날 때까지 대기
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
+            try { f.get(); } catch (Exception e) { e.printStackTrace(); }
         }
         executor.shutdown();
 
-        // then: 최종 결과 검증
-        assertEquals(1, successCount.get(), "정상적으로 승인된 티켓은 1개여야 합니다.");
-        assertEquals(2, failCount.get(), "재고 부족 등으로 실패한 티켓은 2개여야 합니다.");
+        // then: 성공 1명, 실패 2명이어야 함
+        assertEquals(1, successCount.get(), "정상적으로 준비된 요청은 1개여야 합니다.");
+        assertEquals(2, failCount.get(), "재고 부족으로 실패한 요청은 2개여야 합니다.");
 
-        // DB 상태 최종 확인
-        AmateurRounds finalRound = amateurRoundsRepository.findById(roundId).get();
+        // 최종 재고 개수는 0개
+        AmateurRounds finalRound = amateurRoundsRepository.findById(roundId)
+                .orElseThrow(() -> new IllegalStateException("해당 회차가 존재하지 않습니다."));
+
         assertEquals(0, finalRound.getTotalTicket(), "최종 재고는 0이어야 합니다.");
+    }
 
-        long reservedCount = memberTicketRepository.findAllById(ticketIds).stream()
-                .filter(t -> t.getReservationStatus().equals(ReservationStatus.RESERVED))
-                .count();
-        assertEquals(1, reservedCount, "예약 완료(RESERVED) 상태인 티켓은 1개여야 합니다.");
+    @Test
+    @DisplayName("시나리오 3: 재고가 충분해 보여도 동시 요청 시, 재고가 허락하는 만큼만 성공해야 한다 (TOCTOU 방지 검증).")
+    void concurrentReady_With_Sufficient_Stock_But_Limited_Success() {
+
+        // given: 재고 4개, 3명의 사용자가 각각 2개씩 구매하려는 상황 (총 6개 요청)
+        Long roundId = 66L;
+        List<Long> ticketIds = List.of(17L, 28L, 29L);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 4 WHERE a.id = :id")
+                    .setParameter("id", roundId).executeUpdate();
+            em.createQuery("UPDATE MemberTicket m SET m.quantity = 2 WHERE m.id IN :ids")
+                    .setParameter("ids", ticketIds).executeUpdate();
+        });
+
+        int threadCount = 3;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        List<Future<?>> futures = new ArrayList<>();
+
+        // when: 3개의 스레드가 동시에 결제 준비 요청
+        for (Long ticketId : ticketIds) {
+            futures.add(executor.submit(() -> {
+                try {
+                    latch.await();
+                    kakaoPayService.ready(ticketId, "concurrent-user-2");
+                    successCount.incrementAndGet();
+                } catch (GeneralException e) {
+                    if (e.getCode().equals(ErrorStatus.MEMBER_TICKET_STOCK)) {
+                        failCount.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
+
+        latch.countDown();
+
+        for (Future<?> f : futures) {
+            try { f.get(); } catch (Exception e) { e.printStackTrace(); }
+        }
+        executor.shutdown();
+
+        // then: 2명(4개)은 성공하고, 마지막 1명은 재고가 없어 실패해야 함.
+        assertEquals(2, successCount.get(), "성공은 2건이어야 합니다.");
+        assertEquals(1, failCount.get(), "실패는 1건이어야 합니다.");
+
+        // 최종 재고 개수는 0개
+        AmateurRounds finalRound = amateurRoundsRepository.findById(roundId)
+                .orElseThrow(() -> new IllegalStateException("해당 회차가 존재하지 않습니다."));
+
+        assertEquals(0, finalRound.getTotalTicket(), "최종 재고는 0이어야 합니다.");
     }
 }
