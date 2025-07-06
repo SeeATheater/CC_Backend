@@ -1,6 +1,5 @@
 package cc.backend.kakaoPay.service;
 
-import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.kakaoPay.dto.requestDTO.KakaoPayApproveRequestDTO;
@@ -25,26 +24,17 @@ public class KakaoPayService {
     private final WebClient kakaoWebClient;
     private final MemberTicketRepository memberTicketRepository;
     private final KakaoPayBusinessService kakaoPayBusinessService;
-    private final AmateurRoundsRepository amateurRoundsRepository;
 
     @Value("${kakaopay.cid}")
     private String cid;
 
     public KakaoPayReadyResponseDTO ready(Long ticketId, String partnerUserId) {
 
+        // 재고 먼저 선점!!
+        kakaoPayBusinessService.preemptStock(ticketId);
+
         MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
-
-        // 현재 회차의 최신 재고 상태를 DB에서 직접 조회
-        int currentStock = amateurRoundsRepository.findById(memberTicket.getAmateurRound().getId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND))
-                .getTotalTicket();
-
-        // 현재 재고와 요청한 수량 비교
-        if (currentStock < memberTicket.getQuantity()) {
-            // 재고가 부족하면 ready에서 예외 발생
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
-        }
 
         // itemName (할인명 - 공연이름)
         String itemName = memberTicket.getAmateurTicket().getDiscountName() + " - " +
@@ -75,13 +65,14 @@ public class KakaoPayService {
                         })
                 )
                 .bodyToMono(KakaoPayReadyResponseDTO.class)
-                .block();
+                .block(); // 동기 처리
 
         if (readyResponse == null) {
             throw new RuntimeException("카카오페이 결제 준비 응답을 받지 못했습니다.");
         }
 
-        memberTicket.updateTid(readyResponse.getTid()); // tid 디비에 저장
+        // tid 디비에 저장
+        memberTicket.updateTid(readyResponse.getTid());
         memberTicketRepository.save(memberTicket);
 
         return readyResponse;
@@ -123,7 +114,7 @@ public class KakaoPayService {
         }
 
         // 예약 확정 (재고는 이미 ready에서 선점된 상태!)
-        kakaoPayBusinessService.handleApprovedTicket(partnerOrderId);
+        kakaoPayBusinessService.confirmReservation(partnerOrderId);
 
         return response;
     }
