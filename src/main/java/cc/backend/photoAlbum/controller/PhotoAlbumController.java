@@ -44,7 +44,7 @@ public class PhotoAlbumController {
     @Operation(summary = "등록자 계정의 전체 사진첩 피드 조회 API", description = "등록자의 사진첩 피드를 전체 조회하는 API 입니다.")
     public ApiResponse<List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO>> getPhotoAlbumList(
             @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "사진첩 등록자 계정") Long memberId){
+            @PathVariable Long memberId){
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), memberId));
     }
 
