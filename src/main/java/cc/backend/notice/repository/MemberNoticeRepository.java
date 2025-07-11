@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface MemberNoticeRepository extends JpaRepository<MemberNotice, Long> {
-    List<MemberNotice> findAllByMemberIdAndIsReadFalseOrderByCreatedAtDesc(Long memberId);
+    List<MemberNotice> findAllByMemberIdAndIsReadOrderByCreatedAtDesc(Long memberId, boolean isRead);
 
 }
