@@ -44,7 +44,9 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
     @Override
     @Transactional
-    public MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO) {
+    public MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Long memberId, MemberTicketCreateRequestDTO requestDTO) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException((ErrorStatus.MEMBER_NOT_AUTHORIZED)));
 
         AmateurRounds round = amateurRoundsRepository.findById(amateurRoundId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND));
