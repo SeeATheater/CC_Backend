@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public interface MemberTicketService {
 
-    MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO);
+    MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Long memberId, MemberTicketCreateRequestDTO requestDTO);
     List<MemberTicketListResponseDTO> getMyTicketList(Long memberId, String status);
     MemberTicketResponseDTO getMyTicket(Long memberId, Long memberTicketId);
     MemberTicketResponseDTO cancelTicket(Long memberId, Long memberTicketId);
