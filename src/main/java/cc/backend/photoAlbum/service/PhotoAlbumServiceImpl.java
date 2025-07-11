@@ -167,7 +167,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         AmateurShow amateurShow = amateurShowRepository.findById(requestDTO.getAmateurShowId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
 
-        PhotoAlbum updatedPhotoAlbum = photoAlbumRepository.save(photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow));
+        PhotoAlbum updatedPhotoAlbum = photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow);
 
         // 기존 이미지들 가져오기
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());

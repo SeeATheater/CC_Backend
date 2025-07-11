@@ -20,7 +20,7 @@ public class MemberNoticeResponseDTO {
         private NoticeType noticeType;
         private String message;
         private Long contentId;
-        private Boolean isread;
+        private Boolean isRead;
         private LocalDateTime createdAt;
 
     }
