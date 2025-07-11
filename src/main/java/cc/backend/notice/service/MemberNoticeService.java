@@ -30,8 +30,7 @@ public class MemberNoticeService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        List<MemberNotice> memberNotices = memberNoticeRepository.findAllByMemberIdAndIsReadFalseOrderByCreatedAtDesc(memberId);
-        System.out.println("memberNOtices = " + memberNotices);
+        List<MemberNotice> memberNotices = memberNoticeRepository.findAllByMemberIdAndIsReadOrderByCreatedAtDesc(memberId, false);
 
         return memberNotices.stream().map(memberNotice -> MemberNoticeResponseDTO.MemberNoticeDTO.builder()
                 .id(memberNotice.getId())
