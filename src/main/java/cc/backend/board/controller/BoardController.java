@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/boards")
+@RequestMapping("/boards")
 @Tag(name = "게시판")
 @RequiredArgsConstructor
 public class BoardController {

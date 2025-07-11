@@ -7,7 +7,7 @@ services:
       - "8081:8080"
     env_file:
       - .env
-    restart: unless-stopped
+    restart: unless-stopped -> 자동 롤백이안되네
     pull_policy: always
     mem_limit: 400m
 
