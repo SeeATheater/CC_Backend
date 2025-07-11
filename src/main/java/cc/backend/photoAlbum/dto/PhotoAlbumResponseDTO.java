@@ -35,4 +35,16 @@ public class PhotoAlbumResponseDTO {
         private String imageUrl;
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MemberPhotoAlbumDTO {
+        private Long photoAlbumId;
+        private Long memberId;
+        private String memberName;
+        private String amateurShowName;
+        private String imageUrl;
+    }
+
 }
