@@ -246,4 +246,34 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         return "삭제가 완료되었습니다.";
     }
+
+    @Override
+    public List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> getAllPhotoAlbumList(Long memberId){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        List<PhotoAlbum> photoAlbums = photoAlbumRepository.findAllByOrderByUpdatedAtDesc();
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> memberPhotoAlbumDTOs = photoAlbums.stream()
+                .map(photoAlbum -> {
+                    String imageUrl = imageRepository.findAllByFilePathAndContentId(
+                                    FilePath.photoAlbum,
+                                    photoAlbum.getId()
+                            ).stream()
+                            .findFirst()
+                            .map(Image::getImageUrl)
+                            .orElse(null);
+
+                    return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
+                            .photoAlbumId(photoAlbum.getId())
+                            .memberId(photoAlbum.getAmateurShow().getMember().getId())
+                            .memberName(photoAlbum.getAmateurShow().getMember().getName())
+                            .amateurShowName(photoAlbum.getAmateurShow().getName())
+                            .imageUrl(imageUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return memberPhotoAlbumDTOs;
+    }
+
 }

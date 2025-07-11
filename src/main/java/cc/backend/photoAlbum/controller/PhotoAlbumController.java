@@ -65,4 +65,10 @@ public class PhotoAlbumController {
                 return ApiResponse.onSuccess(photoAlbumService.deletePhotoAlbum(photoAlbumId, member.getId()));
     }
 
+    @GetMapping("")
+    @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
+    public ApiResponse<List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO>> getAllPhotoAlbum(
+            @AuthenticationPrincipal(expression = "member") Member member){
+        return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList(member.getId()));
+    }
 }
