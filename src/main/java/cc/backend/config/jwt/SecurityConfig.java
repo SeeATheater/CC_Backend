@@ -47,6 +47,9 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 비활성화
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
+                        .requestMatchers("/actuator/info").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/login/**").permitAll()
 
                         .requestMatchers("/swagger-ui/**").permitAll()
