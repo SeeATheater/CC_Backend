@@ -48,6 +48,12 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login/**").permitAll()
+
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/photoAlbums").permitAll()
                         .requestMatchers(HttpMethod.GET, "/boards").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/ranking").permitAll()
@@ -55,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/amateurs/ongoing").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/closing").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/*").permitAll()
+                        .requestMatchers("/upload/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .apply(new JwtSecurityConfig(tokenProvider));
