@@ -248,9 +248,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> getAllPhotoAlbumList(Long memberId){
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> getAllPhotoAlbumList(){
 
         List<PhotoAlbum> photoAlbums = photoAlbumRepository.findAllByOrderByUpdatedAtDesc();
         List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> memberPhotoAlbumDTOs = photoAlbums.stream()
