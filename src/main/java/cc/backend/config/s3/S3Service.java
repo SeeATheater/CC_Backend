@@ -34,7 +34,7 @@ public class S3Service {
     private final S3Client s3Client;
     private final MemberRepository memberRepository;
 
-    @Value("${AWS_BUCKET_DOMAIN")
+    @Value("${AWS_BUCKET_DOMAIN}")
     private String BUCKET_DOMAIN;
 
     @Value("${AWS_S3_BUCKET}")
