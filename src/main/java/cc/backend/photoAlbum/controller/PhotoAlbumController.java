@@ -44,8 +44,8 @@ public class PhotoAlbumController {
     @Operation(summary = "등록자 계정의 전체 사진첩 피드 조회 API", description = "등록자의 사진첩 피드를 전체 조회하는 API 입니다.")
     public ApiResponse<List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO>> getPhotoAlbumList(
             @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "사진첩 등록자 계정") Long performerId){
-        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), performerId));
+            @PathVariable Long memberId){
+        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), memberId));
     }
 
     @PatchMapping("/{photoAlbumId}")
@@ -65,4 +65,9 @@ public class PhotoAlbumController {
                 return ApiResponse.onSuccess(photoAlbumService.deletePhotoAlbum(photoAlbumId, member.getId()));
     }
 
+    @GetMapping("")
+    @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
+    public ApiResponse<List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO>> getAllPhotoAlbum(){
+        return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList());
+    }
 }

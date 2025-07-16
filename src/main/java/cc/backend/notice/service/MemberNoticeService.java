@@ -10,6 +10,7 @@ import cc.backend.notice.entity.MemberNotice;
 import cc.backend.notice.entity.enums.NoticeType;
 import cc.backend.notice.repository.MemberNoticeRepository;
 import cc.backend.notice.repository.NoticeRepository;
+import jakarta.xml.bind.SchemaOutputResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +30,13 @@ public class MemberNoticeService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        List<MemberNotice> memberNotices = memberNoticeRepository.findAllByMemberId(memberId);
+        List<MemberNotice> memberNotices = memberNoticeRepository.findAllByMemberIdAndIsReadOrderByCreatedAtDesc(memberId, false);
 
         return memberNotices.stream().map(memberNotice -> MemberNoticeResponseDTO.MemberNoticeDTO.builder()
                 .id(memberNotice.getId())
                 .noticeType(memberNotice.getNotice().getType())
                 .message(memberNotice.getNotice().getMessage())
-                .isread(false)
+                .isRead(memberNotice.getIsRead())
                 .contentId(memberNotice.getNotice().getContentId())
                 .createdAt(memberNotice.getCreatedAt())
                 .build())
@@ -60,7 +61,7 @@ public class MemberNoticeService {
                 .id(updatedMemberNotice.getId())
                 .noticeType(updatedMemberNotice.getNotice().getType())
                 .message(updatedMemberNotice.getNotice().getMessage())
-                .isread(true)
+                .isRead(true)
                 .contentId(updatedMemberNotice.getNotice().getContentId())
                 .createdAt(memberNotice.getCreatedAt())
                 .build();

@@ -167,7 +167,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         AmateurShow amateurShow = amateurShowRepository.findById(requestDTO.getAmateurShowId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
 
-        PhotoAlbum updatedPhotoAlbum = photoAlbumRepository.save(photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow));
+        PhotoAlbum updatedPhotoAlbum = photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow);
 
         // 기존 이미지들 가져오기
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
@@ -246,4 +246,32 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         return "삭제가 완료되었습니다.";
     }
+
+    @Override
+    public List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> getAllPhotoAlbumList(){
+
+        List<PhotoAlbum> photoAlbums = photoAlbumRepository.findAllByOrderByUpdatedAtDesc();
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> memberPhotoAlbumDTOs = photoAlbums.stream()
+                .map(photoAlbum -> {
+                    String imageUrl = imageRepository.findAllByFilePathAndContentId(
+                                    FilePath.photoAlbum,
+                                    photoAlbum.getId()
+                            ).stream()
+                            .findFirst()
+                            .map(Image::getImageUrl)
+                            .orElse(null);
+
+                    return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
+                            .photoAlbumId(photoAlbum.getId())
+                            .memberId(photoAlbum.getAmateurShow().getMember().getId())
+                            .memberName(photoAlbum.getAmateurShow().getMember().getName())
+                            .amateurShowName(photoAlbum.getAmateurShow().getName())
+                            .imageUrl(imageUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return memberPhotoAlbumDTOs;
+    }
+
 }

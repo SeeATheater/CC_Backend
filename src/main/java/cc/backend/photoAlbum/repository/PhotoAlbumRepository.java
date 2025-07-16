@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
     List<PhotoAlbum> findAllByAmateurShowId(Long amateurShowId);
+    List<PhotoAlbum> findAllByOrderByUpdatedAtDesc();
 }

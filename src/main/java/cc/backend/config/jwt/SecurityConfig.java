@@ -47,8 +47,25 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 비활성화
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/**").permitAll() // 모든 URL 접근 허용
-                        .anyRequest().permitAll() // 현재는 모든 url에 대해 접근 가능
+                        .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
+                        .requestMatchers("/actuator/info").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/login/**").permitAll()
+
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/photoAlbums").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/boards").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/amateurs/ranking").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/amateurs/today").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/amateurs/ongoing").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/amateurs/closing").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/amateurs/*").permitAll()
+                        .requestMatchers("/upload/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .apply(new JwtSecurityConfig(tokenProvider));
         http

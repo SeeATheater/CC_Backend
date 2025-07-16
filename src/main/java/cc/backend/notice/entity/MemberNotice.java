@@ -26,17 +26,17 @@ public class MemberNotice extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    private Boolean isread = false;
+    private Boolean isRead = false;
 
     @Builder
     public MemberNotice( Notice notice, Member member) {
-        this.isread = false ;
+        this.isRead = false ;
         this.notice = notice;
         this.member = member;
     }
 
     public MemberNotice updateIsRead(){
-        this.isread = true ;
+        this.isRead = true ;
         return this;
     }
 }

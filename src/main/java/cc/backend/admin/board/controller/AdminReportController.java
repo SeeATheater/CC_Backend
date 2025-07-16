@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/reports")
+@RequestMapping("/admin/reports")
 @RequiredArgsConstructor
 @Tag(name = "관리자 신고 통합 관리")
 @PreAuthorize("hasRole('ADMIN')")

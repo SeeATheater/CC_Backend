@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/boards/reports")
+@RequestMapping("/boards/reports")
 @Tag(name = "게시글/댓글 신고")
 public class ReportController {
 

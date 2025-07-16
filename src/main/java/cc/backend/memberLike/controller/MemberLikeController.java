@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "공연진 좋아요")
 @RestController
-@RequestMapping("/api/member-like")
+@RequestMapping("/member-like")
 @RequiredArgsConstructor
 public class MemberLikeController {
 

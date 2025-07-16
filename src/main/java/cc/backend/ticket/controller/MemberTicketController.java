@@ -30,7 +30,7 @@ public class MemberTicketController {
                                                                          @PathVariable Long amateurTicketId,
                                                                          @AuthenticationPrincipal(expression = "member") Member member,
                                                                          @RequestBody MemberTicketCreateRequestDTO requestDTO) {
-        return ApiResponse.onSuccess(memberTicketService.createTicket(amateurRoundId, amateurTicketId, member, requestDTO));
+        return ApiResponse.onSuccess(memberTicketService.createTicket(amateurRoundId, amateurTicketId, member.getId(), requestDTO));
 
     }
 
