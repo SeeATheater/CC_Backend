@@ -35,4 +35,7 @@ public interface MemberTicketRepository extends JpaRepository<MemberTicket, Long
             "amateurRound"
     })
     Optional<MemberTicket> findWithTicketAndShowById(Long id);
+
+    // 스케줄러에서 사용 (15분 이상 PENDING 상태인 티켓을 EXPIRED로 변경)
+    List<MemberTicket> findByReservationStatusAndCreatedAtBefore(ReservationStatus status, LocalDateTime expirationTime);
 }

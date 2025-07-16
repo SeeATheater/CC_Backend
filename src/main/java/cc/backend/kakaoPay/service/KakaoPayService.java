@@ -7,18 +7,21 @@ import cc.backend.kakaoPay.dto.requestDTO.KakaoPayReadyRequestDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class KakaoPayService {
 
     private final WebClient kakaoWebClient;
@@ -83,6 +86,11 @@ public class KakaoPayService {
         // partnerOrderId로 MemberTicket 조회
         MemberTicket memberTicket = memberTicketRepository.findById(Long.valueOf(partnerOrderId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+
+        // 티켓 상태가 EXPIRED 이면 승인 불가
+        if (memberTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
+        }
 
         // 저장된 tid 가져오기
         String tid = memberTicket.getKakaoTid();

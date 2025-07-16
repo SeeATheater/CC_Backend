@@ -14,4 +14,10 @@ public interface AmateurRoundsRepository extends JpaRepository<AmateurRounds, Lo
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE AmateurRounds a SET a.totalTicket = a.totalTicket - :quantity WHERE a.id = :id AND a.totalTicket >= :quantity")
     int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+    // 재고 증가 메소드
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE AmateurRounds a SET a.totalTicket = a.totalTicket + :quantity WHERE a.id = :id")
+    int increaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+
 }
