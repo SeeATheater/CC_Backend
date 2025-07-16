@@ -39,6 +39,11 @@ public class KakaoPayService {
         MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
+        // 재고 상태 검증
+        if (memberTicket.getReservationStatus() != ReservationStatus.PENDING) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STATUS_INVALID);
+        }
+
         // itemName (할인명 - 공연이름)
         String itemName = memberTicket.getAmateurTicket().getDiscountName() + " - " +
                 memberTicket.getAmateurTicket().getAmateurShow().getName();
