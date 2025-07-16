@@ -44,6 +44,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_TICKET_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "TICKET4005", "이미 예매된 티켓입니다."),
     MEMBER_TICKET_TID_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4006", "존재하지 않는 결제 고유 번호(TID) 입니다."),
     MEMBER_TICKET_STATUS_INVALID(HttpStatus.BAD_REQUEST, "TICKET4007", "유효하지 않은 티켓 상태입니다."),
+    MEMBER_TICKET_EXPIRED(HttpStatus.BAD_REQUEST, "TICKET4008", "티켓이 만료되었습니다."),
 
     // REAL TICKET ERROR
     REAL_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "REALTICKET4000", "존재하지 않는 실제 티켓입니다."),
