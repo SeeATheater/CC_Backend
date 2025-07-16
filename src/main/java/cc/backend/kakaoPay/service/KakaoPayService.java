@@ -31,6 +31,15 @@ public class KakaoPayService {
     @Value("${kakaopay.cid}")
     private String cid;
 
+    @Value("${kakaopay.url.approval}")
+    private String approvalUrl;
+
+    @Value("${kakaopay.url.cancel}")
+    private String cancelUrl;
+
+    @Value("${kakaopay.url.fail}")
+    private String failUrl;
+
     public KakaoPayReadyResponseDTO ready(Long ticketId, String partnerUserId) {
 
         // 재고 먼저 선점!!
@@ -56,9 +65,9 @@ public class KakaoPayService {
                 .quantity(memberTicket.getQuantity())
                 .totalAmount(memberTicket.getTotalPrice())
                 .taxFreeAmount(0)
-                .approvalUrl("http://localhost:8080/kakaoPay/approve?partner_order_id=" + ticketId)
-                .cancelUrl("http://localhost:8080/kakaoPay/cancel")
-                .failUrl("http://localhost:8080/kakaoPay/fail")
+                .approvalUrl(approvalUrl + "?partner_order_id=" + ticketId)
+                .cancelUrl(cancelUrl)
+                .failUrl(failUrl)
                 .build();
 
         // post 요청 (ready)
