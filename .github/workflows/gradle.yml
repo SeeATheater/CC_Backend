@@ -51,7 +51,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
-          source: "docker-compose.yml,switch-blue-green.sh"
+          source: "docker-compose.yml,switch-blue-green.sh,health-check.sh,rollback.sh"
           target: /home/ubuntu/ccapp
           overwrite: true
 
@@ -72,6 +72,8 @@ jobs:
             echo "📦 Pull latest images"
             docker compose pull
             
+            chmod +x switch-blue-green.sh health-check.sh rollback.sh
+            
             echo "🔄 Execute Blue-Green deployment with auto rollback"
             if ./switch-blue-green.sh; then
               echo "✅ Deployment completed successfully"
@@ -83,3 +85,6 @@ jobs:
               fi
               exit 1
             fi
+            
+            chmod +x switch-blue-green.sh
+            ./switch-blue-green.sh
