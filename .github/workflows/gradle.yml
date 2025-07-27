@@ -72,8 +72,14 @@ jobs:
             echo "📦 Pull latest images"
             docker compose pull
             
-            echo "🔄 Execute Blue-Green deployment"
-            chmod +x switch-blue-green.sh
-            ./switch-blue-green.sh
-            
-            echo "✅ Deployment completed successfully"
+            echo "🔄 Execute Blue-Green deployment with auto rollback"
+            if ./blue-green-deploy.sh; then
+              echo "✅ Deployment completed successfully"
+            else
+              echo "❌ Deployment failed, check rollback logs"
+              if [ -f /tmp/rollback.log ]; then
+                echo "📋 Rollback logs:"
+                cat /tmp/rollback.log
+              fi
+              exit 1
+            fi
