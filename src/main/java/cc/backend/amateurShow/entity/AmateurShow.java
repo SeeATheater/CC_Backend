@@ -97,7 +97,6 @@ public class AmateurShow extends BaseEntity {
         if (dto.getContact() != null) this.contact = dto.getContact();
         if (dto.getHashtag() != null) this.hashtag = dto.getHashtag();
         if (dto.getSummary() != null) this.summary = dto.getSummary();
-        if (dto.getPosterImageUrl() != null) this.posterImageUrl = dto.getPosterImageUrl();
     }
 
     public void increaseSoldTicket(int quantity) {
@@ -105,5 +104,9 @@ public class AmateurShow extends BaseEntity {
             this.totalSoldTicket = 0;
         }
         this.totalSoldTicket += quantity;
+    }
+
+    public void updatePosterImageUrl(String imageUrl){
+        this.posterImageUrl = imageUrl;
     }
 }

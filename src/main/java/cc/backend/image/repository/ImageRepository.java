@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
     List<Image> findAllByFilePathAndContentId(FilePath filePath, Long contentId);
+    Image findByFilePathAndContentId(FilePath filePath, Long contentId);
 }
