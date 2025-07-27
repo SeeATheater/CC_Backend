@@ -14,11 +14,11 @@ import java.util.List;
 public interface AmateurService {
     AmateurEnrollResponseDTO.AmateurEnrollResult enrollShow(Long memberId,
                                                                    AmateurEnrollRequestDTO requestDTO);
-    AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurId);
-    AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long showId, AmateurUpdateRequestDTO requestDTO);
-    void deleteShow(Long amateurShowId);
-    List<AmateurShowResponseDTO.AmateurShowList> getShowToday();
-    Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable);
-    List<AmateurShowResponseDTO.AmateurShowList> getShowRanking();
-    List<AmateurShowResponseDTO.AmateurShowList> getShowClosing();
+    AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long memberId, Long amateurId);
+    AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long memberId, Long showId, AmateurUpdateRequestDTO requestDTO);
+    void deleteShow(Long memberId, Long amateurShowId);
+    List<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId);
+    Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable);
+    List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId);
+    List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId);
 }

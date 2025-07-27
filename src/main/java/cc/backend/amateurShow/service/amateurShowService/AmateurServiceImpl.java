@@ -10,6 +10,12 @@ import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.event.entity.NewShowEvent;
+import cc.backend.image.DTO.ImageRequestDTO;
+import cc.backend.image.DTO.ImageResponseDTO;
+import cc.backend.image.FilePath;
+import cc.backend.image.entity.Image;
+import cc.backend.image.repository.ImageRepository;
+import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.memberLike.entity.MemberLike;
@@ -41,6 +47,8 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final MemberLikeRepository memberLikeRepository;
+    private final ImageService imageService;
+    private final ImageRepository imageRepository;
     private final ApplicationEventPublisher eventPublisher; //이벤트 생성
 
     // 소극장 공연 등록
@@ -56,6 +64,21 @@ public class AmateurServiceImpl implements AmateurService {
 
         // 나머지도 저장
         saveRelatedEntity(requestDTO, amateurShow);
+
+        //포스터사진 저장(1개만)
+        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
+        ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                .keyName(dto.getKeyName())
+                .imageUrl(dto.getImageUrl())
+                .filePath(FilePath.poster)
+                .contentId(newAmateurShow.getId())
+                .memberId(memberId)
+                .build();
+
+        //amateurShow 엔티티 내 posterImageUrl 필드에 추가 저장
+        String imageUrl = imageService.saveImage(memberId, fullImageRequestDTO).getImageUrl();
+        newAmateurShow.updatePosterImageUrl(imageUrl);
+
 
         // 좋아요한 멤버리스트
         List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
@@ -101,14 +124,36 @@ public class AmateurServiceImpl implements AmateurService {
         // 공연 회차
         List<AmateurRounds> rounds = AmateurConverter.toAmateurRoundEntity(requestDTO.getRounds(), amateurShow);
         amateurRoundsRepository.saveAll(rounds);
+
     }
 
     // 소극장 공연 수정
     @Transactional
     @Override
-    public AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long showId, AmateurUpdateRequestDTO requestDTO) {
+    public AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long memberId, Long showId, AmateurUpdateRequestDTO requestDTO) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         AmateurShow amateurShow = amateurShowRepository.findByIdWithDetails(showId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        //포스터 사진 수정
+        //기존 이미지 삭제
+        Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.poster, amateurShow.getId());
+        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
+        if(!dto.getImageUrl().isEmpty()){
+            imageService.deleteImage(existingImage.getId(), memberId);
+            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                    .keyName(dto.getKeyName())
+                    .imageUrl(dto.getImageUrl())
+                    .filePath(FilePath.poster)
+                    .contentId(amateurShow.getId())
+                    .memberId(memberId)
+                    .build();
+            //amateurShow 엔티티 내 posterImageUrl 필드에 추가 저장
+            String imageUrl = imageService.saveImage(memberId, fullImageRequestDTO).getImageUrl();
+            amateurShow.updatePosterImageUrl(imageUrl);
+        }
 
         // 기본 정보 업데이트
         amateurShow.updateInfo(requestDTO);
@@ -260,15 +305,24 @@ public class AmateurServiceImpl implements AmateurService {
     // 소극장 공연 삭제
     @Transactional
     @Override
-    public void deleteShow(Long amateurShowId) {
+    public void deleteShow(Long memberId, Long amateurShowId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
         amateurShowRepository.delete(amateurShow);
+
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.poster, amateurShowId);
+        images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
     }
 
     // 소극장 공연 단건 조회
     @Override
-    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurShowId) {
+    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long memberId, Long amateurShowId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
@@ -277,7 +331,10 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 오늘 진행하는 소극장 공연 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowToday() {
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         LocalDate today = LocalDate.now();
         List<AmateurShow> allShows = amateurShowRepository.findAll();
 
@@ -315,7 +372,10 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 현재 진행중인 소극장 공연 리스트 조회
     @Override
-    public Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable) {
+    public Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         LocalDate today = LocalDate.now();
         List<AmateurShow> allShows = amateurShowRepository.findAll();
 
@@ -344,7 +404,10 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 소극장 공연 랭킹 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking() {
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         LocalDate today = LocalDate.now();
         List<AmateurShow> shows = amateurShowRepository.findAll();
 
@@ -370,7 +433,10 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 오늘 마감인 소극장 공연 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing() {
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
         List<AmateurShow> allShows = amateurShowRepository.findAll();
         LocalDate today = LocalDate.now();
 

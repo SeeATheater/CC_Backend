@@ -1,4 +1,5 @@
 package cc.backend.amateurShow.dto;
+import cc.backend.image.DTO.ImageRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,12 +19,13 @@ public class AmateurEnrollRequestDTO {
     private String contact; // 연락처
     private String hashtag; // 해시태그
     private String summary; // 줄거리
-    private String posterImageUrl; // 포스터 이미지 url
     private Notice notice; // 공지사항 -> 일대일 맵핑
     private List<Casting> casting; // 캐스팅 정보
     private List<Tickets> tickets;
     private List<Staff> staff; // 감독 및 스태프 정보
     private List<Rounds> rounds;
+
+    private ImageRequestDTO.PartialImageRequestDTO imageRequestDTO;
 
     @Getter
     @NoArgsConstructor
