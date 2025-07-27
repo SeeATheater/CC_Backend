@@ -76,4 +76,11 @@ jobs:
             chmod +x switch-blue-green.sh
             ./switch-blue-green.sh
             
+            echo "🔍 Deployment verification"
+            CONTAINER_COUNT=$(docker ps --filter "name=ccapp" --format "{{.Names}}" | wc -l)
+            if [ "$CONTAINER_COUNT" -ne 1 ]; then
+            echo "❌ Deployment failed: $CONTAINER_COUNT containers running"
+            exit 1
+            fi  
+            
             echo "✅ Deployment completed successfully"
