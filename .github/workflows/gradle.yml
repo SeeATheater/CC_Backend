@@ -85,6 +85,3 @@ jobs:
               fi
               exit 1
             fi
-            
-            chmod +x switch-blue-green.sh
-            ./switch-blue-green.sh
