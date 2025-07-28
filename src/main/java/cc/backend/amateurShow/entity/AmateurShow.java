@@ -49,6 +49,9 @@ public class AmateurShow extends BaseEntity {
 
     private Integer totalSoldTicket;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private AmateurShowStatus status = AmateurShowStatus.APPROVED_YET;
 //    @Enumerated(EnumType.STRING)
 //    @Builder.Default
 //    private AmateurStatus amateurStatus = AmateurStatus.YET;

@@ -33,7 +33,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4010", "토큰이 유효하지 않습니다."),
     MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4011", "해당 사용자게에게 관리자 권한이 없습니다."),
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
-    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
+    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4013", "해당 회원은 이미 활성화 상태입니다,"),
 
     // MEMBER TICKET ERROR
     MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
@@ -54,8 +54,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // AMATEUR TICKET ERROR
     AMATEUR_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURTICKET4000", "존재하지 않는 소극장 공연 티켓입니다."),
     AMATEUR_TICKET_STOCK(HttpStatus.BAD_REQUEST, "AMATEURTICKET4001", "주문 수량은 최소 1개 이상이어야 합니다."),
-
-
+    AMATEUR_SHOW_MISMATCH(HttpStatus.NOT_FOUND, "AMATEURTICKET4002", "회차와 티켓에 해당하는 공연이 일치하지 않습니다."),
     // PHOTOALBUM ERROR
     PHOTOALBUM_NOT_FOUND(HttpStatus.NOT_FOUND, "PHOTOALBUM4000", "존재하지 않는 사진첩입니다."),
 
@@ -82,7 +81,10 @@ public enum ErrorStatus implements BaseErrorCode {
     // MEMBER LIKE ERROR
 
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE4001", "존재하지 않는 좋아요입니다."),
-    DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다.");
+    DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다."),
+
+    // MYPAGE ERROR
+    MEMBER_NOT_PERFORMER(HttpStatus.FORBIDDEN, "MYPAGE4001", "등록자 계정이 아니기에 마이페이지 접근권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

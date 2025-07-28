@@ -2,7 +2,9 @@ package cc.backend.ticket.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 
 import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
@@ -14,10 +16,8 @@ import cc.backend.event.entity.PromoteHotEvent;
 import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
+import cc.backend.ticket.dto.response.*;
 import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
-import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
-import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
@@ -44,22 +44,30 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
     @Override
     @Transactional
-    public MemberTicketCreateResponseDTO createTicket(Long amateurRoundId, Long amateurTicketId, Long memberId, MemberTicketCreateRequestDTO requestDTO) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException((ErrorStatus.MEMBER_NOT_AUTHORIZED)));
+    public MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO) {
+
+        AmateurShow show = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         AmateurRounds round = amateurRoundsRepository.findById(amateurRoundId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND));
 
+        AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
+
+        // 해당 회차와 티켓에 해당하는 공연이 일치 하는지
+        if (!amateurTicket.getAmateurShow().getId().equals(amateurShowId) || !round.getAmateurShow().getId().equals(amateurShowId)) {
+            throw new GeneralException(ErrorStatus.AMATEUR_SHOW_MISMATCH);
+        }
+
+        // 현재 예약하려는 티켓의 수량이 해당 회차의 재고수량을 초과하지 않는지
         if(requestDTO.getQuantity() > round.getTotalTicket()) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
         }
 
-        AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
-
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
+        String bookingNumber = generateBookingNumber();
 
         MemberTicket ticket = MemberTicket.builder()
                 .member(member)
@@ -67,6 +75,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
                 .reserveDate(LocalDateTime.now())
+                .bookingNumber(bookingNumber)
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
@@ -82,7 +91,8 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), member));
 
         return MemberTicketCreateResponseDTO.builder()
-                .ticketId(saved.getId())
+                .memberTicketId(saved.getId())
+                .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .place(amateurTicket.getAmateurShow().getPlace())
                 .quantity(saved.getQuantity())
@@ -132,6 +142,49 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         memberTicket.updateReservationStatus(ReservationStatus.CANCELLED);
         return MemberTicketResponseDTO.from(memberTicket);
     }
+
+    @Override
+    public List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId){
+        List<AmateurRounds> rounds = amateurRoundsRepository.findByAmateurShowId(amateurShowId);
+        return rounds.stream()
+                .map(r -> new RoundsListDTO(
+                        r.getId(),
+                        r.getRoundNumber(),
+                        r.getPerformanceDateTime()
+                )).toList();
+    }
+
+    @Override
+    public List<AmateurTicketListDTO> getAmateurTicketList(Long memberId, Long amateurShowId){
+        List<AmateurTicket> tickets = amateurTicketRepository.findByAmateurShowId(amateurShowId);
+        return tickets.stream()
+                .map(t -> new AmateurTicketListDTO(
+                        t.getId(),
+                        t.getDiscountName(),
+                        t.getPrice()
+                )).toList();
+    }
+
+    @Override
+    public AmateurShowSimpleDTO getSimpleAmateurShow(Long amateurShowId){
+        AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+        return AmateurShowSimpleDTO.builder()
+                .amateurShowId(amateurShowId)
+                .name(amateurShow.getName())
+                .place(amateurShow.getPlace())
+                .posterImageUrl(amateurShow.getPosterImageUrl())
+                .build();
+    }
+
+
+    private String generateBookingNumber() {
+        String prefix = "TICKET";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = new Random().nextInt(9000) + 1000; // 1000~9999
+        return  prefix + timestamp + randomNum;
+    }
+
 
 
 

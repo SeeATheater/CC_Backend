@@ -61,5 +61,10 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             @Param("boardType") BoardType boardType,
             @Param("keyword") String keyword,
             Pageable pageable);
+
+    // 내가 쓴 게시말 리스트
+    @Query("SELECT b FROM Board b WHERE b.member.id = :memberId ORDER BY b.id DESC")
+    Slice<Board> findAllByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
+
 }
 

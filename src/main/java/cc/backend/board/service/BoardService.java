@@ -252,6 +252,16 @@ public class BoardService {
         return boardSlice.map(BoardDetailResponse::from);
     }
 
+    //내가 쓴 게시글 리스트 조회
+    @Transactional(readOnly = true)
+    public Slice<BoardDetailResponse> getMyBoards(Long memberId, int page, int size) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Slice<Board> boardSlice = boardRepository.findAllByMemberIdOrderByIdDesc(member.getId(), pageable);
+        return boardSlice.map(BoardDetailResponse::from);
+    }
+
     // --------------- 내부 메서드 ------------
     //핫게시판 선정 로직
     private void promoteToHotBoard(Board board) {
