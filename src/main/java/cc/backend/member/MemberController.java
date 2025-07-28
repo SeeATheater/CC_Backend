@@ -7,6 +7,7 @@ import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.board.dto.response.BoardDetailResponse;
+import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import org.springframework.data.domain.Sort;
 import cc.backend.board.service.BoardService;
 import cc.backend.member.dto.MyPageResponseDTO;
@@ -139,10 +140,38 @@ public class MemberController {
             @RequestParam int page,
             @Parameter(description = "페이지 크기", required = true)
             @RequestParam int size,
-            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: RESERVING, 공연 종료: ENDED)", required = false)
+            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: APPROVED_ONGOING, 공연 종료: APPROVED_ENDED)", required = false)
             @RequestParam(required = false) AmateurShowStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         return amateurService.getMyAmateurShow(member.getId(), status, pageable);
     }
+
+    @GetMapping("/myPage/reserveList")
+    @Operation(summary = "예매 내역 조회 첫화면", description = "등록자 계정으로 예매내역 조회를 누를시 나오는 첫화면입니다.")
+    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getReserveList(
+            @Parameter(description = "작성자 회원 ID", required = true)
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
+            @RequestParam int page,
+            @Parameter(description = "페이지 크기", required = true)
+            @RequestParam int size,
+            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: APPROVED_ONGOING, 공연 종료: APPROVED_ENDED)", required = false)
+            @RequestParam(required = false) AmateurShowStatus status
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
+    }
+
+/*    @GetMapping("/myPage/reserveList/{amateurShowId}")
+    @Operation(summary = "예매 내역 조회 상세보기", description = "등록자 계정으로 예매내역 조회 상세화면 입니다.")
+    public ReserveListResponseDTO getReserveListDetail(
+            @Parameter(description = "공연 ID", required = true)
+            @PathVariable Long amateurShowId,
+
+            @Parameter(description = "로그인한 회원 정보", required = true)
+            @AuthenticationPrincipal(expression = "member") Member member
+    ) {
+        return amateurService.getReserveListDetail(amateurShowId, member.getId());
+    }*/
 }

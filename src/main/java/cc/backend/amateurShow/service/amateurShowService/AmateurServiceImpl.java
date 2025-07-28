@@ -22,6 +22,7 @@ import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
+import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -491,4 +492,9 @@ public class AmateurServiceImpl implements AmateurService {
                 .status(status)
                 .build());
     }
+
+    //@Override
+    //public ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId){
+    //    return null;
+    //}
 }
