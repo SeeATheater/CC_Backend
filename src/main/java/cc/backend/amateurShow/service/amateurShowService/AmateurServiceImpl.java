@@ -497,4 +497,5 @@ public class AmateurServiceImpl implements AmateurService {
     //public ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId){
     //    return null;
     //}
+    
 }

@@ -24,13 +24,7 @@ public interface AmateurService {
     Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable);
     List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId);
     List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId);
-    AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurId);
-    AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long showId, AmateurUpdateRequestDTO requestDTO);
-    void deleteShow(Long amateurShowId);
-    List<AmateurShowResponseDTO.AmateurShowList> getShowToday();
-    Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable);
-    List<AmateurShowResponseDTO.AmateurShowList> getShowRanking();
-    List<AmateurShowResponseDTO.AmateurShowList> getShowClosing();
+
 
     Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyAmateurShow(Long memberId, AmateurShowStatus showStatus, Pageable pageable);
 
