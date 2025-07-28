@@ -81,7 +81,10 @@ public enum ErrorStatus implements BaseErrorCode {
     // MEMBER LIKE ERROR
 
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE4001", "존재하지 않는 좋아요입니다."),
-    DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다.");
+    DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다."),
+
+    // MYPAGE ERROR
+    MEMBER_NOT_PERFORMER(HttpStatus.FORBIDDEN, "MYPAGE4001", "등록자 계정이 아니기에 마이페이지 접근권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

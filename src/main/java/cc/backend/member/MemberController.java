@@ -1,10 +1,13 @@
 package cc.backend.member;
 
 
+import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
+import cc.backend.amateurShow.entity.AmateurShowStatus;
+import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.board.dto.response.BoardDetailResponse;
-import cc.backend.board.entity.enums.BoardType;
+import org.springframework.data.domain.Sort;
 import cc.backend.board.service.BoardService;
 import cc.backend.member.dto.MyPageResponseDTO;
 import cc.backend.member.entity.Member;
@@ -15,7 +18,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +34,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final BoardService boardService;
+    private final AmateurService amateurService;
 
     @GetMapping("/myPage")
     @Operation(
@@ -112,14 +119,30 @@ public class MemberController {
     }
 
 
-    @Operation(summary = "게시글 목록 조회 API", description = "게시글을 무한 스크롤 방식으로 조회합니다.")
+    @Operation(summary = "내가 업로드한 게시글 목록 조회 API", description = "내가 업로드한 게시글을 무한 스크롤 방식으로 조회합니다.")
     @GetMapping("/myPage/myBoard")
     public Slice<BoardDetailResponse> getMyBoards(
             @Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
             @Parameter(description = "페이지 번호(0부터 시작)", required = true) @RequestParam int page,
             @Parameter(description = "페이지 크기", required = true) @RequestParam int size
     ) {
-        return boardService.getMyBoards(member, page, size);
+        return boardService.getMyBoards(member.getId(), page, size);
     }
 
+
+    @GetMapping("/myPage/myShow")
+    @Operation(summary = "내가 등록한 공연 조회", description = "등록자 계정으로 등록한 공연들을 무한 스크롤 방식으로 조회합니다.")
+    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyShows(
+            @Parameter(description = "작성자 회원 ID", required = true)
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
+            @RequestParam int page,
+            @Parameter(description = "페이지 크기", required = true)
+            @RequestParam int size,
+            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: RESERVING, 공연 종료: ENDED)", required = false)
+            @RequestParam(required = false) AmateurShowStatus status
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
+    }
 }

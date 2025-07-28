@@ -9,6 +9,7 @@ import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.board.entity.enums.BoardType;
 import cc.backend.event.entity.NewShowEvent;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
@@ -17,6 +18,7 @@ import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -460,5 +463,32 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         return result;
+    }
+
+    @Override
+    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyAmateurShow(Long memberId, AmateurShowStatus status, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if (member.getRole() != Role.PERFORMER) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
+        }
+
+        Slice<AmateurShow> shows;
+
+        if (status == null) {
+            shows = amateurShowRepository.findAllByMemberIdOrderByIdDesc(memberId, pageable);
+        } else {
+            shows = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
+        }
+
+        return shows.map(show -> AmateurShowResponseDTO.MyShowAmateurShowList.builder()
+                .amateurShowId(show.getId())
+                .name(show.getName())
+                .place(show.getPlace())
+                .schedule(show.getSchedule())
+                .posterImageUrl(show.getPosterImageUrl())
+                .status(status)
+                .build());
     }
 }
