@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 public class MemberTicketCreateResponseDTO {
     private Long memberTicketId;
-
+    private String bookingNumber;
     private String showTitle;               // 공연 이름
     private String place;                   // 공연 장소
     private int quantity;                   // 예매 수량

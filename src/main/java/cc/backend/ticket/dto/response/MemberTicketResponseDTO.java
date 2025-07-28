@@ -14,6 +14,7 @@ public class MemberTicketResponseDTO {
 
     private String posterImageUrl;
     private Long memberTicketId;
+    private String bookingNumber;
     private String showTitle;
     private int quantity;
     private String place;
@@ -26,6 +27,7 @@ public class MemberTicketResponseDTO {
         return MemberTicketResponseDTO.builder()
                 .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
                 .memberTicketId(ticket.getId())
+                .bookingNumber(ticket.getBookingNumber())
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
                 .place(ticket.getAmateurTicket().getAmateurShow().getPlace())
                 .quantity(ticket.getQuantity())

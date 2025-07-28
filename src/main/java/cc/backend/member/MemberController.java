@@ -3,6 +3,9 @@ package cc.backend.member;
 
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.board.dto.response.BoardDetailResponse;
+import cc.backend.board.entity.enums.BoardType;
+import cc.backend.board.service.BoardService;
 import cc.backend.member.dto.MyPageResponseDTO;
 import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final BoardService boardService;
 
     @GetMapping("/myPage")
     @Operation(
@@ -105,4 +110,16 @@ public class MemberController {
     ) {
         return ApiResponse.onSuccess(memberService.reactivateMember(member.getId()));
     }
+
+
+    @Operation(summary = "게시글 목록 조회 API", description = "게시글을 무한 스크롤 방식으로 조회합니다.")
+    @GetMapping("/myPage/myBoard")
+    public Slice<BoardDetailResponse> getMyBoards(
+            @Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
+            @Parameter(description = "페이지 번호(0부터 시작)", required = true) @RequestParam int page,
+            @Parameter(description = "페이지 크기", required = true) @RequestParam int size
+    ) {
+        return boardService.getMyBoards(member, page, size);
+    }
+
 }

@@ -2,7 +2,9 @@ package cc.backend.ticket.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 
 import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
@@ -65,6 +67,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
+        String bookingNumber = generateBookingNumber();
 
         MemberTicket ticket = MemberTicket.builder()
                 .member(member)
@@ -72,6 +75,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
                 .reserveDate(LocalDateTime.now())
+                .bookingNumber(bookingNumber)
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
@@ -88,6 +92,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
         return MemberTicketCreateResponseDTO.builder()
                 .memberTicketId(saved.getId())
+                .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .place(amateurTicket.getAmateurShow().getPlace())
                 .quantity(saved.getQuantity())
@@ -170,6 +175,14 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .place(amateurShow.getPlace())
                 .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
+    }
+
+
+    private String generateBookingNumber() {
+        String prefix = "TICKET";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = new Random().nextInt(9000) + 1000; // 1000~9999
+        return  prefix + timestamp + randomNum;
     }
 
 
