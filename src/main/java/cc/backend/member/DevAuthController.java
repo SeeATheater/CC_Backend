@@ -60,12 +60,7 @@ public class DevAuthController {
         Member member = memberRepository.findMemberByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계정이 존재하지 않습니다."));
 
-        CustomUserDetails userDetails = new CustomUserDetails(member);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-
-        TokenDTO tokenDto = tokenProvider.generateTokenDto(authentication);
+        TokenDTO tokenDto = tokenProvider.generateTokenDto(member);
 
         return ResponseEntity.ok(tokenDto);
     }

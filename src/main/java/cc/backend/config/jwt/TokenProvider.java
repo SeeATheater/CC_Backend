@@ -3,6 +3,7 @@ package cc.backend.config.jwt;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -45,36 +46,27 @@ public class TokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public TokenDTO generateTokenDto(Authentication authentication) {
-        // 권한들 가져오기
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
-
-       /* if (authorities.isEmpty()) {
-            authorities = "ROLE_USER"; // 기본 권한 부여 //지피티가 추가함
-        }*/
-        long now = (new Date()).getTime();
+    public TokenDTO generateTokenDto(Member member) {
+        long now = System.currentTimeMillis();
 
         // Access Token 생성
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())       // payload "sub": "name"
-                .claim(AUTHORITIES_KEY, authorities)        // payload "auth": "ROLE_USER"
+                .setSubject(member.getEmail())      // payload "sub": "name"
+                .claim(AUTHORITIES_KEY, "ROLE_" + member.getRole().name())        // payload "auth": "ROLE_USER"
                 .setExpiration(accessTokenExpiresIn)        // payload "exp": 151621022 (ex)
                 .signWith(key, SignatureAlgorithm.HS512)    // header "alg": "HS512"
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
+                .setSubject(member.getEmail())
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
         return TokenDTO.builder()
-                //.grantType(BEARER_TYPE)
                 .accessToken(accessToken)
-                //.accessTokenExpiresIn(accessTokenExpiresIn.getTime())
                 .refreshToken(refreshToken)
                 .build();
     }
@@ -88,21 +80,11 @@ public class TokenProvider {
         Member member = memberRepository.findMemberByEmail(email)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        // 🔍 auth 값이 존재하는 경우, GrantedAuthority로 변환
-//        String authorities = claims.get("auth", String.class);
-//        List<SimpleGrantedAuthority> grantedAuthorities = Collections.emptyList();
-//
-//        if (authorities != null && !authorities.isEmpty()) {
-//            grantedAuthorities = Arrays.stream(authorities.split(","))
-//                    .map(SimpleGrantedAuthority::new)
-//                    .collect(Collectors.toList());
-//        }
-//
-//        // 권한 정보를 포함한 UserDetails 생성
-//        UserDetails principal = new User(claims.getSubject(), "", grantedAuthorities);
-//
-//        return new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities());
-//
+        // 활성 상태 확인
+        if (member.getActive_status() == ActiveStatus.INACTIVE) {
+            throw new GeneralException(ErrorStatus.MEMBER_ALREADY_DEACTIVATED);
+        }
+
          //권한 정보 없이 UserDetails 생성
         UserDetails principal = new CustomUserDetails(member);
 
@@ -135,5 +117,19 @@ public class TokenProvider {
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        if (!validateToken(refreshToken)) {
+            throw new GeneralException(ErrorStatus.INVALID_REFRESH_TOKEN);
+        }
+
+        Claims claims = parseClaims(refreshToken);
+        String email = claims.getSubject();
+
+        Member member = memberRepository.findMemberByEmail(email)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        return generateTokenDto(member).getAccessToken();
     }
 }

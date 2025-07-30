@@ -34,6 +34,7 @@ public class Member extends BaseEntity {
 
     private String address;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String phone;

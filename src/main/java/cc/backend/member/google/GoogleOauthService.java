@@ -32,8 +32,8 @@ public class GoogleOauthService {
                             .build();
                     return memberRepository.save(newMember);
                 });
-        Authentication authentication = new UsernamePasswordAuthenticationToken(member.getEmail(), null);
-        TokenDTO token = tokenProvider.generateTokenDto(authentication);
+
+        TokenDTO token = tokenProvider.generateTokenDto(member);
 
         return new AuthResponse(token.getAccessToken(), token.getRefreshToken());
         //return googleClient.getGoogleAccountProfile(code);
