@@ -2,8 +2,9 @@ package cc.backend.member;
 
 
 import cc.backend.config.jwt.CustomUserDetails;
-import cc.backend.config.jwt.TokenDTO;
+import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.config.jwt.TokenProvider;
+import cc.backend.config.jwt.dto.RefreshTokenRequest;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,12 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
@@ -63,5 +60,19 @@ public class DevAuthController {
         TokenDTO tokenDto = tokenProvider.generateTokenDto(member);
 
         return ResponseEntity.ok(tokenDto);
+    }
+
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenDTO> refresh(@RequestBody RefreshTokenRequest request) {
+        TokenDTO tokenDto = tokenProvider.refreshAccessToken(request.getRefreshToken());
+        return ResponseEntity.ok(tokenDto);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        tokenProvider.logout(userDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 }

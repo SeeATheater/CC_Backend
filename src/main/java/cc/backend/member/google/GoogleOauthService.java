@@ -1,6 +1,6 @@
 package cc.backend.member.google;
 
-import cc.backend.config.jwt.TokenDTO;
+import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.config.jwt.TokenProvider;
 import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.Role;
@@ -8,8 +8,6 @@ import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service

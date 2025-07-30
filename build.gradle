@@ -58,6 +58,7 @@ dependencies {
 	implementation 'software.amazon.awssdk:s3outposts:2.27.3'
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {

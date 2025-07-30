@@ -2,28 +2,23 @@ package cc.backend.config.jwt;
 
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -35,13 +30,14 @@ public class TokenProvider {
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 
     private final MemberRepository memberRepository;
-
+    private final RefreshTokenService refreshTokenService;
     private final Key key;
 
-    public TokenProvider(@Value("${jwt.secret}") String secretKey, MemberRepository memberRepository) {
+    public TokenProvider(@Value("${jwt.secret}") String secretKey, MemberRepository memberRepository,RefreshTokenService refreshTokenService) {
         log.info("JWT Secret Key (Generation): {}", secretKey); // Secret Key 출력
 
         this.memberRepository = memberRepository;
+        this.refreshTokenService = refreshTokenService;
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -64,6 +60,8 @@ public class TokenProvider {
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+
+        refreshTokenService.saveRefreshToken(member.getEmail(), refreshToken);
 
         return TokenDTO.builder()
                 .accessToken(accessToken)
@@ -119,7 +117,7 @@ public class TokenProvider {
         }
     }
 
-    public String refreshAccessToken(String refreshToken) {
+    public TokenDTO refreshAccessToken(String refreshToken) {
         if (!validateToken(refreshToken)) {
             throw new GeneralException(ErrorStatus.INVALID_REFRESH_TOKEN);
         }
@@ -127,9 +125,17 @@ public class TokenProvider {
         Claims claims = parseClaims(refreshToken);
         String email = claims.getSubject();
 
+        if (!refreshTokenService.validateRefreshToken(email, refreshToken)) {
+            throw new GeneralException(ErrorStatus.INVALID_REFRESH_TOKEN);
+        }
+
         Member member = memberRepository.findMemberByEmail(email)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        return generateTokenDto(member).getAccessToken();
+        return generateTokenDto(member);
+    }
+
+    public void logout(String email) {
+        refreshTokenService.deleteRefreshToken(email);
     }
 }
