@@ -39,6 +39,10 @@ url:
 jwt:
   secret: ${JWT_SECRET}
 
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+
 logging:
   level:
     org:
@@ -58,3 +62,4 @@ management:
   endpoint:
     health:
       show-details: always
+

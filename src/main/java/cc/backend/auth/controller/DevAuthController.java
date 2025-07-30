@@ -1,4 +1,4 @@
-package cc.backend.member;
+package cc.backend.auth.controller;
 
 
 import cc.backend.config.jwt.CustomUserDetails;
@@ -18,9 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 
-@Tag(name = "DevAuth", description = "개발자용 토큰 발급 API")
+@Tag(name = "Auth", description = "Auth API")
 @RestController
-@RequestMapping("/login/dev")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class DevAuthController {
 
@@ -45,7 +45,7 @@ public class DevAuthController {
             - admin@test.com
             """
     )
-    @PostMapping
+    @PostMapping("/dev/login")
     public ResponseEntity<TokenDTO> devLogin(
             @RequestParam String email
     ) {
@@ -63,7 +63,7 @@ public class DevAuthController {
     }
 
 
-    @PostMapping("/refresh")
+    @PostMapping("/dev/refresh")
     public ResponseEntity<TokenDTO> refresh(@RequestBody RefreshTokenRequest request) {
         TokenDTO tokenDto = tokenProvider.refreshAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(tokenDto);

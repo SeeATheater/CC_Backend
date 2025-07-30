@@ -1,6 +1,7 @@
 package cc.backend.member.repository;
 
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import cc.backend.notice.entity.MemberNotice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,5 +16,11 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     @Query("select m from Member m where m.email = :email")
     Optional<Member> findMemberByEmail(@Param("email") String email);
+
+    Optional<Member> findMemberByEmailAndRole(String email, Role role);
+
+    Optional<Member> findMemberByKakaoId(String kakaoId);
+
+    boolean existsByUsername(String username);
 
 }

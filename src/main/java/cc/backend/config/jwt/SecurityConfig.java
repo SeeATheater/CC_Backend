@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/login/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
 
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
