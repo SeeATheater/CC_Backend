@@ -177,8 +177,11 @@ public class MemberController {
     }*/
 
     @PatchMapping("/username")
+    @Operation(summary = "회원 username 수정")
     public ResponseEntity<UpdateUsernameResponseDTO> updateUsername(
+            @Parameter(description = "수정할 유저네임", required = true)
             @Valid @RequestBody UpdateUsernameRequestDTO request,
+            @Parameter(description = "작성자 회원 ID", required = true)
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         UpdateUsernameResponseDTO response =memberService.updateUsername(member.getId(), request.getUsername());
