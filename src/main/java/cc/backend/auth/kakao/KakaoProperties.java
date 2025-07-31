@@ -1,4 +1,4 @@
-package cc.backend.auth.kakao.property;
+package cc.backend.auth.kakao;
 
 import lombok.Getter;
 import lombok.Setter;

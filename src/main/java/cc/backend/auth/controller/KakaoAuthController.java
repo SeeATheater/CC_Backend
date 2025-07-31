@@ -1,9 +1,8 @@
-package cc.backend.auth.kakao.controller;
+package cc.backend.auth.controller;
 
 import cc.backend.auth.kakao.dto.request.KakaoCallbackRequest;
 import cc.backend.auth.service.AuthService;
 import cc.backend.config.jwt.dto.TokenDTO;
-import cc.backend.member.enumerate.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

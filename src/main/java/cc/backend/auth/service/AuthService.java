@@ -4,7 +4,7 @@ import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.auth.kakao.dto.response.KakaoTokenResponse;
 import cc.backend.auth.kakao.dto.response.KakaoUserInfo;
-import cc.backend.auth.kakao.service.KakaoAuthService;
+import cc.backend.auth.kakao.KakaoClient;
 import cc.backend.config.jwt.TokenProvider;
 import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.member.entity.Member;
@@ -25,16 +25,16 @@ import java.util.UUID;
 @Slf4j
 public class AuthService {
 
-    private final KakaoAuthService kakaoAuthService;
+    private final KakaoClient kakaoClient;
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public TokenDTO kakaoLogin(String authorizationCode, Role role) {
         // 인가 코드로 액세스 토큰 획득
-        KakaoTokenResponse tokenResponse = kakaoAuthService.getAccessToken(authorizationCode);
+        KakaoTokenResponse tokenResponse = kakaoClient.getAccessToken(authorizationCode);
 
-        KakaoUserInfo userInfo = kakaoAuthService.getUserInfo(tokenResponse.getAccessToken());
+        KakaoUserInfo userInfo = kakaoClient.getUserInfo(tokenResponse.getAccessToken());
 
         // 기존 회원 조회 또는 신규 회원 생성
         Member member = findOrCreateMember(userInfo, role);

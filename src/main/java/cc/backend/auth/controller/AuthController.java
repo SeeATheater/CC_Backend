@@ -22,7 +22,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class DevAuthController {
+public class AuthController {
 
     private final TokenProvider tokenProvider;
     private final MemberRepository memberRepository;
@@ -62,13 +62,18 @@ public class DevAuthController {
         return ResponseEntity.ok(tokenDto);
     }
 
-
+    @Operation(
+            summary = "개발자용 액세스 토큰 재발급",
+            description = "refresh token을 통해 access token을 재발급합니다."
+    )
     @PostMapping("/dev/refresh")
     public ResponseEntity<TokenDTO> refresh(@RequestBody RefreshTokenRequest request) {
         TokenDTO tokenDto = tokenProvider.refreshAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(tokenDto);
     }
-
+    @Operation(
+            summary = "로그아웃"
+    )
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

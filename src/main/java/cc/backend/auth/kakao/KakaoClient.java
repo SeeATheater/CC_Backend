@@ -1,11 +1,9 @@
-package cc.backend.auth.kakao.service;
+package cc.backend.auth.kakao;
 
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.auth.kakao.dto.response.KakaoTokenResponse;
 import cc.backend.auth.kakao.dto.response.KakaoUserInfo;
-import cc.backend.auth.kakao.property.KakaoProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -19,12 +17,12 @@ import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class KakaoAuthService {
+public class KakaoClient {
 
     private final WebClient webClient;
     private final KakaoProperties kakaoProperties;
 
-    public KakaoAuthService(KakaoProperties kakaoProperties) {
+    public KakaoClient(KakaoProperties kakaoProperties) {
         this.kakaoProperties = kakaoProperties;
         this.webClient = WebClient.builder()
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
