@@ -51,10 +51,17 @@ public class AuthService {
             throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
         }
 
-        Optional<Member> existingMember = memberRepository.findMemberByEmailAndRole(email, role);
+        Optional<Member> existingMember = memberRepository.findMemberByEmail(email);
 
         if (existingMember.isPresent()) {
             Member member = existingMember.get();
+
+            //다른 역할로 로그인 요청한 경우
+            if (!member.getRole().equals(role)) {
+                throw new GeneralException(ErrorStatus.MEMBER_ROLE_ALREADY_EXISTS);
+            }
+
+            //같은 역할일 경우 로그인 처리
             if (member.getKakaoId() == null) {
                 member.updateKakaoId(kakaoId);
             }
@@ -83,7 +90,7 @@ public class AuthService {
         return memberRepository.save(newMember);
     }
 
-    //유저네임 임의로 생성
+    //유저네임 = 이메일 + 역할
     private String generateUsername(String email, Role role) {
         String baseUsername = email.split("@")[0] + "_" + role.name().toLowerCase();
 

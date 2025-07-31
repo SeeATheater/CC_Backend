@@ -40,6 +40,8 @@ public enum ErrorStatus implements BaseErrorCode {
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),
     KAKAO_USER_INFO_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4002", "카카오 사용자 정보 요청에 실패했습니다."),
     INVALID_KAKAO_USER_INFO(HttpStatus.BAD_REQUEST, "KAKAO4003", "카카오 사용자 정보가 유효하지 않습니다."),
+    MEMBER_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "KAKAO4004", "이미 다른 역할로 가입된 계정입니다."),
+
 
     // MEMBER TICKET ERROR
     MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
