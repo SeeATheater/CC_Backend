@@ -4,8 +4,10 @@ import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
 import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
+import cc.backend.ticket.dto.response.RealTicketResponseDTO;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.service.MemberTicketService;
+import cc.backend.ticket.service.RealTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -25,6 +27,7 @@ import java.util.List;
 @RequestMapping("/myTickets")
 public class MyTicketController {
     private final MemberTicketService memberTicketService;
+    private final RealTicketService realTicketService;
 
     @GetMapping("/list")
     @Operation(
@@ -52,21 +55,21 @@ public class MyTicketController {
                     )
             }
     )
-    public ApiResponse<List<MemberTicketListResponseDTO>> getMyTicketList(
+    public ApiResponse<List<RealTicketResponseDTO>> getMyTicketList(
             @AuthenticationPrincipal(expression = "member") Member member,
             @RequestParam(defaultValue = "ALL") String status) {
 
-        List<MemberTicketListResponseDTO> tickets = memberTicketService.getMyTicketList(member.getId(), status);
+        List<RealTicketResponseDTO> tickets = realTicketService.getMyTicketList(member.getId(), status);
         return ApiResponse.onSuccess(tickets);
     }
 
 
-    @GetMapping("{memberTicketId}/getMyTicket")
+    @GetMapping("{realTicketId}/getMyTicket")
     @Operation(
             summary = "내 티켓 단건 조회 API",
             description = "회원이 예매한 특정 티켓(단건)의 상세 정보를 조회합니다.",
             parameters = {
-                    @Parameter(name = "memberTicketId", description = "조회할 티켓 ID", required = true),
+                    @Parameter(name = "realTicketId", description = "조회할 티켓 ID", required = true),
                     @Parameter(name = "member", hidden = true)
             },
             responses = {
@@ -87,21 +90,21 @@ public class MyTicketController {
                     )
             }
     )
-    public ApiResponse<MemberTicketResponseDTO> getMyTicket(
-            @PathVariable Long memberTicketId,
+    public ApiResponse<RealTicketResponseDTO> getMyTicket(
+            @PathVariable Long realTicketId,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
-        MemberTicketResponseDTO myTicket = memberTicketService.getMyTicket(member.getId(), memberTicketId);
+         RealTicketResponseDTO myTicket = realTicketService.getMyTicket(member.getId(), realTicketId);
         return ApiResponse.onSuccess(myTicket);
     }
 
 
-    @PatchMapping("{memberTicketId}/cancel")
+    @PatchMapping("{realTicketId}/cancel")
     @Operation(
             summary = "티켓 예약 취소하기 API",
             description = "회원이 예매한 티켓을 취소하는 기능입니다. 이미 취소된 티켓은 다시 취소할 수 없습니다.",
             parameters = {
-                    @Parameter(name = "memberTicketId", description = "취소할 티켓 ID", required = true),
+                    @Parameter(name = "realTicketId", description = "취소할 티켓 ID", required = true),
                     @Parameter(name = "member", hidden = true)
             },
             responses = {
@@ -127,11 +130,11 @@ public class MyTicketController {
                     )
             }
     )
-    public ApiResponse<MemberTicketResponseDTO> cancelTicket(
-            @PathVariable Long memberTicketId,
+    public ApiResponse<RealTicketResponseDTO> cancelTicket(
+            @PathVariable Long realTicketId,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
-        MemberTicketResponseDTO myTicket = memberTicketService.cancelTicket(member.getId(), memberTicketId);
+        RealTicketResponseDTO myTicket = realTicketService.cancelTicket(member.getId(), realTicketId);
         return ApiResponse.onSuccess(myTicket);
     }
 
