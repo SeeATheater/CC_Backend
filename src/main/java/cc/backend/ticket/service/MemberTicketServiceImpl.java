@@ -83,9 +83,9 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .build();
 
         MemberTicket saved = memberTicketRepository.save(ticket);
-        round.decreaseTotalTicket(requestDTO.getQuantity());
+        //round.decreaseTotalTicket(requestDTO.getQuantity());
 
-        amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
+        //amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
 
         //티켓 예매 알림 이벤트 생성
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), member));
@@ -104,44 +104,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .build();
     }
 
-    @Override
-    public List<MemberTicketListResponseDTO> getMyTicketList(Long memberId, String status){
-        ReservationStatus filter = null;
-        if (!status.equalsIgnoreCase("ALL")) {
-            try {
-                filter = ReservationStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new GeneralException(ErrorStatus.MEMBER_TICKET_WRONG_STATUS);
-            }
-        }
 
-        List<MemberTicket> tickets = (filter == null)
-                ? memberTicketRepository.findAllByMemberId(memberId)
-                : memberTicketRepository.findAllByMemberIdAndReservationStatus(memberId, filter);
-
-        return tickets.stream()
-                .map(MemberTicketListResponseDTO::from)
-                .toList();
-    }
-
-    @Override
-    public MemberTicketResponseDTO getMyTicket(Long memberId, Long memberTicketId) {
-        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, memberTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
-        return MemberTicketResponseDTO.from(memberTicket);
-    }
-
-    @Override
-    @Transactional
-    public MemberTicketResponseDTO cancelTicket(Long memberId, Long memberTicketId) {
-        MemberTicket memberTicket = memberTicketRepository.findByMemberIdAndId(memberId, memberTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
-        if (memberTicket.getReservationStatus().equals(ReservationStatus.CANCELLED)) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_ALREADY_CANCELED);
-        }
-        memberTicket.updateReservationStatus(ReservationStatus.CANCELLED);
-        return MemberTicketResponseDTO.from(memberTicket);
-    }
 
     @Override
     public List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId){

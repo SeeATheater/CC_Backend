@@ -12,9 +12,6 @@ import java.util.List;
 public interface MemberTicketService {
 
     MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO);
-    List<MemberTicketListResponseDTO> getMyTicketList(Long memberId, String status);
-    MemberTicketResponseDTO getMyTicket(Long memberId, Long memberTicketId);
-    MemberTicketResponseDTO cancelTicket(Long memberId, Long memberTicketId);
     List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId);
     List<AmateurTicketListDTO> getAmateurTicketList(Long memberId, Long amateurShowId);
     AmateurShowSimpleDTO getSimpleAmateurShow(Long amateurShowId);
