@@ -24,18 +24,25 @@ public class MemberTicket extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private int quantity;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private ReservationStatus reservationStatus;
 
     private LocalDateTime reserveDate;
 
+    @Column(nullable = false)
     private LocalDateTime performanceDateTime;
 
     private LocalDateTime cancelAvailableUntil;
 
+    @Column(nullable = false)
     private int totalPrice;
+
+    @Column(nullable = false, unique = true)
+    private String bookingNumber;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
