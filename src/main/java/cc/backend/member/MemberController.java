@@ -7,14 +7,15 @@ import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.board.dto.response.BoardDetailResponse;
-import cc.backend.ticket.dto.response.ReserveListResponseDTO;
+import cc.backend.member.dto.UpdateUsernameRequestDTO;
+import cc.backend.member.dto.UpdateUsernameResponseDTO;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Sort;
 import cc.backend.board.service.BoardService;
 import cc.backend.member.dto.MyPageResponseDTO;
 import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -174,4 +175,14 @@ public class MemberController {
     ) {
         return amateurService.getReserveListDetail(amateurShowId, member.getId());
     }*/
+
+    @PatchMapping("/username")
+    public ResponseEntity<UpdateUsernameResponseDTO> updateUsername(
+            @Valid @RequestBody UpdateUsernameRequestDTO request,
+            @AuthenticationPrincipal(expression = "member") Member member) {
+
+        UpdateUsernameResponseDTO response =memberService.updateUsername(member.getId(), request.getUsername());
+
+        return ResponseEntity.ok(response );
+    }
 }

@@ -4,12 +4,15 @@ package cc.backend.member;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.dto.MyPageResponseDTO;
+import cc.backend.member.dto.UpdateUsernameResponseDTO;
 import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +70,28 @@ public class MemberService {
                 .address(member.getAddress())
                 .status(member.getActive_status()).build();
 
+    }
+
+    @Transactional
+    public UpdateUsernameResponseDTO updateUsername(Long memberId, String newUsername) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        validateUsernameFormat(newUsername);
+        member.updateUsername(newUsername);
+        return UpdateUsernameResponseDTO.builder()
+                .updatedUsername(newUsername)
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    private void validateUsernameFormat(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new GeneralException(ErrorStatus.INVALID_USERNAME_EMPTY);
+        }
+
+        if (username.length() < 1 || username.length() > 20) {
+            throw new GeneralException(ErrorStatus.INVALID_USERNAME_LENGTH);
+        }
     }
 
 }

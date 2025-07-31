@@ -35,6 +35,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
     MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
+    INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
+    INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
 
     //KAKAO
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),
