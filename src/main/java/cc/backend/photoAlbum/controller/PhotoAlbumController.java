@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "사진첩")
 @RequestMapping("/photoAlbums")
+@PreAuthorize("hasRole('PERFORMER')")
 public class PhotoAlbumController {
     private final PhotoAlbumService photoAlbumService;
 

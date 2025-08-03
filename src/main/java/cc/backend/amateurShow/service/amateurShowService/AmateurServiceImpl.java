@@ -67,14 +67,14 @@ public class AmateurServiceImpl implements AmateurService {
         AmateurShow newAmateurShow = amateurShowRepository.save(amateurShow);
 
         // 나머지도 저장
-        saveRelatedEntity(requestDTO, amateurShow);
+        saveRelatedEntity(requestDTO, newAmateurShow);
 
         //포스터사진 저장(1개만)
-        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
+        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
         ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                 .keyName(dto.getKeyName())
                 .imageUrl(dto.getImageUrl())
-                .filePath(FilePath.poster)
+                .filePath(FilePath.amateurShow)
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
@@ -96,7 +96,7 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         // response
-        return AmateurConverter.toAmateurEnrollDTO(amateurShow);
+        return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
     }
 
     private void saveRelatedEntity(AmateurEnrollRequestDTO requestDTO, AmateurShow amateurShow) {
@@ -143,14 +143,14 @@ public class AmateurServiceImpl implements AmateurService {
 
         //포스터 사진 수정
         //기존 이미지 삭제
-        Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.poster, amateurShow.getId());
+        Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId());
         ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
         if(!dto.getImageUrl().isEmpty()){
             imageService.deleteImage(existingImage.getId(), memberId);
             ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                     .keyName(dto.getKeyName())
                     .imageUrl(dto.getImageUrl())
-                    .filePath(FilePath.poster)
+                    .filePath(FilePath.amateurShow)
                     .contentId(amateurShow.getId())
                     .memberId(memberId)
                     .build();
@@ -317,7 +317,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
         amateurShowRepository.delete(amateurShow);
 
-        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.poster, amateurShowId);
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.amateurShow, amateurShowId);
         images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
     }
 

@@ -57,6 +57,9 @@ dependencies {
 	implementation 'software.amazon.awssdk:s3control:2.27.3'
 	implementation 'software.amazon.awssdk:s3outposts:2.27.3'
 
+	//google analytics
+	implementation "com.google.analytics:google-analytics-data:0.81.0"
+
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
