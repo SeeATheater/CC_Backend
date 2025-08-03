@@ -58,7 +58,13 @@ dependencies {
 	implementation 'software.amazon.awssdk:s3outposts:2.27.3'
 
 	//google analytics
-	implementation "com.google.analytics:google-analytics-data:0.81.0"
+	implementation platform('com.google.cloud:libraries-bom:26.37.0')
+
+	implementation 'com.google.analytics:google-analytics-data'
+	implementation 'com.google.protobuf:protobuf-java'
+	implementation 'io.grpc:grpc-netty-shaded'
+	implementation 'com.google.auth:google-auth-library-oauth2-http'
+
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
