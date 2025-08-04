@@ -36,9 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-### Google Analytics Key ###
-src/main/resources/seeatheater-6e8084e55368.json
-
 !**src/main/resources/application.yml
 !**src/main/resources/application-dev.yml
 !**src/main/resources/application-prod.yml
