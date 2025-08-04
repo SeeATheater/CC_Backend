@@ -18,6 +18,12 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 }
+configurations.all {
+	resolutionStrategy {
+		force 'com.google.protobuf:protobuf-java:3.25.5'
+		force 'com.google.protobuf:protobuf-java-util:3.25.5'
+	}
+}
 
 repositories {
 	mavenCentral()
@@ -59,9 +65,7 @@ dependencies {
 
 	//google analytics
 	implementation platform('com.google.cloud:libraries-bom:26.37.0')
-	implementation('com.google.analytics:google-analytics-data:1.14.0') {
-		exclude group: 'com.google.protobuf'
-	}
+	implementation('com.google.analytics:google-analytics-data')
 	implementation 'com.google.auth:google-auth-library-oauth2-http'
 
 
