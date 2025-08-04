@@ -4,6 +4,7 @@ import cc.backend.admin.dashboard.dto.VisitResponseDTO;
 import cc.backend.admin.dashboard.service.DashboardService;
 import cc.backend.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/dashboard")
 @RequiredArgsConstructor
+@Tag(name = "관리자 대쉬보드")
 @PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
     private final DashboardService dashBoardService;
