@@ -4,27 +4,30 @@ import com.google.analytics.data.v1beta.BetaAnalyticsDataClient;
 import com.google.analytics.data.v1beta.BetaAnalyticsDataSettings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Base64;
+import java.io.InputStream;
 
 @Configuration
 public class GoogleAnalyticsConfig {
 
+    @Value("${google.credentials.path}")
+    private Resource googleCredentialsResource;
+
     @Bean
     public BetaAnalyticsDataClient betaAnalyticsDataClient() throws IOException {
-        String base64Key = System.getenv("GA_SERVICE_ACCOUNT_KEY_BASE64");
+        try (InputStream inputStream = googleCredentialsResource.getInputStream()) {
+            GoogleCredentials credentials = ServiceAccountCredentials.fromStream(inputStream);
 
-        GoogleCredentials credentials = ServiceAccountCredentials
-                .fromStream(new ByteArrayInputStream(Base64.getDecoder().decode(base64Key)));
-
-        return BetaAnalyticsDataClient.create(
-                BetaAnalyticsDataSettings.newBuilder()
-                        .setCredentialsProvider(() -> credentials)
-                        .build()
-        );
+            return BetaAnalyticsDataClient.create(
+                    BetaAnalyticsDataSettings.newBuilder()
+                            .setCredentialsProvider(() -> credentials)
+                            .build()
+            );
+        }
     }
 }

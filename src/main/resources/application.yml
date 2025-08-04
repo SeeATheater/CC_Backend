@@ -39,6 +39,10 @@ url:
 jwt:
   secret: ${JWT_SECRET}
 
+google:
+  credentials:
+    path: classpath:seeatheater-6e8084e55368.json
+
 logging:
   level:
     org:
