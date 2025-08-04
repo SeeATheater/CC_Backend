@@ -18,6 +18,12 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 }
+configurations.all {
+	resolutionStrategy {
+		force 'com.google.protobuf:protobuf-java:3.25.5'
+		force 'com.google.protobuf:protobuf-java-util:3.25.5'
+	}
+}
 
 repositories {
 	mavenCentral()
@@ -58,7 +64,10 @@ dependencies {
 	implementation 'software.amazon.awssdk:s3outposts:2.27.3'
 
 	//google analytics
-	implementation "com.google.analytics:google-analytics-data:0.81.0"
+	implementation platform('com.google.cloud:libraries-bom:26.37.0')
+	implementation('com.google.analytics:google-analytics-data')
+	implementation 'com.google.auth:google-auth-library-oauth2-http'
+
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
