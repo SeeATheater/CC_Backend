@@ -117,7 +117,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         Member performer = memberRepository.findById(performerId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberId(performerId);
+        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberIdOrderByUpdatedAtDesc(performerId);
 
         List<PhotoAlbum> photoAlbums = amateurShows.stream()
                         .flatMap(amateurShow -> photoAlbumRepository.findAllByAmateurShowId(amateurShow.getId()).stream())

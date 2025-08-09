@@ -20,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "사진첩")
 @RequestMapping("/photoAlbums")
-@PreAuthorize("hasRole('PERFORMER')")
 public class PhotoAlbumController {
     private final PhotoAlbumService photoAlbumService;
 
@@ -32,7 +31,7 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbum(photoAlbumId, member.getId()));
     }
 
-
+    @PreAuthorize("hasRole('PERFORMER')")
     @PostMapping("")
     @Operation(summary = "사진첩 등록 API", description = "사진첩을 등록하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultDTO> uploadPhotoAlbum(
@@ -50,6 +49,7 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), memberId));
     }
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @PatchMapping("/{photoAlbumId}")
     @Operation(summary = "사진첩 수정 API", description = "공연별 사진첩을 수정하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultDTO> updatePhotoAlbum(
