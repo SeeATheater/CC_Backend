@@ -18,10 +18,16 @@ public class AmateurShowResponseDTO {
     public static class AmateurShowResult{ // 소극장 공연 단건 조회용
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
-        private String place; // 공연장 주소
+        private String performerName; // 공연진 이름
+        private String hallName; // 공연장 이름
+        //private String place; // 공연장 주소
+        private String roadAddress; // 공연장 도로명 주소
+        private String detailAddress; // 공연장 상세 주소
         private String schedule; // 공연 기간
         private String runtime; // 러닝타임
+        private String bankName; // 은행명
         private String account; // 계좌번호
+        private String depositor; // 입금자명
         private String contact; // 연락처
         private String hashtag; // 해시태그
         private String summary; // 줄거리
@@ -93,7 +99,8 @@ public class AmateurShowResponseDTO {
     public static class AmateurShowList { // 극장 공연 리스트 조회
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
-        private String place; // 공연장 주소
+        //private String place; // 공연장 주소
+        private String detailAddress; // 공연장 상세 주소
         private String schedule;
         private String posterImageUrl;
     }
@@ -105,7 +112,8 @@ public class AmateurShowResponseDTO {
     public static class MyShowAmateurShowList { // 극장 공연 리스트 조회
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
-        private String place; // 공연장 주소
+        //private String place; // 공연장 주소
+        private String detailAddress; // 공연장 상세 주소
         private String schedule;
         private String posterImageUrl;
         private AmateurShowStatus status;
