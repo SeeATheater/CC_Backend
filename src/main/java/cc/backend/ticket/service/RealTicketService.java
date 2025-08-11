@@ -33,7 +33,7 @@ public class RealTicketService {
                 .member(ticket.getMember())
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
                 .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
-                .place(ticket.getAmateurTicket().getAmateurShow().getPlace())
+                .detailAddress(ticket.getAmateurTicket().getAmateurShow().getDetailAddress())
                 .performanceDateTime(ticket.getPerformanceDateTime())
                 .reserveDateTime(ticket.getReserveDate())
                 .quantity(ticket.getQuantity())

@@ -94,7 +94,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .memberTicketId(saved.getId())
                 .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
-                .place(amateurTicket.getAmateurShow().getPlace())
+                .detailAddress(amateurTicket.getAmateurShow().getDetailAddress())
                 .quantity(saved.getQuantity())
                 .reserveDate(saved.getReserveDate())
                 .performanceDateTime(saved.getPerformanceDateTime())
@@ -135,7 +135,8 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         return AmateurShowSimpleDTO.builder()
                 .amateurShowId(amateurShowId)
                 .name(amateurShow.getName())
-                .place(amateurShow.getPlace())
+                //.place(amateurShow.getPlace())
+                .detailAddress(amateurShow.getDetailAddress())
                 .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
     }

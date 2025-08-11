@@ -35,7 +35,9 @@ public class RealTicket extends BaseEntity {
     private String posterImageUrl;
 
     // 장소 (ex. 홍익대학교 학생회관 3층 소극장)
-    private String place;
+    //private String place;
+
+    private String detailAddress; // 상세 주소 -> 이게 홍익대학교 학생회관 3층 소극장
 
     // 관람일시
     private LocalDateTime performanceDateTime;

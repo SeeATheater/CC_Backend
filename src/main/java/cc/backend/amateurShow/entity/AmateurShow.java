@@ -26,14 +26,23 @@ public class AmateurShow extends BaseEntity {
 
     private String name;
 
-    private String place;
-
     private String schedule;
+
+    private String performerName; // 공연진 이름
+
+    private String hallName; // 공연장 이름
+
+    //private String place; // 공연장 주소
+
+    private String roadAddress; // 공연장 도로명 주소
+    private String detailAddress; // 공연장 상세 주소
+
+    private String bankName; // 은행명
+    private String account; // 계좌번호
+    private String depositor; // 입금자명
 
     // 추가
     private String runtime;
-
-    private String account;
 
     private String hashtag;
 
@@ -56,7 +65,7 @@ public class AmateurShow extends BaseEntity {
 //    @Builder.Default
 //    private AmateurStatus amateurStatus = AmateurStatus.YET;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
@@ -84,16 +93,23 @@ public class AmateurShow extends BaseEntity {
     private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
     @Builder
-    public AmateurShow(String name, String place, String schedule, List<PhotoAlbum> photoAlbums) {
+    public AmateurShow(String name, String detailAddress, String schedule, List<PhotoAlbum> photoAlbums) {
         this.name = name;
-        this.place = place;
+        this.detailAddress = detailAddress;
         this.schedule = schedule;
         this.photoAlbums = photoAlbums;
     }
 
     public void updateInfo(AmateurUpdateRequestDTO dto) {
         if (dto.getName() != null) this.name = dto.getName();
-        if (dto.getPlace() != null) this.place = dto.getPlace();
+        //if (dto.getPlace() != null) this.place = dto.getPlace();
+        if (dto.getPerformerName() != null) this.performerName = dto.getPerformerName();
+        if (dto.getHallName() != null) this.hallName = dto.getHallName();
+        if (dto.getRoadAddress() != null) this.roadAddress = dto.getRoadAddress();
+        if (dto.getDetailAddress() != null) this.detailAddress = dto.getDetailAddress();
+        if (dto.getBankName() != null) this.bankName = dto.getBankName();
+        if (dto.getDepositor() != null) this.depositor = dto.getDepositor();
+
         if (dto.getSchedule() != null) this.schedule = dto.getSchedule();
         if (dto.getRuntime() != null) this.runtime = dto.getRuntime();
         if (dto.getAccount() != null) this.account = dto.getAccount();
