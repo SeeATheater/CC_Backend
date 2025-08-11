@@ -34,8 +34,7 @@ public class MyTicketController {
             summary = "내 티켓 리스트 조회 API",
             description = "회원의 예약된 공연 티켓 목록을 조회합니다. 상태(status)에 따라 필터링할 수 있습니다.",
             parameters = {
-                    @Parameter(name = "status", description = "티켓 상태 (예: ALL, RESERVED, CANCELLED)", required = false),
-                    @Parameter(name = "member", hidden = true)
+                    @Parameter(name = "status", description = "티켓 상태 (예: ALL, RESERVED, CANCELLED)", required = false)
             },
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -69,8 +68,7 @@ public class MyTicketController {
             summary = "내 티켓 단건 조회 API",
             description = "회원이 예매한 특정 티켓(단건)의 상세 정보를 조회합니다.",
             parameters = {
-                    @Parameter(name = "realTicketId", description = "조회할 티켓 ID", required = true),
-                    @Parameter(name = "member", hidden = true)
+                    @Parameter(name = "realTicketId", description = "조회할 티켓 ID", required = true)
             },
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -104,8 +102,7 @@ public class MyTicketController {
             summary = "티켓 예약 취소하기 API",
             description = "회원이 예매한 티켓을 취소하는 기능입니다. 이미 취소된 티켓은 다시 취소할 수 없습니다.",
             parameters = {
-                    @Parameter(name = "realTicketId", description = "취소할 티켓 ID", required = true),
-                    @Parameter(name = "member", hidden = true)
+                    @Parameter(name = "realTicketId", description = "취소할 티켓 ID", required = true)
             },
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
