@@ -7,7 +7,6 @@ import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +59,7 @@ public class AmateurShow extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @Column(length = 30)
     private AmateurShowStatus status = AmateurShowStatus.APPROVED_YET;
 //    @Enumerated(EnumType.STRING)
 //    @Builder.Default
@@ -127,5 +127,22 @@ public class AmateurShow extends BaseEntity {
 
     public void updatePosterImageUrl(String imageUrl){
         this.posterImageUrl = imageUrl;
+    }
+
+
+    public void reviseShowInfo(String hashtag, String summary, String account, String contact) {
+            this.hashtag = hashtag;
+            this.summary = summary;
+            this.account = account;
+            this.contact = contact;
+    }
+
+    public void approve(){
+        this.status = AmateurShowStatus.APPROVED_ONGOING;
+    }
+    public void reject(String rejectReason){
+        this.status = AmateurShowStatus.REJECTED;
+        this.rejectReason = rejectReason;
+
     }
 }
