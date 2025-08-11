@@ -32,7 +32,7 @@ public class AmateurEnrollRequestDTO {
     private List<Staff> staff; // 감독 및 스태프 정보
     private List<Rounds> rounds;
 
-    private ImageRequestDTO.PartialImageRequestDTO imageRequestDTO;
+    private ImageRequestDTO.PartialImageRequestDTO posterImageRequestDTO;
 
     @Getter
     @NoArgsConstructor

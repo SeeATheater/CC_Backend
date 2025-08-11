@@ -32,6 +32,7 @@ public class AmateurConverter {
                 .depositor(requestDTO.getDepositor())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
+                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl())
                 .build();
     }
 
