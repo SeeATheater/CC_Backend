@@ -40,12 +40,14 @@ public class MemberTicketServiceImpl implements MemberTicketService {
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RealTicketService realTicketService;
 
 
     @Override
     @Transactional
     public MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO) {
 
+        Member memberRef = memberRepository.getReferenceById(member.getId());
         AmateurShow show = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
@@ -70,7 +72,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         String bookingNumber = generateBookingNumber();
 
         MemberTicket ticket = MemberTicket.builder()
-                .member(member)
+                .member(memberRef)
                 .amateurTicket(amateurTicket)
                 .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
@@ -88,13 +90,15 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         //amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
 
         //티켓 예매 알림 이벤트 생성
-        eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), member));
+        eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
 
+
+        realTicketService.createRealTicketFromMemberTicket(saved.getId());
         return MemberTicketCreateResponseDTO.builder()
                 .memberTicketId(saved.getId())
                 .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
-                .place(amateurTicket.getAmateurShow().getPlace())
+                .detailAddress(amateurTicket.getAmateurShow().getDetailAddress())
                 .quantity(saved.getQuantity())
                 .reserveDate(saved.getReserveDate())
                 .performanceDateTime(saved.getPerformanceDateTime())
@@ -135,7 +139,8 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         return AmateurShowSimpleDTO.builder()
                 .amateurShowId(amateurShowId)
                 .name(amateurShow.getName())
-                .place(amateurShow.getPlace())
+                //.place(amateurShow.getPlace())
+                .detailAddress(amateurShow.getDetailAddress())
                 .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
     }

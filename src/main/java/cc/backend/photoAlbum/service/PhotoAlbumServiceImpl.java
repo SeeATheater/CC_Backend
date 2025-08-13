@@ -72,7 +72,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
                 .content(newPhotoAlbum.getContent())
-                .place(newPhotoAlbum.getAmateurShow().getPlace())
+                .detailAddress(newPhotoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(newPhotoAlbum.getAmateurShow().getSchedule())
                 .imageResultDTOs(imageResultDTOs)
                 .build();
@@ -102,7 +102,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .photoAlbumId(photoAlbum.getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
                 .content(photoAlbum.getContent())
-                .place(photoAlbum.getAmateurShow().getPlace())
+                .detailAddress(photoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(photoAlbum.getAmateurShow().getSchedule())
                 .imageResultDTOs(imageResultDTOs)
                 .build();
@@ -145,7 +145,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                     return PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
                             .photoAlbumId(album.getId())
                             .amateurShowName(album.getAmateurShow().getName())
-                            .place(album.getAmateurShow().getPlace())
+                            .detailAddress(album.getAmateurShow().getDetailAddress())
                             .imageUrl(image.getImageUrl())
                             .build();
                 })
@@ -221,7 +221,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .photoAlbumId(updatedPhotoAlbum.getId())
                 .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
                 .content(updatedPhotoAlbum.getContent())
-                .place(updatedPhotoAlbum.getAmateurShow().getPlace())
+                .detailAddress(updatedPhotoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(updatedPhotoAlbum.getAmateurShow().getSchedule())
                 .imageResultDTOs(imageResultDTOs)
                 .build();

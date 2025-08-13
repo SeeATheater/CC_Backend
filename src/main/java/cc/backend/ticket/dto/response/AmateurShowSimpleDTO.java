@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class AmateurShowSimpleDTO {
     private Long amateurShowId;
     private String name;
-    private String place;
+    //private String place;
+    private String detailAddress;
     private String posterImageUrl;
 }

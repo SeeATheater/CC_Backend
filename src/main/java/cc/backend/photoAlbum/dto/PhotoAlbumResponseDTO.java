@@ -19,7 +19,8 @@ public class PhotoAlbumResponseDTO {
         private Long photoAlbumId;
         private String amateurShowName;
         private String schedule;
-        private String place;
+        //private String place;
+        private String detailAddress;
         private String content;
         private List<ImageResponseDTO.ImageResultDTO> imageResultDTOs;
     }
@@ -31,7 +32,8 @@ public class PhotoAlbumResponseDTO {
     public static class SinglePhotoAlbumDTO {
         private Long photoAlbumId;
         private String amateurShowName;
-        private String place;
+        //private String place;
+        private String detailAddress;
         private String imageUrl;
     }
 
