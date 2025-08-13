@@ -12,5 +12,7 @@ public interface NoticeService {
     public NoticeResponseDTO.NoticeDTO notifyNewReply(ReplyEvent event);
     public NoticeResponseDTO.NoticeDTO notifyNewShow(NewShowEvent event);
     public NoticeResponseDTO.NoticeDTO notifyTicketReservation(TicketReservationEvent event);
+    public NoticeResponseDTO.NoticeDTO notifyApproval(ApproveShowEvent event);
+    public NoticeResponseDTO.NoticeDTO notifyRejection(RejectShowEvent event);
 
 }
