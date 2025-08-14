@@ -32,6 +32,6 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
                                                                @Param("status") AmateurShowStatus status,
                                                                Pageable pageable);
 
-
+    List<AmateurShow> findAllByMemberIdOrderByUpdatedAtDesc(@Param("memberId") Long memberId);
 
 }
