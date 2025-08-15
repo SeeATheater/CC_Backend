@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ public class PerformerController {
 
     private final PerformerService performerService;
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @GetMapping("/my-shows")
     @Operation(summary = "내가 등록한 공연 목록", description = "탭 필터: all(전체) / on_sale(예매 진행) / ended(공연 종료)")
     public ApiResponse<Slice<PerformerMyShowResponseDTO>> getMyShows(
