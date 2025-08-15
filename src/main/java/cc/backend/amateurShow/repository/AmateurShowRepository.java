@@ -4,6 +4,7 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.member.entity.Member;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +35,16 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
 
     List<AmateurShow> findAllByMemberIdOrderByUpdatedAtDesc(@Param("memberId") Long memberId);
 
+
+    @Query("""
+       select s
+         from AmateurShow s
+        where lower(s.name) like lower(concat('%', :kw, '%'))
+           or lower(s.performerName) like lower(concat('%', :kw, '%'))
+        order by s.createdAt desc
+       """)
+    Slice<AmateurShow> findByNameOrPerformer(
+            @Param("kw") String keyword,
+            Pageable pageable
+    );
 }
