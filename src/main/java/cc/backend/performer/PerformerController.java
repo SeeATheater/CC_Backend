@@ -25,8 +25,7 @@ public class PerformerController {
     private final PerformerService performerService;
 
     @GetMapping("/my-shows")
-    @Operation(summary = "내가 등록한 공연 목록(Slice)",
-            description = "탭 필터: all(전체) / on_sale(예매 진행) / ended(공연 종료)")
+    @Operation(summary = "내가 등록한 공연 목록", description = "탭 필터: all(전체) / on_sale(예매 진행) / ended(공연 종료)")
     public ApiResponse<Slice<PerformerMyShowResponseDTO>> getMyShows(
             @AuthenticationPrincipal(expression = "member") Long memberId,
             @Parameter(description = "탭바 선택, all, on_sale, ended ", required = true) @RequestParam String tab,
