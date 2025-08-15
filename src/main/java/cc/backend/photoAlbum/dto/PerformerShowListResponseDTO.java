@@ -34,8 +34,8 @@ public class PerformerShowListResponseDTO {
         private String title;
         @Schema(description = "포스터 URL")
         private String posterImageUrl;
-        @Schema(description = "공연장명")
-        private String hallName;
+        @Schema(description = "공연장 주소")
+        private String detailAddress;
         @Schema(description = "공연 상태")
         private AmateurShowStatus status;
 
@@ -44,7 +44,7 @@ public class PerformerShowListResponseDTO {
                     .showId(s.getId())
                     .title(s.getName())
                     .posterImageUrl(s.getPosterImageUrl())
-                    .hallName(s.getHallName())
+                    .detailAddress(s.getDetailAddress())
                     .status(s.getStatus())
                     .build();
         }
