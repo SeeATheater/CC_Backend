@@ -1,4 +1,4 @@
-package cc.backend.search.dto;
+package cc.backend.performer.dto;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
@@ -13,28 +13,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Schema(description = "검색 결과 - 소극장 공연 상세 응답 DTO")
-public class SearchShowResponseDTO {
-    @Schema(description = "공연 ID", example = "1")
+public class PerformerMyShowResponseDTO {
+    @Schema(description = "공연 ID")
     private Long showId;
 
-    @Schema(description = "공연명", example = "실종")
+    @Schema(description = "공연명")
     private String title;
 
-    @Schema(description = "공연진명", example = "홍길동")
-    private String performerName;
-
-    @Schema(description = "공연장명", example = "문학관 대학로 3층 소극장")
+    @Schema(description = "공연장명")
     private String hallName;
 
-    @Schema(description = "일정 문자열", example = "2024.04.03(목) 19:00 ~ 2024.10.05(토) 14:00")
+    @Schema(description = "관람 일시")
     private String schedule;
 
-    @Schema(description = "포스터 이미지 URL")
-    private String posterImageUrl;
-    @Schema(description = "공연 상태", example = "판매중")
+    @Schema(description = "공연 상태")
     private String status;
 
-    public static SearchShowResponseDTO from(AmateurShow s){
+    public static PerformerMyShowResponseDTO from(AmateurShow s) {
         String statusLabel = switch (s.getStatus()) {
             case APPROVED_ONGOING -> "예매 진행 중";
             case APPROVED_ENDED   -> "공연 종료";
@@ -42,16 +37,13 @@ public class SearchShowResponseDTO {
             case WAITING_APPROVAL -> "승인 대기";
             case REJECTED         -> "반려";
         };
-        return SearchShowResponseDTO.builder()
+
+        return PerformerMyShowResponseDTO.builder()
                 .showId(s.getId())
                 .title(s.getName())
-                .performerName(s.getPerformerName())
                 .hallName(s.getHallName())
                 .schedule(s.getSchedule())
-                .posterImageUrl(s.getPosterImageUrl())
                 .status(statusLabel)
                 .build();
     }
-
-
 }

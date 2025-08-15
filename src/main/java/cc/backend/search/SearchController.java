@@ -1,6 +1,7 @@
 package cc.backend.search;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.member.entity.Member;
 import cc.backend.search.dto.SearchShowResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,6 +33,9 @@ public class SearchController {
             description = "공연명, 공연진명을 대상으로 키워드 검색하는 기능."
     )
     public ApiResponse<Slice<SearchShowResponseDTO>> searchShows(
+            @Parameter(description = "작성자 회원 ID", required = true)
+            @AuthenticationPrincipal(expression = "member") Member member,
+
             @Parameter(description = "검색 키워드", example = "실종")
             @RequestParam String keyword,
 
