@@ -44,6 +44,8 @@ public class PhotoAlbumResponseDTO {
         private List<SinglePhotoAlbumDTO> singlePhotoAlbumDTOs;
         private String performerName;
         private Integer number;
+        private boolean hasNext;
+        private Long nextCursor;
     }
 
     @Builder
@@ -57,5 +59,17 @@ public class PhotoAlbumResponseDTO {
         private String amateurShowName;
         private String imageUrl;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ScrollMemberPhotoAlbumDTO {
+        private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
+        private boolean hasNext;
+        private Long nextCursor;
+    }
+
+
 
 }
