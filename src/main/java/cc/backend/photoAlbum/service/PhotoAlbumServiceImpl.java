@@ -13,11 +13,14 @@ import cc.backend.image.repository.ImageRepository;
 import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.photoAlbum.dto.PerformerShowListResponseDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -282,4 +285,19 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return memberPhotoAlbumDTOs;
     }
 
+    // hy) 사진첩 옆에서 쓰이는 공연진 - 공연 목록보기
+    @Override
+    public PerformerShowListResponseDTO getPerformerShows(Long memberId, Pageable pageable) {
+
+        Slice<AmateurShow> slice = amateurShowRepository.findByMember_IdOrderByIdDesc(memberId, pageable);
+        long total = amateurShowRepository.countByMember_Id(memberId); // 총 개수
+
+        List<PerformerShowListResponseDTO.ShowList> showLists =
+                slice.map(PerformerShowListResponseDTO.ShowList::from).getContent();
+
+        return PerformerShowListResponseDTO.builder()
+                .totalCount(total)
+                .shows(showLists)
+                .build();
+    }
 }

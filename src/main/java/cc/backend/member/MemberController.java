@@ -131,21 +131,7 @@ public class MemberController {
     }
 
 
-    @GetMapping("/myPage/myShow")
-    @Operation(summary = "내가 등록한 공연 조회", description = "등록자 계정으로 등록한 공연들을 무한 스크롤 방식으로 조회합니다.")
-    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyShows(
-            @Parameter(description = "작성자 회원 ID", required = true)
-            @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
-            @RequestParam int page,
-            @Parameter(description = "페이지 크기", required = true)
-            @RequestParam int size,
-            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: APPROVED_ONGOING, 공연 종료: APPROVED_ENDED)", required = false)
-            @RequestParam(required = false) AmateurShowStatus status
-    ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
-    }
+
 
     @GetMapping("/myPage/reserveList")
     @Operation(summary = "예매 내역 조회 첫화면", description = "등록자 계정으로 예매내역 조회를 누를시 나오는 첫화면입니다.")

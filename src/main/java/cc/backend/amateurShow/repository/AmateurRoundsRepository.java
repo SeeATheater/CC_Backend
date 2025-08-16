@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface AmateurRoundsRepository extends JpaRepository<AmateurRounds, Long> {
     List<AmateurRounds> findByAmateurShowId(Long amateurShowId);
+    List<AmateurRounds> findByAmateurShow_IdOrderByRoundNumberAsc(Long amateurShowId);
 
 }

@@ -2,6 +2,7 @@ package cc.backend.photoAlbum.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.entity.Member;
+import cc.backend.photoAlbum.dto.PerformerShowListResponseDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -72,4 +75,27 @@ public class PhotoAlbumController {
     public ApiResponse<List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO>> getAllPhotoAlbum(){
         return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList());
     }
+
+    @GetMapping("/member/{memberId}/shows")
+    @Operation(summary = "특정 공연진의 공연 목록 조회(총 개수 + 리스트)")
+    public ApiResponse<PerformerShowListResponseDTO> getPerformerShows(
+            @PathVariable
+            @Parameter(description = "조회할 공연진 ID", required = true)
+            Long memberId,
+
+            @RequestParam(defaultValue = "0")
+            @Parameter(description = "페이지(0부터 시작)", example = "0")
+            int page,
+
+            @RequestParam(defaultValue = "20")
+            @Parameter(description = "페이지 크기", example = "20")
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ApiResponse.onSuccess(
+                photoAlbumService.getPerformerShows(memberId, pageable)
+        );
+    }
+
+
 }

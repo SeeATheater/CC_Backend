@@ -1,5 +1,6 @@
 package cc.backend.ticket.service;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
@@ -29,8 +30,10 @@ public class RealTicketService {
         MemberTicket ticket = memberTicketRepository.findById(memberTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
+        AmateurRounds round = ticket.getAmateurRound();
         RealTicket realTicket = RealTicket.builder()
                 .member(ticket.getMember())
+                .amateurRound(round)
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
                 .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
                 .detailAddress(ticket.getAmateurTicket().getAmateurShow().getDetailAddress())

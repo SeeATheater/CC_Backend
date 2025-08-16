@@ -1,5 +1,6 @@
 package cc.backend.ticket.entity;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.entity.enums.ReservationStatus;
@@ -27,6 +28,10 @@ public class RealTicket extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "amateur_round_id", nullable = false)
+    private AmateurRounds amateurRound;
 
     // 공연 제목
     private String showTitle;
