@@ -69,6 +69,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
+                .performerName(amateurShow.getPerformerName())
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
                 .content(newPhotoAlbum.getContent())
@@ -101,6 +102,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(photoAlbum.getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
+                .performerName(photoAlbum.getAmateurShow().getPerformerName())
                 .content(photoAlbum.getContent())
                 .detailAddress(photoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(photoAlbum.getAmateurShow().getSchedule())
@@ -109,7 +111,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId){
+    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId){
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
@@ -145,13 +147,18 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                     return PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
                             .photoAlbumId(album.getId())
                             .amateurShowName(album.getAmateurShow().getName())
+                            .performerName(performer.getName())
                             .detailAddress(album.getAmateurShow().getDetailAddress())
                             .imageUrl(image.getImageUrl())
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        return singlePhotoAlbumDTOs;
+        return PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO.builder()
+                .singlePhotoAlbumDTOs(singlePhotoAlbumDTOs)
+                .performerName(performer.getName())
+                .number(photoAlbumIds.size())
+                .build();
 
     }
 
@@ -220,6 +227,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(updatedPhotoAlbum.getId())
                 .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
+                .performerName(updatedPhotoAlbum.getAmateurShow().getPerformerName())
                 .content(updatedPhotoAlbum.getContent())
                 .detailAddress(updatedPhotoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(updatedPhotoAlbum.getAmateurShow().getSchedule())
@@ -264,7 +272,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                     return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
                             .photoAlbumId(photoAlbum.getId())
                             .memberId(photoAlbum.getAmateurShow().getMember().getId())
-                            .memberName(photoAlbum.getAmateurShow().getMember().getName())
+                            .performerName(photoAlbum.getAmateurShow().getMember().getName())
                             .amateurShowName(photoAlbum.getAmateurShow().getName())
                             .imageUrl(imageUrl)
                             .build();
