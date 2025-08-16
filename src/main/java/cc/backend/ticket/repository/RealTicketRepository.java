@@ -5,6 +5,7 @@ import cc.backend.ticket.entity.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,5 +18,10 @@ public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
 
     List<RealTicket> findAllByMemberIdAndReservationStatus(Long memberId, ReservationStatus status);
 
+    List<RealTicket> findByShowTitleAndReservationStatusInOrderByIdDesc(
+            String showTitle,
+            List<ReservationStatus> statuses
+    );
+    List<RealTicket> findByAmateurRound_IdOrderByReserveDateTimeAsc(Long roundId);
 
 }

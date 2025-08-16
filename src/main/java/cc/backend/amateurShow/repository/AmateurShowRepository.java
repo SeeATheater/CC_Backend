@@ -4,6 +4,7 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.member.entity.Member;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,5 +35,29 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
                                                                Pageable pageable);
 
     List<AmateurShow> findAllByMemberIdOrderByUpdatedAtDesc(@Param("memberId") Long memberId);
+
+
+    @Query("""
+       select s
+         from AmateurShow s
+        where lower(s.name) like lower(concat('%', :kw, '%'))
+           or lower(s.performerName) like lower(concat('%', :kw, '%'))
+        order by s.createdAt desc
+       """)
+    Slice<AmateurShow> findByNameOrPerformer(
+            @Param("kw") String keyword,
+            Pageable pageable
+    );
+
+
+    Slice<AmateurShow> findByMember_IdAndStatusInOrderByIdDesc(
+            Long memberId,
+            Collection<AmateurShowStatus> statuses,
+            Pageable pageable
+    );
+
+    Slice<AmateurShow> findByMember_IdOrderByIdDesc(Long memberId, Pageable pageable);
+
+    long countByMember_Id(Long memberId);
 
 }
