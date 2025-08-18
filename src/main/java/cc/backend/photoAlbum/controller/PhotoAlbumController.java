@@ -7,6 +7,7 @@ import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.service.PhotoAlbumService;
+import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,10 +47,12 @@ public class PhotoAlbumController {
 
     @GetMapping("/member/{memberId}")
     @Operation(summary = "등록자 계정의 전체 사진첩 피드 조회 API", description = "등록자의 사진첩 피드를 전체 조회하는 API 입니다.")
-    public ApiResponse<List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO>> getPhotoAlbumList(
+    public ApiResponse<PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO> getPhotoAlbumList(
             @AuthenticationPrincipal(expression = "member") Member member,
-            @PathVariable Long memberId){
-        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), memberId));
+            @PathVariable("memberId") Long performerId,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), performerId, cursorId, size));
     }
 
     @PreAuthorize("hasRole('PERFORMER')")
@@ -72,8 +75,10 @@ public class PhotoAlbumController {
 
     @GetMapping("")
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
-    public ApiResponse<List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO>> getAllPhotoAlbum(){
-        return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList());
+    public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList(cursorId, size));
     }
 
     @GetMapping("/member/{memberId}/shows")

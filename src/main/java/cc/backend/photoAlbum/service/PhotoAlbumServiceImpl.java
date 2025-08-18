@@ -19,6 +19,7 @@ import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 
 @Service
@@ -72,6 +75,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
+                .performerName(amateurShow.getPerformerName())
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
                 .content(newPhotoAlbum.getContent())
@@ -104,6 +108,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(photoAlbum.getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
+                .performerName(photoAlbum.getAmateurShow().getPerformerName())
                 .content(photoAlbum.getContent())
                 .detailAddress(photoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(photoAlbum.getAmateurShow().getSchedule())
@@ -112,50 +117,58 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId){
+    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, Long cursorId, int pageSize){
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
-
         Member performer = memberRepository.findById(performerId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberIdOrderByUpdatedAtDesc(performerId);
+        // 사진첩 단위 조회 (커서 기반)
+        List<PhotoAlbum> photoAlbums = photoAlbumRepository.findByPerformerWithCursor
+                (performerId, cursorId, PageRequest.of(0, pageSize + 1)
+        );
 
-        List<PhotoAlbum> photoAlbums = amateurShows.stream()
-                        .flatMap(amateurShow -> photoAlbumRepository.findAllByAmateurShowId(amateurShow.getId()).stream())
-                .collect(Collectors.toList());
+        //다음 커서 설정
+        boolean hasNext = photoAlbums.size() > pageSize;
+        Long nextCursor = hasNext ? photoAlbums.get(pageSize - 1).getId() : null;
 
-        List<Image> images = photoAlbums.stream()
-                .flatMap(photoAlbum -> imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbum.getId()).stream())
-                .collect(Collectors.toList());
+        // 실제 응답할 데이터만 자르기(pageSize 보다 1개 더 가져옴)
+        List<PhotoAlbum> limitedAlbums = photoAlbums.stream()
+                .limit(pageSize)
+                .toList();
 
-        List<Long> photoAlbumIds = images.stream()
-                .map(Image::getContentId)
-                .collect(Collectors.toSet())
-                .stream().toList();
+        // 대표 이미지 가져오기
+        List<Long> albumIds = limitedAlbums.stream()
+                .map(PhotoAlbum::getId)
+                .toList();
 
-        Map<Long, PhotoAlbum> photoAlbumMap = photoAlbumRepository.findAllById(photoAlbumIds).stream()
-                .collect(Collectors.toMap(PhotoAlbum::getId, Function.identity()));
+        // 쿼리 한번에 다 가져오기
+        Map<Long, Image> albumImageMap = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
+                .stream()
+                .collect(Collectors.toMap(Image::getContentId, Function.identity()));
 
-        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs = images.stream()
-                .map(image -> {
-                    PhotoAlbum album = photoAlbumMap.get(image.getContentId());
-                    if (album == null) {
-                        throw new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND);
-                    }
-
+        // DTO 변환
+        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs = limitedAlbums.stream()
+                .map(album -> {
+                    Image coverImage = albumImageMap.get(album.getId());
                     return PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
                             .photoAlbumId(album.getId())
                             .amateurShowName(album.getAmateurShow().getName())
+                            .performerName(performer.getName())
                             .detailAddress(album.getAmateurShow().getDetailAddress())
-                            .imageUrl(image.getImageUrl())
+                            .imageUrl(coverImage != null ? coverImage.getImageUrl() : null)
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        return singlePhotoAlbumDTOs;
-
+        return PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO.builder()
+                .singlePhotoAlbumDTOs(singlePhotoAlbumDTOs)
+                .performerName(performer.getName())
+                .number(singlePhotoAlbumDTOs.size())
+                .hasNext(hasNext)
+                .nextCursor(nextCursor)
+                .build();
     }
 
     @Override
@@ -177,7 +190,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         // 프론트에서 받은 이미지 url 목록
         List<String> newImageUrls = requestDTO.getImageRequestDTOs().stream()
-                .map(dto->dto.getImageUrl()).toList();
+                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl).toList();
 
         // 수정 후 사라진 사진들 - 삭제 대상 찾기
         List<Image> toDelete = existingImages.stream()
@@ -218,11 +231,12 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                                 .memberId(image.getMemberId())
                                 .uploadedAt(image.getUploadedAt())
                                 .build())
-                        .collect(Collectors.toList());
+                        .collect(toList());
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(updatedPhotoAlbum.getId())
                 .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
+                .performerName(updatedPhotoAlbum.getAmateurShow().getPerformerName())
                 .content(updatedPhotoAlbum.getContent())
                 .detailAddress(updatedPhotoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(updatedPhotoAlbum.getAmateurShow().getSchedule())
@@ -251,30 +265,48 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> getAllPhotoAlbumList(){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllPhotoAlbumList(Long cursorId, int size){
 
-        List<PhotoAlbum> photoAlbums = photoAlbumRepository.findAllByOrderByUpdatedAtDesc();
-        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> memberPhotoAlbumDTOs = photoAlbums.stream()
-                .map(photoAlbum -> {
-                    String imageUrl = imageRepository.findAllByFilePathAndContentId(
-                                    FilePath.photoAlbum,
-                                    photoAlbum.getId()
-                            ).stream()
-                            .findFirst()
-                            .map(Image::getImageUrl)
-                            .orElse(null);
+        Pageable pageable = PageRequest.of(0, size + 1);
+        List<PhotoAlbum> albums = photoAlbumRepository.findNextAlbums(cursorId, pageable);
 
+        // 실제 응답할 데이터만 자르기(size 보다 1개 더 가져옴)
+        List<PhotoAlbum> limitedAlbums = albums.stream()
+                .limit(size)
+                .toList();
+
+        // 대표 이미지 조회 (N+1 방지)
+        List<Long> albumIds = limitedAlbums.stream()
+                .map(PhotoAlbum::getId)
+                .toList();
+
+        Map<Long, Image> albumImageMap = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
+                .stream()
+                .collect(Collectors.toMap(Image::getContentId, Function.identity()));
+
+        //DTO 변환
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = limitedAlbums.stream()
+                .map(album -> {
+                    Image coverImage = albumImageMap.get(album.getId());
                     return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
-                            .photoAlbumId(photoAlbum.getId())
-                            .memberId(photoAlbum.getAmateurShow().getMember().getId())
-                            .memberName(photoAlbum.getAmateurShow().getMember().getName())
-                            .amateurShowName(photoAlbum.getAmateurShow().getName())
-                            .imageUrl(imageUrl)
+                            .photoAlbumId(album.getId())
+                            .memberId(album.getAmateurShow().getMember().getId())
+                            .performerName(album.getAmateurShow().getMember().getName())
+                            .amateurShowName(album.getAmateurShow().getName())
+                            .imageUrl(coverImage != null ? coverImage.getImageUrl() : null)
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        return memberPhotoAlbumDTOs;
+        // 다음 커서 설정
+        boolean hasNext = albums.size() > size;
+        Long nextCursor = hasNext ? limitedAlbums.get(limitedAlbums.size() - 1).getId() : null;
+
+        return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
+                .photoAlbumDTOs(dtoList)
+                .nextCursor(nextCursor)
+                .hasNext(hasNext)
+                .build();
     }
 
     // hy) 사진첩 옆에서 쓰이는 공연진 - 공연 목록보기

@@ -15,11 +15,10 @@ public class PhotoAlbumResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PhotoAlbumResultDTO {
-
+        private String performerName;
         private Long photoAlbumId;
         private String amateurShowName;
         private String schedule;
-        //private String place;
         private String detailAddress;
         private String content;
         private List<ImageResponseDTO.ImageResultDTO> imageResultDTOs;
@@ -32,9 +31,21 @@ public class PhotoAlbumResponseDTO {
     public static class SinglePhotoAlbumDTO {
         private Long photoAlbumId;
         private String amateurShowName;
-        //private String place;
+        private String performerName;
         private String detailAddress;
         private String imageUrl;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PerformerPhotoAlbumDTO {
+        private List<SinglePhotoAlbumDTO> singlePhotoAlbumDTOs;
+        private String performerName;
+        private Integer number;
+        private boolean hasNext;
+        private Long nextCursor;
     }
 
     @Builder
@@ -44,9 +55,21 @@ public class PhotoAlbumResponseDTO {
     public static class MemberPhotoAlbumDTO {
         private Long photoAlbumId;
         private Long memberId;
-        private String memberName;
+        private String performerName;
         private String amateurShowName;
         private String imageUrl;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ScrollMemberPhotoAlbumDTO {
+        private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
+        private boolean hasNext;
+        private Long nextCursor;
+    }
+
+
 
 }
