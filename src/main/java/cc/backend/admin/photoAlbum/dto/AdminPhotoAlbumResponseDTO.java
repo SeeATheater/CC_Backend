@@ -30,13 +30,15 @@ public class AdminPhotoAlbumResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DetailPhotoAlbumDTO {
-        private Long id;
+        private Long photoAlbumId;
         private Long amateurShowId;
         private String amateurShowName;
         private Long uploaderId;
         private String uploaderName;
         private String content;
         private LocalDateTime updatedAt;
+        private List<ImageResponseDTO.ImageResultDTO> imageResultDTOs;
+
     }
 
 

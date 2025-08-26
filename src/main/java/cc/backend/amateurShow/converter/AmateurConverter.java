@@ -43,6 +43,7 @@ public class AmateurConverter {
         return AmateurEnrollResponseDTO.AmateurEnrollResult.builder()
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
+                .memberId(amateurShow.getMember().getId())
                 .build();
     }
 
@@ -217,6 +218,7 @@ public class AmateurConverter {
                 .collect(Collectors.toList());
 
         return AmateurShowResponseDTO.AmateurShowResult.builder()
+                .memberId(amateurShow.getMember().getId())
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
                 .performerName(amateurShow.getPerformerName())

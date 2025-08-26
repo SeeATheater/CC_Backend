@@ -3,6 +3,7 @@ package cc.backend.admin.photoAlbum.service;
 import cc.backend.admin.photoAlbum.dto.AdminPhotoAlbumResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
@@ -50,14 +51,27 @@ public class AdminPhotoAlbumService {
         PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
 
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
+
+        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = images.stream()
+                .map(image -> ImageResponseDTO.ImageResultDTO.builder()
+                        .id(image.getId())
+                        .keyName(image.getKeyName())
+                        .imageUrl(image.getImageUrl())
+                        .filePath(image.getFilePath())
+                        .contentId(image.getContentId())
+                        .uploadedAt(image.getUploadedAt())
+                        .build()).toList();
+
         return AdminPhotoAlbumResponseDTO.DetailPhotoAlbumDTO.builder()
-                .id(photoAlbum.getId())
+                .photoAlbumId(photoAlbum.getId())
                 .amateurShowId(photoAlbum.getAmateurShow().getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
                 .content(photoAlbum.getContent())
                 .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
                 .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
                 .updatedAt(photoAlbum.getUpdatedAt())
+                .imageResultDTOs(imageResultDTOs)
                 .build();
     }
 

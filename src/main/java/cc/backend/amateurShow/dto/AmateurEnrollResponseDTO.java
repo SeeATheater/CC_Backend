@@ -14,5 +14,6 @@ public class AmateurEnrollResponseDTO {
     public static class AmateurEnrollResult{
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
+        private Long memberId; //등록자 id
     }
 }

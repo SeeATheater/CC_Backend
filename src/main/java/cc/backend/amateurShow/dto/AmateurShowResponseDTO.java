@@ -16,6 +16,7 @@ public class AmateurShowResponseDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AmateurShowResult{ // 소극장 공연 단건 조회용
+        private Long memberId; //등록자 memberId
         private Long amateurShowId; // 소극장 공연 id
         private String name; // 공연 이름
         private String performerName; // 공연진 이름
