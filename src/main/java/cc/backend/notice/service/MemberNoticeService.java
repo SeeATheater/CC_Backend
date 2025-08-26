@@ -5,13 +5,11 @@ import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.notice.dto.MemberNoticeResponseDTO;
-import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.entity.MemberNotice;
-import cc.backend.notice.entity.enums.NoticeType;
 import cc.backend.notice.repository.MemberNoticeRepository;
 import cc.backend.notice.repository.NoticeRepository;
-import jakarta.xml.bind.SchemaOutputResolver;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,21 +24,51 @@ public class MemberNoticeService {
     private final NoticeRepository noticeRepository;
     private final MemberRepository memberRepository;
 
-    public List<MemberNoticeResponseDTO.MemberNoticeDTO> getAllMemberNotice(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+    public MemberNoticeResponseDTO.MemberNoticeListDTO getAllMemberNotice(
+            Long memberId, Long cursorId, LocalDateTime cursorCreatedAt, int pageSize) {
 
-        List<MemberNotice> memberNotices = memberNoticeRepository.findAllByMemberIdAndIsReadOrderByCreatedAtDesc(memberId, false);
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        return memberNotices.stream().map(memberNotice -> MemberNoticeResponseDTO.MemberNoticeDTO.builder()
-                .id(memberNotice.getId())
-                .noticeType(memberNotice.getNotice().getType())
-                .message(memberNotice.getNotice().getMessage())
-                .isRead(memberNotice.getIsRead())
-                .contentId(memberNotice.getNotice().getContentId())
-                .createdAt(memberNotice.getCreatedAt())
-                .build())
+        List<MemberNotice> memberNotices =
+                memberNoticeRepository.findMemberNoticeByCursor(
+                        memberId,
+                        cursorId,
+                        cursorCreatedAt,
+                        PageRequest.of(0, pageSize + 1));
+
+        boolean hasNext = memberNotices.size() > pageSize;
+
+        List<MemberNotice> limited = memberNotices.stream()
+                .limit(pageSize)
                 .toList();
+
+        List<MemberNoticeResponseDTO.MemberNoticeDTO> items = limited.stream()
+                .map(notice -> MemberNoticeResponseDTO.MemberNoticeDTO.builder()
+                        .id(notice.getId())
+                        .noticeType(notice.getNotice().getType())
+                        .message(notice.getNotice().getMessage())
+                        .isRead(notice.getIsRead())
+                        .contentId(notice.getNotice().getContentId())
+                        .createdAt(notice.getCreatedAt())
+                        .build())
+                .toList();
+
+
+        Long nextCursorId = hasNext ? limited.get(limited.size() - 1).getId() : null;
+        LocalDateTime nextCursorCreatedAt = hasNext ? limited.get(limited.size() - 1).getCreatedAt() : null;
+
+
+        return MemberNoticeResponseDTO.MemberNoticeListDTO.builder()
+                .items(items)
+                .meta(MemberNoticeResponseDTO.MemberNoticeListDTO.Meta.builder()
+                        .count(items.size())
+                        .hasNext(hasNext)
+                        .empty(items.isEmpty())
+                        .nextCursorId(nextCursorId)
+                        .nextCursorCreatedAt(nextCursorCreatedAt)
+                        .build())
+                .build();
     }
 
     @Transactional
@@ -66,5 +94,4 @@ public class MemberNoticeService {
                 .createdAt(memberNotice.getCreatedAt())
                 .build();
     }
-
 }
