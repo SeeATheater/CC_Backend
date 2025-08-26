@@ -69,7 +69,7 @@ public class AmateurShow extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToMany (mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany (mappedBy = "amateurShow", cascade = CascadeType.PERSIST)
     private List<PhotoAlbum> photoAlbums = new ArrayList<>();
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
