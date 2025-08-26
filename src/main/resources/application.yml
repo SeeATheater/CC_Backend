@@ -26,6 +26,10 @@ spring:
             redirect-uri: ${GOOGLE_REDIRECT_URI}
             authorization-grant-type: authorization_code
             client-name: Google
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 
 url:
