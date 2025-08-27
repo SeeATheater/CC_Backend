@@ -9,11 +9,8 @@ import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayCancelResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
-import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
-import cc.backend.ticket.repository.RealTicketRepository;
-import cc.backend.ticket.service.RealTicketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,9 +28,6 @@ public class KakaoPayService {
 
     private final WebClient kakaoWebClient;
     private final MemberTicketRepository memberTicketRepository;
-    private final KakaoPayBusinessService kakaoPayBusinessService;
-    private final RealTicketService realTicketService;
-    private final RealTicketRepository realTicketRepository;
 
     @Value("${kakaopay.cid}")
     private String cid;
@@ -48,9 +42,6 @@ public class KakaoPayService {
     private String failUrl;
 
     public KakaoPayReadyResponseDTO ready(Long ticketId, String partnerUserId) {
-
-        // 재고 먼저 선점!!
-        kakaoPayBusinessService.preemptStock(ticketId);
 
         MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
@@ -78,7 +69,7 @@ public class KakaoPayService {
                 .build();
 
         // post 요청 (ready)
-        KakaoPayReadyResponseDTO readyResponse = kakaoWebClient.post()
+        return kakaoWebClient.post()
                 .uri("/online/v1/payment/ready")
                 .bodyValue(requestDTO)
                 .retrieve()
@@ -90,19 +81,9 @@ public class KakaoPayService {
                 )
                 .bodyToMono(KakaoPayReadyResponseDTO.class)
                 .block(); // 동기 처리
-
-        if (readyResponse == null) {
-            throw new RuntimeException("카카오페이 결제 준비 응답을 받지 못했습니다.");
-        }
-
-        // tid 디비에 저장
-        memberTicket.updateTid(readyResponse.getTid());
-        memberTicketRepository.save(memberTicket);
-
-        return readyResponse;
     }
 
-    public KakaoPayApproveResponseDTO approve(String partnerOrderId, String pgToken) {
+    public KakaoPayApproveResponseDTO approve(String tid, String partnerOrderId, String partnerUserId, String pgToken) {
 
         // partnerOrderId로 MemberTicket 조회
         MemberTicket memberTicket = memberTicketRepository.findById(Long.valueOf(partnerOrderId))
@@ -113,14 +94,6 @@ public class KakaoPayService {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
         }
 
-        // 저장된 tid 가져오기
-        String tid = memberTicket.getKakaoTid();
-        if (tid == null) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND);
-        }
-
-        String partnerUserId = memberTicket.getMember().getId().toString(); // 멤버를 DB에서 추적하기
-
         KakaoPayApproveRequestDTO requestDTO = KakaoPayApproveRequestDTO.builder()
                 .cid(cid)
                 .tid(tid)
@@ -129,7 +102,7 @@ public class KakaoPayService {
                 .pgToken(pgToken)
                 .build();
 
-        KakaoPayApproveResponseDTO response = kakaoWebClient.post()
+        return kakaoWebClient.post()
                 .uri("/online/v1/payment/approve")
                 .bodyValue(requestDTO)
                 .retrieve()
@@ -141,36 +114,9 @@ public class KakaoPayService {
                 )
                 .bodyToMono(KakaoPayApproveResponseDTO.class)
                 .block();
-
-        if (response == null) {
-            throw new RuntimeException("카카오페이 결제 승인 응답을 받지 못했습니다.");
-        }
-
-        // 예약 확정 (재고는 이미 ready에서 선점된 상태!)
-        kakaoPayBusinessService.confirmReservation(partnerOrderId);
-
-        // RealTicket 생성
-        realTicketService.createRealTicketFromMemberTicket(Long.valueOf(partnerOrderId));
-
-        return response;
     }
 
-    public KakaoPayCancelResponseDTO cancel(Long realTicketId, Integer cancelAmount) {
-
-        // partnerOrderId로 MemberTicket 조회
-        RealTicket realTicket = realTicketRepository.findById(realTicketId)
-                                                      .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
-
-        // 티켓 상태가 EXPIRED 이면 승인 불가
-        if (realTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
-        }
-
-        // 저장된 tid 가져오기
-        String tid = realTicket.getKakaoTid();
-        if (tid == null) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND);
-        }
+    public KakaoPayCancelResponseDTO cancel(String tid, Integer cancelAmount) {
 
         KakaoPayCancelRequestDTO requestDTO = KakaoPayCancelRequestDTO.builder()
              .cid(cid)
@@ -179,7 +125,7 @@ public class KakaoPayService {
              .cancelTaxFreeAmount(0)
              .build();
 
-        KakaoPayCancelResponseDTO response = kakaoWebClient.post()
+        return kakaoWebClient.post()
             .uri("/online/v1/payment/cancel")
             .bodyValue(requestDTO)
             .retrieve()
@@ -191,11 +137,5 @@ public class KakaoPayService {
             )
             .bodyToMono(KakaoPayCancelResponseDTO.class)
             .block();
-
-        if (response == null) {
-            throw new RuntimeException("카카오페이 결제 취소 응답을 받지 못했습니다.");
-        }
-
-        return response;
     }
 }

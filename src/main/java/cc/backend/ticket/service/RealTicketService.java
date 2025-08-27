@@ -26,7 +26,6 @@ import java.util.List;
 public class RealTicketService {
     private final RealTicketRepository realTicketRepository;
     private final MemberTicketRepository memberTicketRepository;
-    private final KakaoPayService kakaoPayService;
     private final AmateurRoundsRepository amateurRoundsRepository;
 
 
@@ -92,48 +91,15 @@ public class RealTicketService {
     }
 
     @Transactional
-    public RealTicketResponseDTO cancelTicket(Long memberId, Long realTicketId) {
-
-        // 티켓 조회
-        RealTicket realTicket = realTicketRepository.findByIdAndMemberId(memberId, realTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.REAL_TICKET_NOT_FOUND));
-
-        // 이미 취소된 티켓인지 확인
-        if (realTicket.getReservationStatus().equals(ReservationStatus.CANCELLED)) {
-            throw new GeneralException(ErrorStatus.REAL_TICKET_ALREADY_CANCELED);
-        }
-
-        // 취소 가능 기한 확인
-        if (realTicket.getCancelAvailableUntil().isBefore(LocalDateTime.now())) {
-            throw new GeneralException(ErrorStatus.REAL_TICKET_CANCEL_NOT_AVAILABLE);
-        }
-
-        CancelFeeType cancelFeeType = CancelPolicy.determineCancelFeeType(
-            realTicket.getReserveDateTime(),
-            realTicket.getPerformanceDateTime(),
-            LocalDateTime.now()
-        );
-
-        // 취소 금액 계산
-        int cancelFee = CancelPolicy.calculateCancelFee(
-            cancelFeeType,
-            realTicket.getTotalPrice(),
-            realTicket.getQuantity()
-        );
-
-        Integer cancelAmount = realTicket.getTotalPrice() - cancelFee;
-
-        // 카카오페이 결제 취소 API 호출
-        kakaoPayService.cancel(realTicketId, cancelAmount);
+    public void markTicketAsCancelled(RealTicket realTicket) {
 
         //해당 회차 재고 복구
         amateurRoundsRepository.increaseStock(realTicket.getAmateurRound().getId(), realTicket.getQuantity());
 
         // 누적 티켓 판매수 복구
-        realTicket.getAmateurRound().decreaseTotalTicket(realTicket.getQuantity());
+        realTicket.getAmateurRound().getAmateurShow().decreaseSoldTicket(realTicket.getQuantity());
 
         realTicket.updateReservationStatus(ReservationStatus.CANCELLED);
-        return RealTicketResponseDTO.from(realTicket);
     }
 
 
