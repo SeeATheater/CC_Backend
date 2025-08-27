@@ -19,22 +19,22 @@ public class CancelPolicy {
         }
 
         // 2. 공연일 10일 전까지는 취소 수수료 5000원
-        if (today.isBefore(performanceDay.minusDays(10))) {
+        if (!today.isAfter(performanceDay.minusDays(10))) {
             return CancelFeeType.FIXED_5000; // 장당 5,000원 수수료
         }
 
         // 3. 공연일 7~9일 전까지는 취소 수수료 10%
-        if (today.isBefore(performanceDay.minusDays(7))) {
+        if (!today.isAfter(performanceDay.minusDays(7))) {
             return CancelFeeType.RATE_10; // 티켓 금액의 10% 수수료
         }
 
         // 4. 공연일 4~6일 전까지는 취소 수수료 20%
-        if (today.isBefore(performanceDay.minusDays(4))) {
+        if (!today.isAfter(performanceDay.minusDays(4))) {
             return CancelFeeType.RATE_20; // 티켓 금액의 20% 수수료
         }
 
         // 5. 공연일 1~3일 전까지는 취소 수수료 30%
-        if (today.isBefore(performanceDay.minusDays(1))) {
+        if (!today.isAfter(performanceDay.minusDays(1))) {
             return CancelFeeType.RATE_30; // 티켓 금액의 30% 수수료
         }
 
