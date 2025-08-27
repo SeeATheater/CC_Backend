@@ -84,7 +84,6 @@ public class AmateurShow extends BaseEntity {
     private List<AmateurCasting> amateurCastingList = new ArrayList<>();
 
     @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private AmateurNotice amateurNotice;
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -129,6 +128,13 @@ public class AmateurShow extends BaseEntity {
             this.totalSoldTicket = 0;
         }
         this.totalSoldTicket += quantity;
+    }
+
+    public void decreaseSoldTicket(int quantity) {
+        if (this.totalSoldTicket == null) {
+            this.totalSoldTicket = 0;
+        }
+        this.totalSoldTicket = Math.max(0, this.totalSoldTicket - quantity);
     }
 
     public void updatePosterImageUrl(String imageUrl){

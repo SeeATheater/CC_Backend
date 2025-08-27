@@ -14,12 +14,12 @@ import java.util.List;
 public interface AmateurRoundsRepository extends JpaRepository<AmateurRounds, Long> {
     List<AmateurRounds> findByAmateurShow_IdOrderByRoundNumberAsc(Long amateurShowId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("UPDATE AmateurRounds a SET a.totalTicket = a.totalTicket - :quantity WHERE a.id = :id AND a.totalTicket >= :quantity")
     int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 
     // 재고 증가 메소드
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("UPDATE AmateurRounds a SET a.totalTicket = a.totalTicket + :quantity WHERE a.id = :id")
     int increaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 

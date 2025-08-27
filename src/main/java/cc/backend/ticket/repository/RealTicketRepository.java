@@ -3,6 +3,8 @@ package cc.backend.ticket.repository;
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -11,8 +13,9 @@ import java.util.Optional;
 
 @Repository
 public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
-    Optional<RealTicket> findByIdAndMemberId(Long id, Long memberId);
 
+    @Query("SELECT rt FROM RealTicket rt JOIN FETCH rt.amateurRound WHERE rt.id = :id AND rt.member.id = :memberId")
+    Optional<RealTicket> findByIdAndMemberId(@Param("id") Long id, @Param("memberId") Long memberId);
 
     List<RealTicket> findAllByMemberId(Long memberId);
 
