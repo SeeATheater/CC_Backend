@@ -1,10 +1,13 @@
 package cc.backend.amateurShow.entity;
 
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
+import cc.backend.ticket.entity.RealTicket;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,6 +29,10 @@ public class AmateurRounds {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
+
+    @OneToMany(mappedBy = "amateurRound", cascade = CascadeType.ALL, orphanRemoval = false)
+    @Builder.Default
+    private List<RealTicket> realTickets = new ArrayList<>();
 
     public void update(AmateurUpdateRequestDTO.UpdateRounds dto) {
         if (dto.getRoundNumber() != null) this.roundNumber = dto.getRoundNumber();

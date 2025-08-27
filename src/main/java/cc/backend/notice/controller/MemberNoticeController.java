@@ -8,9 +8,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,8 +28,13 @@ public class MemberNoticeController {
             "type이 HOT, COMMENT 일 경우 contentId는 BoardId," +
             "type이 REPLY 일 경우 contentId는 CommentId" +
             "type이 TICKET 일 경우 contentId는 TicketId")
-    public ApiResponse<List<MemberNoticeResponseDTO.MemberNoticeDTO>> getAllMemberNotice(@AuthenticationPrincipal(expression = "member") Member member){
-        return ApiResponse.onSuccess(memberNoticeService.getAllMemberNotice(member.getId()));
+    public ApiResponse<MemberNoticeResponseDTO.MemberNoticeListDTO> getAllMemberNotice(
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorCreatedAt,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.onSuccess(memberNoticeService.getAllMemberNotice(member.getId(), cursorId, cursorCreatedAt, size));
     }
 
     @PatchMapping("/{noticeId}")

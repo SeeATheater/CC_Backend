@@ -31,6 +31,7 @@ public class AmateurTicket extends BaseEntity {
     private AmateurShow amateurShow;
 
     @OneToMany(mappedBy = "amateurTicket", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<MemberTicket> memberTicketList = new ArrayList<>();
 
     public void update(AmateurUpdateRequestDTO.UpdateTickets dto) {
