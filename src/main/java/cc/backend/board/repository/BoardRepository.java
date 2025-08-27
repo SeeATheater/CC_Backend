@@ -19,6 +19,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query(value = "SELECT * FROM board WHERE id = :id", nativeQuery = true)
     Optional<Board> findByIdIncludingDeleted(@Param("id") Long id);
 
+    @Query(value = "SELECT * FROM board ORDER BY id DESC", nativeQuery = true)
+    Slice<Board> findAllBoardsIncludingDeleted(Pageable pageable);
+
     //Full-context Search
     // 일반게시판: 제목 + 내용
     @Query(value = "SELECT * FROM board " +
