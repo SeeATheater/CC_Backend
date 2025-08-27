@@ -3,12 +3,17 @@ package cc.backend.kakaoPay.service;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.kakaoPay.dto.requestDTO.KakaoPayApproveRequestDTO;
+import cc.backend.kakaoPay.dto.requestDTO.KakaoPayCancelRequestDTO;
 import cc.backend.kakaoPay.dto.requestDTO.KakaoPayReadyRequestDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
+import cc.backend.kakaoPay.dto.responseDTO.KakaoPayCancelResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.MemberTicketRepository;
+import cc.backend.ticket.repository.RealTicketRepository;
+import cc.backend.ticket.service.RealTicketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +32,8 @@ public class KakaoPayService {
     private final WebClient kakaoWebClient;
     private final MemberTicketRepository memberTicketRepository;
     private final KakaoPayBusinessService kakaoPayBusinessService;
+    private final RealTicketService realTicketService;
+    private final RealTicketRepository realTicketRepository;
 
     @Value("${kakaopay.cid}")
     private String cid;
@@ -114,9 +121,13 @@ public class KakaoPayService {
 
         String partnerUserId = memberTicket.getMember().getId().toString(); // 멤버를 DB에서 추적하기
 
-        KakaoPayApproveRequestDTO requestDTO = new KakaoPayApproveRequestDTO(
-                cid, tid, partnerOrderId, partnerUserId, pgToken
-        );
+        KakaoPayApproveRequestDTO requestDTO = KakaoPayApproveRequestDTO.builder()
+                .cid(cid)
+                .tid(tid)
+                .partnerOrderId(partnerOrderId)
+                .partnerUserId(partnerUserId)
+                .pgToken(pgToken)
+                .build();
 
         KakaoPayApproveResponseDTO response = kakaoWebClient.post()
                 .uri("/online/v1/payment/approve")
@@ -137,6 +148,53 @@ public class KakaoPayService {
 
         // 예약 확정 (재고는 이미 ready에서 선점된 상태!)
         kakaoPayBusinessService.confirmReservation(partnerOrderId);
+
+        // RealTicket 생성
+        realTicketService.createRealTicketFromMemberTicket(Long.valueOf(partnerOrderId));
+
+        return response;
+    }
+
+    public KakaoPayCancelResponseDTO cancel(Long realTicketId, Integer cancelAmount) {
+
+        // partnerOrderId로 MemberTicket 조회
+        RealTicket realTicket = realTicketRepository.findById(realTicketId)
+                                                      .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+
+        // 티켓 상태가 EXPIRED 이면 승인 불가
+        if (realTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
+        }
+
+        // 저장된 tid 가져오기
+        String tid = realTicket.getKakaoTid();
+        if (tid == null) {
+            throw new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND);
+        }
+
+        KakaoPayCancelRequestDTO requestDTO = KakaoPayCancelRequestDTO.builder()
+             .cid(cid)
+             .tid(tid)
+             .cancelAmount(cancelAmount)
+             .cancelTaxFreeAmount(0)
+             .build();
+
+        KakaoPayCancelResponseDTO response = kakaoWebClient.post()
+            .uri("/online/v1/payment/cancel")
+            .bodyValue(requestDTO)
+            .retrieve()
+            .onStatus(HttpStatusCode::isError, clientResponse ->
+                clientResponse.bodyToMono(String.class).flatMap(errorBody -> {
+                    log.error("KakaoPay cancel API 에러: {}", errorBody);
+                    return Mono.error(new RuntimeException("KakaoPay API error: " + errorBody));
+                })
+            )
+            .bodyToMono(KakaoPayCancelResponseDTO.class)
+            .block();
+
+        if (response == null) {
+            throw new RuntimeException("카카오페이 결제 취소 응답을 받지 못했습니다.");
+        }
 
         return response;
     }
