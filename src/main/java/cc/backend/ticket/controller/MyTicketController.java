@@ -1,6 +1,7 @@
 package cc.backend.ticket.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.kakaoPay.service.KakaoPayBusinessService;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
 import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
@@ -28,6 +29,7 @@ import java.util.List;
 public class MyTicketController {
     private final MemberTicketService memberTicketService;
     private final RealTicketService realTicketService;
+    private final KakaoPayBusinessService kakaoPayBusinessService;
 
     @GetMapping("/list")
     @Operation(
@@ -131,7 +133,7 @@ public class MyTicketController {
             @PathVariable Long realTicketId,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
-        RealTicketResponseDTO myTicket = realTicketService.cancelTicket(member.getId(), realTicketId);
+        RealTicketResponseDTO myTicket = kakaoPayBusinessService.cancelTicket(member.getId(), realTicketId);
         return ApiResponse.onSuccess(myTicket);
     }
 

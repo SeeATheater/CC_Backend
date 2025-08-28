@@ -23,6 +23,11 @@ public class RealTicketResponseDTO {
         private LocalDateTime reserveDateTime;           // 예매일
         private ReservationStatus reservationStatus; // 상태
 
+        private LocalDateTime cancelAvailableUntil; // 취소 가능 기한
+        private String cancelFeePolicyText;      // 취소 수수료 정책 안내
+        private Integer cancelFee;               // 실제 계산된 취소 수수료
+        private Integer cancelAmount;            // 최종 환불(취소) 금액
+
         public static RealTicketResponseDTO from(RealTicket ticket){
             return RealTicketResponseDTO.builder()
                     .ticketId(ticket.getId())
@@ -37,5 +42,24 @@ public class RealTicketResponseDTO {
                     //.cancelAvailableUntil(ticket.getCancelAvailableUntil())
                     //.cancelFeePolicyText(ticket.getCancelFeePolicyText())
                     .build();
+        }
+
+        // 취소 완료 응답용 (수수료, 환불액 포함)
+        public static RealTicketResponseDTO from(RealTicket ticket, int cancelFee, int cancelAmount) {
+                return RealTicketResponseDTO.builder()
+                                            .ticketId(ticket.getId())
+                                            .showTitle(ticket.getShowTitle())
+                                            .posterImageUrl(ticket.getPosterImageUrl())
+                                            .detailAddress(ticket.getDetailAddress())
+                                            .performanceDateTime(ticket.getPerformanceDateTime())
+                                            .reserveDateTime(ticket.getReserveDateTime())
+                                            .quantity(ticket.getQuantity())
+                                            .totalPrice(ticket.getTotalPrice())
+                                            .reservationStatus(ticket.getReservationStatus()) // 이 시점에는 CANCELLED 상태
+                                            .cancelAvailableUntil(ticket.getCancelAvailableUntil())
+                                            .cancelFeePolicyText(ticket.getCancelFeePolicyText())
+                                            .cancelFee(cancelFee) // 계산된 수수료
+                                            .cancelAmount(cancelAmount) // 최종 환불액
+                                            .build();
         }
 }

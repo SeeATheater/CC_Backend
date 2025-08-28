@@ -31,6 +31,7 @@ public class AmateurRounds {
     private AmateurShow amateurShow;
 
     @OneToMany(mappedBy = "amateurRound", cascade = CascadeType.ALL, orphanRemoval = false)
+    @Builder.Default
     private List<RealTicket> realTickets = new ArrayList<>();
 
     public void update(AmateurUpdateRequestDTO.UpdateRounds dto) {

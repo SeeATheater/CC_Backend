@@ -1,26 +1,31 @@
 package cc.backend.ticket.service;
 
-import java.time.LocalDate;
+import cc.backend.amateurShow.entity.AmateurRounds;
+import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.entity.AmateurTicket;
+import cc.backend.amateurShow.repository.AmateurCastingRepository;
+import cc.backend.amateurShow.repository.AmateurNoticeRepository;
+import cc.backend.amateurShow.repository.AmateurRoundsRepository;
+import cc.backend.amateurShow.repository.AmateurShowRepository;
+import cc.backend.amateurShow.repository.AmateurStaffRepository;
+import cc.backend.amateurShow.repository.AmateurTicketRepository;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.event.entity.TicketReservationEvent;
+import cc.backend.member.entity.Member;
+import cc.backend.member.repository.MemberRepository;
+import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
+import cc.backend.ticket.dto.response.AmateurShowSimpleDTO;
+import cc.backend.ticket.dto.response.AmateurTicketListDTO;
+import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
+import cc.backend.ticket.dto.response.RoundsListDTO;
+import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.enums.ReservationStatus;
+import cc.backend.ticket.repository.MemberTicketRepository;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
-
-import cc.backend.amateurShow.entity.AmateurRounds;
-import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.amateurShow.entity.AmateurTicket;
-import cc.backend.amateurShow.repository.*;
-import cc.backend.apiPayLoad.code.status.ErrorStatus;
-import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.event.entity.PromoteHotEvent;
-import cc.backend.event.entity.TicketReservationEvent;
-import cc.backend.member.entity.Member;
-import cc.backend.member.repository.MemberRepository;
-import cc.backend.ticket.dto.response.*;
-import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
-import cc.backend.ticket.entity.MemberTicket;
-import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -31,16 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MemberTicketServiceImpl implements MemberTicketService {
 
-    private final MemberRepository memberRepository;
     private final MemberTicketRepository memberTicketRepository;
     private final AmateurShowRepository amateurShowRepository;
-    private final AmateurCastingRepository amateurCastingRepository;
-    private final AmateurNoticeRepository amateurNoticeRepository;
     private final AmateurTicketRepository amateurTicketRepository;
-    private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final RealTicketService realTicketService;
+    private final MemberRepository memberRepository;
 
 
     @Override
@@ -67,7 +69,6 @@ public class MemberTicketServiceImpl implements MemberTicketService {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
         }
 
-
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
         String bookingNumber = generateBookingNumber();
 
@@ -81,13 +82,10 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
-                .reservationStatus(ReservationStatus.RESERVED)
+                .reservationStatus(ReservationStatus.PENDING)
                 .build();
 
         MemberTicket saved = memberTicketRepository.save(ticket);
-        //round.decreaseTotalTicket(requestDTO.getQuantity());
-
-        //amateurTicket.getAmateurShow().increaseSoldTicket(requestDTO.getQuantity());
 
         //티켓 예매 알림 이벤트 생성
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
@@ -107,8 +105,6 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .reservationStatus(saved.getReservationStatus())
                 .build();
     }
-
-
 
     @Override
     public List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId){
@@ -152,9 +148,4 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         int randomNum = new Random().nextInt(9000) + 1000; // 1000~9999
         return  prefix + timestamp + randomNum;
     }
-
-
-
-
-
 }

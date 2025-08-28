@@ -58,6 +58,7 @@ public class RealTicket extends BaseEntity {
 
     // 예매 상태 (ex. 예매 완료, 예매 취소 등)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private ReservationStatus reservationStatus = ReservationStatus.PENDING;
 
     // 취소 가능 일시
@@ -66,10 +67,11 @@ public class RealTicket extends BaseEntity {
     // 취소 수수료 정책 (옵션)
     private String cancelFeePolicyText;
 
+    @Column(name = "kakao_tid")
+    private String kakaoTid; // 결제 승인 후 저장용
 
     public void updateReservationStatus(ReservationStatus reservationStatus) {
         this.reservationStatus = reservationStatus;
     }
-
 
 }

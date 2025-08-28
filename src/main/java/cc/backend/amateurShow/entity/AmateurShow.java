@@ -70,14 +70,17 @@ public class AmateurShow extends BaseEntity {
     private Member member;
 
     @OneToMany (mappedBy = "amateurShow", cascade = CascadeType.PERSIST)
+    @Builder.Default
     private List<PhotoAlbum> photoAlbums = new ArrayList<>();
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
+    @Builder.Default
     private List<AmateurTicket> amateurTicketList = new ArrayList<>();
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
+    @Builder.Default
     private List<AmateurCasting> amateurCastingList = new ArrayList<>();
 
     @OneToOne(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -85,11 +88,13 @@ public class AmateurShow extends BaseEntity {
 
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
+    @Builder.Default
     private List<AmateurStaff> amateurStaffList = new ArrayList<>();
 
     //--공연 회차랑 날짜 넣기--
     @OneToMany(mappedBy = "amateurShow", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
+    @Builder.Default
     private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
     @Builder
@@ -123,6 +128,13 @@ public class AmateurShow extends BaseEntity {
             this.totalSoldTicket = 0;
         }
         this.totalSoldTicket += quantity;
+    }
+
+    public void decreaseSoldTicket(int quantity) {
+        if (this.totalSoldTicket == null) {
+            this.totalSoldTicket = 0;
+        }
+        this.totalSoldTicket = Math.max(0, this.totalSoldTicket - quantity);
     }
 
     public void updatePosterImageUrl(String imageUrl){
