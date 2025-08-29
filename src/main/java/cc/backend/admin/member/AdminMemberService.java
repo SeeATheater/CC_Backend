@@ -2,6 +2,7 @@ package cc.backend.admin.member;
 
 import cc.backend.admin.member.dto.AdminMemberDetailResponseDTO;
 import cc.backend.admin.member.dto.AdminMemberListResponseDTO;
+import cc.backend.admin.member.dto.UpdateMemberDetailRequestDTO;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
@@ -60,6 +61,25 @@ public class AdminMemberService {
                 .gender(m.getGender())
                 .address(m.getAddress())
                 .build();
+    }
+
+    @Transactional
+    public AdminMemberDetailResponseDTO updateMemberDetail(Long memberId, UpdateMemberDetailRequestDTO dto){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        member.updateMemberDetail(
+                dto.getUsername(),
+                dto.getName(),
+                dto.getPhone(),
+                dto.getEmail(),
+                dto.getBirth_date(),
+                dto.getGender(),
+                dto.getAddress()
+        );
+
+        return toDetailDTO(member);
+
     }
 
 

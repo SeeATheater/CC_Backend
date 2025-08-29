@@ -96,4 +96,21 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "performer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberLike> likesReceived = new ArrayList<>();
 
+    public void updateMemberDetail(
+            String username,
+            String name,
+            String phone,
+            String email,
+            String birthDate,
+            String gender,
+            String address
+    ) {
+        this.username = username;
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.birth_date = birthDate;
+        this.gender = gender;
+        this.address = address;
+    }
 }

@@ -2,6 +2,7 @@ package cc.backend.admin.member;
 
 import cc.backend.admin.member.dto.AdminMemberDetailResponseDTO;
 import cc.backend.admin.member.dto.AdminMemberListResponseDTO;
+import cc.backend.admin.member.dto.UpdateMemberDetailRequestDTO;
 import cc.backend.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.*;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,7 +33,7 @@ public class AdminMemberController {
         return ApiResponse.onSuccess(adminMemberService.getMemberList(page, size));
     }
 
-    @Operation(summary = "사용자 관리 사용자 단건 조회", description = "모든 사용자를 id순으로 리스트로 조회합니다.")
+    @Operation(summary = "사용자 관리-상세", description = "모든 사용자를 id순으로 리스트로 조회합니다.")
     @GetMapping("/{memberId}")
     public ApiResponse<AdminMemberDetailResponseDTO> getMemberDetail(
 
@@ -39,5 +41,15 @@ public class AdminMemberController {
             @PathVariable Long memberId
     ){
         return ApiResponse.onSuccess(adminMemberService.getMemberDetail(memberId));
+    }
+
+    @Operation(summary = "사용자 관리-수정하기")
+    @PutMapping("/{memberId}")
+    public ApiResponse<AdminMemberDetailResponseDTO> updateMemberDetail(
+            @Parameter(description = "사용자 id", example = "1")
+            @PathVariable Long memberId,
+            @RequestBody UpdateMemberDetailRequestDTO dto
+    ){
+        return ApiResponse.onSuccess(adminMemberService.updateMemberDetail(memberId, dto));
     }
 }
