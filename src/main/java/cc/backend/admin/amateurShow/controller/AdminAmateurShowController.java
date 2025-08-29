@@ -62,7 +62,7 @@ public class AdminAmateurShowController {
 
     @GetMapping("/{showId}")
     @Operation(
-            summary = "관리자 소극장 공연 관리에서 소극장 공연 표로 조회",
+            summary = "소극장 공연 관리 - 상세",
             description = "공연명, 등록자명/아이디, 날짜·시간, 해시태그, 줄거리, 계좌번호, 연락처, 상태를 반환합니다.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -82,7 +82,7 @@ public class AdminAmateurShowController {
 
     @PatchMapping("/{showId}/revise")
     @Operation(
-            summary = "관리자 등록 요청이 있는 소극장 수정하기",
+            summary = "소극장 공연 관리 - 상세 - 수정하기",
             description = "관리자가 소극장 공연을 수정하는 api",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -121,7 +121,7 @@ public class AdminAmateurShowController {
 
     @PatchMapping("/{showId}/approve")
     @Operation(
-            summary = "소극장 공연 승인",
+            summary = "소극장 공연 관리 - 최종 등록",
             description = "심사결과를 ‘확인(승인)’으로 설정합니다.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -139,7 +139,7 @@ public class AdminAmateurShowController {
 
     @PatchMapping("/{showId}/reject")
     @Operation(
-            summary = "소극장 공연 반려",
+            summary = "소극장 공연 관리 - 반려",
             description = "심사결과를 ‘반려’로 설정하고 반려 사유를 남깁니다.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
