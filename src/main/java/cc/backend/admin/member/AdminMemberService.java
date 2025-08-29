@@ -32,12 +32,13 @@ public class AdminMemberService {
     private AdminMemberListResponseDTO toDto(Member m) {
         return AdminMemberListResponseDTO.builder()
                 .memberId(m.getId())
-                .userName(m.getUsername())  // 엔티티 필드명에 맞게 필요 시 수정
+                .username(m.getUsername())  // 엔티티 필드명에 맞게 필요 시 수정
                 .name(m.getName())
                 .email(m.getEmail())
                 .phone(m.getPhone())
                 .build();
     }
+
 
 
 }
