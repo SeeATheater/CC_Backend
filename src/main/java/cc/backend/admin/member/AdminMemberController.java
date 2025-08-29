@@ -31,13 +31,13 @@ public class AdminMemberController {
         return ApiResponse.onSuccess(adminMemberService.getMemberList(page, size));
     }
 
-//    @Operation(summary = "사용자 관리 사용자 단건 조회", description = "모든 사용자를 id순으로 리스트로 조회합니다.")
-//    @GetMapping("/{memberId}")
-//    public ApiResponse<AdminMemberDetailResponseDTO> getMemberDetail(
-//
-//            @Parameter(description = "사용자 id", example = "1")
-//            @PathVariable Long memberId
-//    ){
-//        return adminMemberService.getMemberDetail(memberId);
-//    }
+    @Operation(summary = "사용자 관리 사용자 단건 조회", description = "모든 사용자를 id순으로 리스트로 조회합니다.")
+    @GetMapping("/{memberId}")
+    public ApiResponse<AdminMemberDetailResponseDTO> getMemberDetail(
+
+            @Parameter(description = "사용자 id", example = "1")
+            @PathVariable Long memberId
+    ){
+        return ApiResponse.onSuccess(adminMemberService.getMemberDetail(memberId));
+    }
 }

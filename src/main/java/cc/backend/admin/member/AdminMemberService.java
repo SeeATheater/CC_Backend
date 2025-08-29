@@ -1,6 +1,10 @@
 package cc.backend.admin.member;
 
+import cc.backend.admin.member.dto.AdminMemberDetailResponseDTO;
 import cc.backend.admin.member.dto.AdminMemberListResponseDTO;
+import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.*;
@@ -36,6 +40,25 @@ public class AdminMemberService {
                 .name(m.getName())
                 .email(m.getEmail())
                 .phone(m.getPhone())
+                .build();
+    }
+
+    public AdminMemberDetailResponseDTO getMemberDetail(Long memberId){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        return toDetailDTO(member);
+    }
+
+    private AdminMemberDetailResponseDTO toDetailDTO(Member m){
+        return AdminMemberDetailResponseDTO.builder()
+                .username(m.getUsername())
+                .name(m.getName())
+                .phone(m.getPhone())
+                .email(m.getEmail())
+                .birth_date(m.getBirth_date())
+                .gender(m.getGender())
+                .address(m.getAddress())
                 .build();
     }
 
