@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/amateurShow")
 @RequiredArgsConstructor
-@Tag(name = "관리자 소극장 공연 관리")
+@Tag(name = "관리자 등록 요청 관리")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminAmateurShowController {
 
