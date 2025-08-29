@@ -28,9 +28,12 @@ public class AdminMemberController {
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+
+            @Parameter(description = "검색할 사용자 아이디(username)", example = "jihee")
+            @RequestParam(required = false) String keyword
     ) {
-        return ApiResponse.onSuccess(adminMemberService.getMemberList(page, size));
+        return ApiResponse.onSuccess(adminMemberService.getMemberList(page, size, keyword));
     }
 
     @Operation(summary = "사용자 관리-상세", description = "모든 사용자를 id순으로 리스트로 조회합니다.")

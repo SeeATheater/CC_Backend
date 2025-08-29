@@ -22,10 +22,16 @@ public class AdminMemberService {
 
     private final MemberRepository memberRepository;
 
-    public Slice<AdminMemberListResponseDTO> getMemberList(int page, int size) {
+    public Slice<AdminMemberListResponseDTO> getMemberList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        Page<Member> pageResult = memberRepository.findAll(pageable);
+        Page<Member> pageResult;
+
+        if (keyword != null && !keyword.isBlank()) {
+            pageResult = memberRepository.findByUsernameContainingIgnoreCase(keyword, pageable);
+        } else {
+            pageResult = memberRepository.findAll(pageable);
+        }
 
         List<AdminMemberListResponseDTO> content = pageResult.getContent().stream()
                 .map(this::toDto)
