@@ -340,7 +340,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         // 오늘 날짜를 가진 회차가 있는 공연만
         return allShows.stream()
@@ -381,7 +381,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
                 // 오늘 날짜가 schedule 기간 내에 포함된 공연 필터링
@@ -413,7 +413,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> shows = amateurShowRepository.findAll();
+        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
 
         return shows.stream()
                 .filter(show -> parseSchedule(show.getSchedule())
@@ -442,7 +442,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
         LocalDate today = LocalDate.now();
 
         List<AmateurShowResponseDTO.AmateurShowList> result = new ArrayList<>();
