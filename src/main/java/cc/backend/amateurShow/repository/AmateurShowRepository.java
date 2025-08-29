@@ -60,4 +60,7 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
 
     long countByMember_Id(Long memberId);
 
+    Page<AmateurShow> findByNameContainingIgnoreCase(String showName, Pageable pageable);
+
+
 }

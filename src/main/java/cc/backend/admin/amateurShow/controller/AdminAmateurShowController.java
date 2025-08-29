@@ -30,35 +30,30 @@ public class AdminAmateurShowController {
     private final AdminAmateurShowService adminAmateurShowService;
 
 
-//    @GetMapping("/showList")
-//    @Operation(
-//            summary = "소극장 공연 관리 첫 페이지",
-//            description = "공연명/등록자명/날짜별 필터를 통해 등록된 소극장 공연 리스트 조회합니다.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-//                            responseCode = "200",
-//                            description = "조회 성공",
-//                            content = @Content(schema = @Schema(implementation = AdminAmateurShowListResponseDTO.class))
-//                    )
-//            }
-//    )
-//    public ApiResponse<List<AdminAmateurShowListResponseDTO>> showList(
-//            @Parameter(description = "검색 조건 : 소극장 공연 명 / 등록자명 / 날짜시간",
-//                    example = "SHOW_NAME")
-//            @RequestParam(defaultValue = "SHOW_NAME") SearchField searchField,
-//
-//            @Parameter(description = "검색 키워드",
-//                    example = "실종")
-//            @RequestParam(required = false) String keyword,
-//
-//            @Parameter(description = "페이지 번호(0부터)", example = "0")
-//            @RequestParam(defaultValue = "0") int page,
-//
-//            @Parameter(description = "페이지 크기", example = "20")
-//            @RequestParam(defaultValue = "20") int size
-//    ) {
-//        return adminAmateurShowService.getShowList(searchField, keyword, page, size);
-//    }
+    @GetMapping("/showList")
+    @Operation(
+            summary = "소극장 공연 관리 - 첫페이지",
+            description = "공연명을 통해 등록된 소극장 공연 리스트 조회합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(schema = @Schema(implementation = AdminAmateurShowListResponseDTO.class))
+                    )
+            }
+    )
+    public ApiResponse<List<AdminAmateurShowListResponseDTO>> showList(
+            @Parameter(description = "페이지 번호(0부터)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size,
+
+            @Parameter(description = "검색 키워드, 공연면", example = "실종")
+            @RequestParam(required = false) String keyword
+    ) {
+        return adminAmateurShowService.getShowList(page, size, keyword);
+    }
 
     @GetMapping("/{showId}")
     @Operation(

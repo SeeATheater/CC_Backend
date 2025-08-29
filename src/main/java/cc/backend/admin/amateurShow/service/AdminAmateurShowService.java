@@ -15,6 +15,10 @@ import cc.backend.event.entity.RejectShowEvent;
 import cc.backend.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,9 +34,31 @@ public class AdminAmateurShowService {
      private final AmateurShowRepository amateurShowRepository;
      private final ApplicationEventPublisher eventPublisher;
 
-//    public ApiResponse<List<AdminAmateurShowListResponseDTO>> getShowList(){
-//
-//    }
+    public ApiResponse<List<AdminAmateurShowListResponseDTO>> getShowList(int page, int size, String keyword){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+
+        Page<AmateurShow> pageResult;
+        if (keyword != null && !keyword.isBlank()) {
+            pageResult = amateurShowRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            pageResult = amateurShowRepository.findAll(pageable);
+        }
+
+        List<AdminAmateurShowListResponseDTO> rows = pageResult.getContent().stream()
+                .map(this::toListDto)
+                .toList();
+
+        return ApiResponse.onSuccess(rows);
+
+    }
+
+    private AdminAmateurShowListResponseDTO toListDto(AmateurShow show){
+        return AdminAmateurShowListResponseDTO.builder()
+                .showName(show.getName())
+                .createdAt(show.getCreatedAt())
+                .performerName(show.getPerformerName())
+                .amateurShowStatus(show.getStatus().toString()).build();
+    }
 
     public AdminAmateurShowSummaryResponseDTO getShowSummary(Long showId) {
         AmateurShow show = amateurShowRepository.findById(showId)
