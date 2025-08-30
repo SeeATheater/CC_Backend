@@ -33,4 +33,12 @@ public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
     @EntityGraph(attributePaths = {"member"})
     Page<RealTicket> findByShowTitleContainingIgnoreCase(String showTitle, Pageable pageable);
 
+
+    @EntityGraph(attributePaths = {"member"})
+    Page<RealTicket> findByReservationStatus(ReservationStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"member"})
+    Page<RealTicket> findByReservationStatusAndShowTitleContainingIgnoreCase(
+            ReservationStatus status, String showTitle, Pageable pageable
+    );
 }

@@ -1,7 +1,11 @@
 package cc.backend.admin.ticket;
 
-import cc.backend.admin.ticket.dto.ReservationListResponseDTO;
+import cc.backend.admin.ticket.dto.RefundDetailResponseDTO;
+import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.ticket.entity.RealTicket;
+import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.RealTicketRepository;
 import lombok.*;
 import org.springframework.data.domain.*;
@@ -17,7 +21,7 @@ public class AdminTicketService {
 
     private final RealTicketRepository realTicketRepository;
 
-    public Slice<ReservationListResponseDTO> getReservationList(
+    public Slice<ReservationDetailResponseDTO> getReservationList(
             int page, int size, String keyword
     ) {
         Sort sort = Sort.by(
@@ -31,15 +35,15 @@ public class AdminTicketService {
                         ? realTicketRepository.findByShowTitleContainingIgnoreCase(keyword, pageable)
                         : realTicketRepository.findAll(pageable);
 
-        List<ReservationListResponseDTO> content = result.getContent().stream()
+        List<ReservationDetailResponseDTO> content = result.getContent().stream()
                 .map(this::toDto)
                 .toList();
 
         return new SliceImpl<>(content, pageable, result.hasNext());
     }
 
-    private ReservationListResponseDTO toDto(RealTicket t) {
-        return ReservationListResponseDTO.builder()
+    private ReservationDetailResponseDTO toDto(RealTicket t) {
+        return ReservationDetailResponseDTO.builder()
                 .realTicketId(t.getId())
                 .reserverName(t.getMember() != null ? t.getMember().getName() : null)
                 .showTitle(t.getShowTitle())
@@ -47,6 +51,53 @@ public class AdminTicketService {
                 .detailAddress(t.getDetailAddress())
                 .quantity(t.getQuantity())
                 .status(t.getReservationStatus().name())
+                .build();
+    }
+
+    public ReservationDetailResponseDTO getReservationDetail(Long realTicketId) {
+        RealTicket ticket = realTicketRepository.findById(realTicketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.REAL_TICKET_NOT_FOUND));
+
+        return ReservationDetailResponseDTO.builder()
+                .realTicketId(ticket.getId())
+                .reserverName(ticket.getMember() != null ? ticket.getMember().getName() : null)
+                .showTitle(ticket.getShowTitle())
+                .performanceDateTime(ticket.getPerformanceDateTime())
+                .detailAddress(ticket.getDetailAddress())
+                .quantity(ticket.getQuantity())
+                .status(ticket.getReservationStatus().name())
+                .build();
+    }
+
+    public Slice<RefundDetailResponseDTO> getRefundList(int page, int size, String keyword) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Order.desc("updatedAt"))
+        );
+
+        ReservationStatus refundStatus = ReservationStatus.CANCELLED;
+
+        Page<RealTicket> result =
+                (keyword != null && !keyword.isBlank())
+                        ? realTicketRepository.findByReservationStatusAndShowTitleContainingIgnoreCase(refundStatus, keyword, pageable)
+                        : realTicketRepository.findByReservationStatus(refundStatus, pageable);
+
+        List<RefundDetailResponseDTO> content = result.getContent().stream()
+                .map(this::toRefundDTO)
+                .toList();
+
+        return new SliceImpl<>(content, pageable, result.hasNext());
+    }
+
+    private RefundDetailResponseDTO toRefundDTO(RealTicket t) {
+        return RefundDetailResponseDTO.builder()
+                .realTicketId(t.getId())
+                .username(t.getMember() != null ? t.getMember().getUsername() : null)
+                .memberName(t.getMember() != null ? t.getMember().getName() : null)
+                .showTitle(t.getShowTitle())
+                .performanceDateTime(t.getPerformanceDateTime())
+                .refundRequestedAt(t.getUpdatedAt())
                 .build();
     }
 }
