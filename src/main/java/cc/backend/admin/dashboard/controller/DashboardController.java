@@ -1,6 +1,7 @@
 package cc.backend.admin.dashboard.controller;
 
 import cc.backend.admin.dashboard.dto.ApprovalSummaryResponseDTO;
+import cc.backend.admin.dashboard.dto.ReservationSummaryResponseDTO;
 import cc.backend.admin.dashboard.dto.VisitResponseDTO;
 import cc.backend.admin.dashboard.service.DashboardService;
 import cc.backend.apiPayLoad.ApiResponse;
@@ -38,7 +39,7 @@ public class DashboardController {
     }
 
     @GetMapping("/approval")
-    @Operation(summary = "등록 요청 - 간편보기")
+    @Operation(summary = "등록 요청 - 간편보기", description = "대쉬보드에서 등록 요청 리스트를 조회합니다.")
     public ApiResponse<Slice<ApprovalSummaryResponseDTO>> getApprovalSummary(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -47,6 +48,18 @@ public class DashboardController {
             @RequestParam(defaultValue = "10") int size
     ){
         return ApiResponse.onSuccess(dashBoardService.getApprovalList(page, size));
+    }
+
+    @GetMapping("/reservation")
+    @Operation(summary = "예약 현황 - 간편보기", description = "대쉬보드에서 예약 현황 리스트를 조회합니다.")
+    public ApiResponse<Slice<ReservationSummaryResponseDTO>> getReservationSummary(
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(defaultValue = "10") int size
+    ){
+        return ApiResponse.onSuccess(dashBoardService.getReservationList(page, size));
     }
 
 }

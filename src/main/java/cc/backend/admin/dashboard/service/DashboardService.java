@@ -1,8 +1,11 @@
 package cc.backend.admin.dashboard.service;
 
 import cc.backend.admin.dashboard.dto.ApprovalSummaryResponseDTO;
+import cc.backend.admin.dashboard.dto.ReservationSummaryResponseDTO;
 import cc.backend.admin.dashboard.dto.VisitResponseDTO;
+import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import com.google.analytics.data.v1beta.*;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ public class DashboardService {
     private final String propertyId = System.getenv("GA_PROPERTY_ID");
 
     private final AmateurShowRepository amateurShowRepository;
+    private final AmateurRoundsRepository amateurRoundsRepository;
 
     public List<VisitResponseDTO.HourlyVisitorDTO> getHourlyVisits() {
         RunReportRequest request = RunReportRequest.newBuilder()
@@ -86,6 +90,31 @@ public class DashboardService {
                 .showName(s.getName())
                 .dateTime(dateTime)
                 .capacity(capacity)
+                .build();
+    }
+
+    public Slice<ReservationSummaryResponseDTO> getReservationList(int page, int size) {
+        Sort sort = Sort.by(
+                Sort.Order.asc("performanceDateTime"),
+                Sort.Order.asc("id")
+        );
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<AmateurRounds> result = amateurRoundsRepository.findAll(pageable);
+
+        List<ReservationSummaryResponseDTO> content = result.getContent().stream()
+                .map(this::toDto)
+                .toList();
+
+        return new SliceImpl<>(content, pageable, result.hasNext());
+    }
+
+    private ReservationSummaryResponseDTO toDto(AmateurRounds r) {
+        return ReservationSummaryResponseDTO.builder()
+                .amateurRoundId(r.getId())
+                .showName(r.getAmateurShow().getName())
+                .performanceDateTime(r.getPerformanceDateTime())
+                .totalTicket(r.getTotalTicket())
                 .build();
     }
 }
