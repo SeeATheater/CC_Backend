@@ -78,31 +78,7 @@ public class AdminAmateurShowService {
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
 
-    @Transactional
-    public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {
-        AmateurShow show = amateurShowRepository.findById(showId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
-        show.approve();
-
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(new ApproveShowEvent(show, member));   //공연등록 승인 이벤트 생성
-
-        return AdminAmateurShowSummaryResponseDTO.from(show);
-    }
-
-    @Transactional
-    public AdminAmateurShowSummaryResponseDTO rejectShow(Long showId, AdminAmateurShowRejectRequestDTO dto) {
-        AmateurShow show = amateurShowRepository.findById(showId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
-
-        show.reject(dto.getRejectReason());
-
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(new RejectShowEvent(show, member));   //공연등록 반려 이벤트 생성
-
-        return AdminAmateurShowSummaryResponseDTO.from(show);
-    }
 
 
 }

@@ -11,4 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin/ticket")
 public class AdminTicketController {
 
+    private final AdminTicketService adminTicketService;
+
+
+
 }
