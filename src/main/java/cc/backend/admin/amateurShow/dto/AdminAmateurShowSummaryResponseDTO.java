@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AdminAmateurShowSummaryResponseDTO {
+    private Long showId;
     private String showName;
     private String performerName;
     private String performerEmail;
@@ -29,6 +30,7 @@ public class AdminAmateurShowSummaryResponseDTO {
     public static AdminAmateurShowSummaryResponseDTO from(AmateurShow s) {
         Member m = s.getMember();
         return AdminAmateurShowSummaryResponseDTO.builder()
+                .showId(s.getId())
                 .showName(s.getName())
                 .performerName(m != null ? m.getName() : null)
                 .performerEmail(m != null ? m.getEmail() : null)

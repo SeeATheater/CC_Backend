@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class AdminMemberDetailResponseDTO {
-
+    private Long memberId;
     private String username;
     private String name;
     private String phone;

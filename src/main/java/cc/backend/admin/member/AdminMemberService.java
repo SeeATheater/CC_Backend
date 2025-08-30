@@ -59,6 +59,7 @@ public class AdminMemberService {
 
     private AdminMemberDetailResponseDTO toDetailDTO(Member m){
         return AdminMemberDetailResponseDTO.builder()
+                .memberId(m.getId())
                 .username(m.getUsername())
                 .name(m.getName())
                 .phone(m.getPhone())

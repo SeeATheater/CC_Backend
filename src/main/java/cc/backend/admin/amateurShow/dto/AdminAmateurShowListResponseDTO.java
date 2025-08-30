@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 public class AdminAmateurShowListResponseDTO {
+    private Long showId;
     private String showName;
     private LocalDateTime createdAt;
     private String performerName;

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AdminApprovalListResponseDTO {
+    private Long showId;
     private String username;
     private String memberName;
     private String email;

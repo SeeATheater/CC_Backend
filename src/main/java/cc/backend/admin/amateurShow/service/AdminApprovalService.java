@@ -71,6 +71,7 @@ public class AdminApprovalService {
         Member registrant = show.getMember();
 
         return AdminApprovalListResponseDTO.builder()
+                .showId(show.getId())
                 .username(registrant.getUsername())
                 .memberName(registrant.getName())
                 .email(registrant.getEmail())

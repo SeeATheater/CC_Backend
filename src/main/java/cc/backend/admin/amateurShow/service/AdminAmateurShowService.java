@@ -54,6 +54,7 @@ public class AdminAmateurShowService {
 
     private AdminAmateurShowListResponseDTO toListDto(AmateurShow show){
         return AdminAmateurShowListResponseDTO.builder()
+                .showId(show.getId())
                 .showName(show.getName())
                 .createdAt(show.getCreatedAt())
                 .performerName(show.getPerformerName())
