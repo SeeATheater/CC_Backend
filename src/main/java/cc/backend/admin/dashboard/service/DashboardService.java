@@ -1,10 +1,15 @@
 package cc.backend.admin.dashboard.service;
 
+import cc.backend.admin.dashboard.dto.ApprovalSummaryResponseDTO;
 import cc.backend.admin.dashboard.dto.VisitResponseDTO;
+import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.repository.AmateurShowRepository;
 import com.google.analytics.data.v1beta.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -12,6 +17,8 @@ import java.util.List;
 public class DashboardService {
     private final BetaAnalyticsDataClient betaAnalyticsDataClient;
     private final String propertyId = System.getenv("GA_PROPERTY_ID");
+
+    private final AmateurShowRepository amateurShowRepository;
 
     public List<VisitResponseDTO.HourlyVisitorDTO> getHourlyVisits() {
         RunReportRequest request = RunReportRequest.newBuilder()
@@ -51,5 +58,34 @@ public class DashboardService {
                         Long.parseLong(row.getMetricValues(0).getValue())
                 ))
                 .toList();
+    }
+
+
+    // 시간 포맷때문에 static 선언했는데, 프론트랑 상의 후 수정 예정
+    private static final DateTimeFormatter DT_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd / HH:mm");
+
+    public Slice<ApprovalSummaryResponseDTO> getApprovalList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+
+        Page<AmateurShow> result = amateurShowRepository.findAll(pageable);
+
+        List<ApprovalSummaryResponseDTO> content = result.getContent().stream()
+                .map(this::toSummaryDto)
+                .toList();
+
+        return new SliceImpl<>(content, pageable, result.hasNext());
+    }
+
+    private ApprovalSummaryResponseDTO toSummaryDto(AmateurShow s) {
+        String dateTime = s.getCreatedAt().format(DT_FMT);
+        int capacity    = s.getTotalSoldTicket();
+
+        return ApprovalSummaryResponseDTO.builder()
+                .showId(s.getId())
+                .showName(s.getName())
+                .dateTime(dateTime)
+                .capacity(capacity)
+                .build();
     }
 }
