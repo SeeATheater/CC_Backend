@@ -1,6 +1,7 @@
 package cc.backend.admin.ticket;
 
 import cc.backend.admin.ticket.dto.RefundDetailResponseDTO;
+import cc.backend.admin.ticket.dto.RefundListResponseDTO;
 import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
@@ -69,7 +70,7 @@ public class AdminTicketService {
                 .build();
     }
 
-    public Slice<RefundDetailResponseDTO> getRefundList(int page, int size, String keyword) {
+    public Slice<RefundListResponseDTO> getRefundList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
@@ -83,21 +84,47 @@ public class AdminTicketService {
                         ? realTicketRepository.findByReservationStatusAndShowTitleContainingIgnoreCase(refundStatus, keyword, pageable)
                         : realTicketRepository.findByReservationStatus(refundStatus, pageable);
 
-        List<RefundDetailResponseDTO> content = result.getContent().stream()
+        List<RefundListResponseDTO> content = result.getContent().stream()
                 .map(this::toRefundDTO)
                 .toList();
 
         return new SliceImpl<>(content, pageable, result.hasNext());
     }
 
-    private RefundDetailResponseDTO toRefundDTO(RealTicket t) {
-        return RefundDetailResponseDTO.builder()
+    private RefundListResponseDTO toRefundDTO(RealTicket t) {
+        return RefundListResponseDTO.builder()
                 .realTicketId(t.getId())
                 .username(t.getMember() != null ? t.getMember().getUsername() : null)
                 .memberName(t.getMember() != null ? t.getMember().getName() : null)
                 .showTitle(t.getShowTitle())
                 .performanceDateTime(t.getPerformanceDateTime())
-                .refundRequestedAt(t.getUpdatedAt())
+                .canceledAt(t.getUpdatedAt())
                 .build();
     }
+
+    public RefundDetailResponseDTO getRefundDetail(Long realTicketId) {
+        RealTicket ticket = realTicketRepository.findById(realTicketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.REAL_TICKET_NOT_FOUND));
+
+
+
+        int cancelFee = 5000; // 일단 5000원으로 고정으로하고, 환부 정책에 따라 바뀌게 할게요
+
+        String account = ticket.getAmateurRound().getAmateurShow().getAccount();
+        // 이거 맞나 싶은데....일단 이게 최선인 것 같습니다
+
+        return RefundDetailResponseDTO.builder()
+                .realTicketId(ticket.getId())
+                .showTitle(ticket.getShowTitle())
+                .memberName(ticket.getMember() != null ? ticket.getMember().getName() : null)
+                .performanceDateTime(ticket.getPerformanceDateTime())
+                .canceledAt(ticket.getUpdatedAt())
+                .totalPrice(ticket.getTotalPrice())
+                .cancelFee(cancelFee)
+                .account(account)
+                .status(ticket.getReservationStatus().name())
+                .build();
+    }
+
+
 }

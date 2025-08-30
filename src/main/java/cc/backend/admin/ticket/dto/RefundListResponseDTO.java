@@ -1,6 +1,5 @@
 package cc.backend.admin.ticket.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,16 +11,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class RefundDetailResponseDTO {
+public class RefundListResponseDTO {
     private Long realTicketId;
-    private String showTitle;
+    private String username;
     private String memberName;
+    private String showTitle;
     private LocalDateTime performanceDateTime;
     private LocalDateTime canceledAt;
-    private int totalPrice;
-    private int cancelFee;
-    private String account;
-    private String status;
-
 
 }

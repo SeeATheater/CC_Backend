@@ -1,6 +1,7 @@
 package cc.backend.admin.ticket;
 
 import cc.backend.admin.ticket.dto.RefundDetailResponseDTO;
+import cc.backend.admin.ticket.dto.RefundListResponseDTO;
 import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
 import cc.backend.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +45,7 @@ public class AdminTicketController {
 
     @GetMapping("/refund/history")
     @Operation(summary = "관리자 환불 내역 관리", description = "환불 내역을 리스트 형태로 조회합니다.")
-    public ApiResponse<Slice<RefundDetailResponseDTO>> getRefundHistory(
+    public ApiResponse<Slice<RefundListResponseDTO>> getRefundHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -57,13 +58,15 @@ public class AdminTicketController {
         return ApiResponse.onSuccess(adminTicketService.getRefundList(page, size, keyword));
     }
 
-//    @GetMapping("/refund/{realTicketId}")
-//    @Operation(summary = "관리자 예매 내역 관리 상세조회")
-//    public ApiResponse<RefundDetailResponseDTO> getRefundDetail(
-//            @Parameter(description = "티켓 id", example = "1")
-//            @PathVariable Long realTicketId
-//    ){
-//        return ApiResponse.onSuccess(adminTicketService.getRefundDetail(realTicketId));
-//    }
+    @GetMapping("/refund/{realTicketId}")
+    @Operation(summary = "관리자 환불 내역 관리 상세조회")
+    public ApiResponse<RefundDetailResponseDTO> getRefundDetail(
+            @Parameter(description = "티켓 id", example = "1")
+            @PathVariable Long realTicketId
+    ){
+        return ApiResponse.onSuccess(adminTicketService.getRefundDetail(realTicketId));
+    }
+
+
 
 }
