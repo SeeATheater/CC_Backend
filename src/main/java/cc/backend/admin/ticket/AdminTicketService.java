@@ -3,6 +3,7 @@ package cc.backend.admin.ticket;
 import cc.backend.admin.ticket.dto.RefundDetailResponseDTO;
 import cc.backend.admin.ticket.dto.RefundListResponseDTO;
 import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
+import cc.backend.admin.ticket.dto.TicketDetailResponseDTO;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.ticket.entity.RealTicket;
@@ -22,6 +23,47 @@ public class AdminTicketService {
 
     private final RealTicketRepository realTicketRepository;
 
+    // == 소극장 티켓 관리 == //
+    public Slice<TicketDetailResponseDTO> getTicketList(int page, int size, String keyword) {
+        Sort sort = Sort.by(
+                Sort.Order.desc("id")
+        );
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<RealTicket> result =
+                (keyword != null && !keyword.isBlank())
+                        ? realTicketRepository.findByShowTitleContainingIgnoreCase(keyword, pageable)
+                        : realTicketRepository.findAll(pageable);
+
+        List<TicketDetailResponseDTO> content = result.getContent().stream()
+                .map(this::toTicketDTO)
+                .toList();
+
+        return new SliceImpl<>(content, pageable, result.hasNext());
+    }
+
+    private TicketDetailResponseDTO toTicketDTO(RealTicket t) {
+        return TicketDetailResponseDTO.builder()
+                .realTicketId(t.getId())
+                .showTitle(t.getShowTitle())
+                .performanceDateTime(t.getPerformanceDateTime())
+                .quantity(t.getQuantity())
+                .build();
+    }
+
+    public TicketDetailResponseDTO getTicketDetail(Long realTicketId) {
+        RealTicket ticket = realTicketRepository.findById(realTicketId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.REAL_TICKET_NOT_FOUND));
+
+        return TicketDetailResponseDTO.builder()
+                .realTicketId(ticket.getId())
+                .showTitle(ticket.getShowTitle())
+                .performanceDateTime(ticket.getPerformanceDateTime())
+                .quantity(ticket.getQuantity())
+                .build();
+    }
+
+    // == 예약 내역 관리 == //
     public Slice<ReservationDetailResponseDTO> getReservationList(
             int page, int size, String keyword
     ) {
@@ -37,13 +79,13 @@ public class AdminTicketService {
                         : realTicketRepository.findAll(pageable);
 
         List<ReservationDetailResponseDTO> content = result.getContent().stream()
-                .map(this::toDto)
+                .map(this::toReservationDTO)
                 .toList();
 
         return new SliceImpl<>(content, pageable, result.hasNext());
     }
 
-    private ReservationDetailResponseDTO toDto(RealTicket t) {
+    private ReservationDetailResponseDTO toReservationDTO(RealTicket t) {
         return ReservationDetailResponseDTO.builder()
                 .realTicketId(t.getId())
                 .reserverName(t.getMember() != null ? t.getMember().getName() : null)
@@ -54,6 +96,8 @@ public class AdminTicketService {
                 .status(t.getReservationStatus().name())
                 .build();
     }
+
+    // == 환불 내역 관리 == //
 
     public ReservationDetailResponseDTO getReservationDetail(Long realTicketId) {
         RealTicket ticket = realTicketRepository.findById(realTicketId)
