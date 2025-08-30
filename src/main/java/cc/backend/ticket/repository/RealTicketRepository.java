@@ -2,6 +2,9 @@ package cc.backend.ticket.repository;
 
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,5 +29,8 @@ public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
             List<ReservationStatus> statuses
     );
     List<RealTicket> findByAmateurRound_IdOrderByReserveDateTimeAsc(Long roundId);
+
+    @EntityGraph(attributePaths = {"member"})
+    Page<RealTicket> findByShowTitleContainingIgnoreCase(String showTitle, Pageable pageable);
 
 }
