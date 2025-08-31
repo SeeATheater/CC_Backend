@@ -13,9 +13,7 @@ import java.util.List;
 public class AmateurEnrollRequestDTO {
 
     private String name; // 공연 이름
-    private String performerName; // 공연진 이름
     private String hallName; // 공연장 이름
-    //private String place; // 공연장 주소
     private String roadAddress; // 공연장 도로명 주소
     private String detailAddress; // 공연장 상세 주소
     private String schedule; // 공연 기간
