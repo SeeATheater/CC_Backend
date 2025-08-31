@@ -19,8 +19,7 @@ public class AmateurConverter {
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())
-                //.place(requestDTO.getPlace())
-                .performerName(requestDTO.getPerformerName())
+                .performerName(member.getName()) // 등록자 이름으로 기본 설정
                 .hallName(requestDTO.getHallName())
                 .roadAddress(requestDTO.getRoadAddress())
                 .detailAddress(requestDTO.getDetailAddress())
