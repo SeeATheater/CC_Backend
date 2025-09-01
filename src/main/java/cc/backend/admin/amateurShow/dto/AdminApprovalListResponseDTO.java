@@ -5,17 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-public class AdminAmateurShowListResponseDTO {
+public class AdminApprovalListResponseDTO {
     private Long showId;
+    private String username;
+    private String memberName;
+    private String email;
+    private String phone;
     private String showName;
-    private LocalDateTime createdAt;
-    private String performerName;
     private String amateurShowStatus;
-
 }

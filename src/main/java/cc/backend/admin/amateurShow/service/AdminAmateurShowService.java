@@ -15,6 +15,10 @@ import cc.backend.event.entity.RejectShowEvent;
 import cc.backend.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,9 +34,32 @@ public class AdminAmateurShowService {
      private final AmateurShowRepository amateurShowRepository;
      private final ApplicationEventPublisher eventPublisher;
 
-//    public ApiResponse<List<AdminAmateurShowListResponseDTO>> getShowList(){
-//
-//    }
+    public ApiResponse<List<AdminAmateurShowListResponseDTO>> getShowList(int page, int size, String keyword){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+
+        Page<AmateurShow> pageResult;
+        if (keyword != null && !keyword.isBlank()) {
+            pageResult = amateurShowRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            pageResult = amateurShowRepository.findAll(pageable);
+        }
+
+        List<AdminAmateurShowListResponseDTO> rows = pageResult.getContent().stream()
+                .map(this::toListDto)
+                .toList();
+
+        return ApiResponse.onSuccess(rows);
+
+    }
+
+    private AdminAmateurShowListResponseDTO toListDto(AmateurShow show){
+        return AdminAmateurShowListResponseDTO.builder()
+                .showId(show.getId())
+                .showName(show.getName())
+                .createdAt(show.getCreatedAt())
+                .performerName(show.getPerformerName())
+                .amateurShowStatus(show.getStatus().toString()).build();
+    }
 
     public AdminAmateurShowSummaryResponseDTO getShowSummary(Long showId) {
         AmateurShow show = amateurShowRepository.findById(showId)
@@ -52,31 +79,7 @@ public class AdminAmateurShowService {
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
 
-    @Transactional
-    public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {
-        AmateurShow show = amateurShowRepository.findById(showId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
-        show.approve();
-
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(new ApproveShowEvent(show, member));   //공연등록 승인 이벤트 생성
-
-        return AdminAmateurShowSummaryResponseDTO.from(show);
-    }
-
-    @Transactional
-    public AdminAmateurShowSummaryResponseDTO rejectShow(Long showId, AdminAmateurShowRejectRequestDTO dto) {
-        AmateurShow show = amateurShowRepository.findById(showId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
-
-        show.reject(dto.getRejectReason());
-
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(new RejectShowEvent(show, member));   //공연등록 반려 이벤트 생성
-
-        return AdminAmateurShowSummaryResponseDTO.from(show);
-    }
 
 
 }

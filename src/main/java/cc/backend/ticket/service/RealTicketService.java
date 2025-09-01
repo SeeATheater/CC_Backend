@@ -85,7 +85,7 @@ public class RealTicketService {
     }
 
     public RealTicketResponseDTO getMyTicket(Long memberId, Long realTicketId) {
-        RealTicket realTicket = realTicketRepository.findByIdAndMemberId(memberId, realTicketId)
+        RealTicket realTicket = realTicketRepository.findByIdAndMemberId(realTicketId, memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.REAL_TICKET_NOT_FOUND));
         return RealTicketResponseDTO.from(realTicket);
     }
