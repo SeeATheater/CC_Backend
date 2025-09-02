@@ -52,6 +52,7 @@ public enum ErrorStatus implements BaseErrorCode {
     REAL_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "REALTICKET4001", "이미 취소하신 티켓입니다."),
     INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "REALTICKET4002", "지원하지 않는 티켓 타입입니다."),
     REAL_TICKET_CANCEL_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "REALTICKET4004", "티켓 취소 가능 기한이 이미 지났습니다."),
+    NOT_REAL_TICKET_OWNER(HttpStatus.FORBIDDEN, "REALTICKET4005", "해당 실제 티켓의 소유자가 아닙니다."),
 
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "IMAGE4000", "이미지를 찾을 수 없습니다."),
     NOT_FOUND_IN_S3(HttpStatus.NOT_FOUND, "S34000", "해당 이미지가 S3 내에 존재하지 않습니다."),

@@ -65,13 +65,10 @@ public class MyTicketController {
     }
 
 
-    @GetMapping("{realTicketId}/getMyTicket")
+    @GetMapping("/{realTicketId}/getMyTicket")
     @Operation(
             summary = "내 티켓 단건 조회 API",
             description = "회원이 예매한 특정 티켓(단건)의 상세 정보를 조회합니다.",
-            parameters = {
-                    @Parameter(name = "realTicketId", description = "조회할 티켓 ID", required = true)
-            },
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
@@ -91,7 +88,7 @@ public class MyTicketController {
             }
     )
     public ApiResponse<RealTicketResponseDTO> getMyTicket(
-            @PathVariable Long realTicketId,
+            @PathVariable("realTicketId") Long realTicketId,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
          RealTicketResponseDTO myTicket = realTicketService.getMyTicket(member.getId(), realTicketId);
@@ -99,7 +96,7 @@ public class MyTicketController {
     }
 
 
-    @PatchMapping("{realTicketId}/cancel")
+    @PatchMapping("/{realTicketId}/cancel")
     @Operation(
             summary = "티켓 예약 취소하기 API",
             description = "회원이 예매한 티켓을 취소하는 기능입니다. 이미 취소된 티켓은 다시 취소할 수 없습니다.",
