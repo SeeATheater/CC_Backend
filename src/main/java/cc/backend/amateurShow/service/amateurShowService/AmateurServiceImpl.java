@@ -32,6 +32,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Collator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -496,6 +497,39 @@ public class AmateurServiceImpl implements AmateurService {
                 .build());
     }
 
+    @Override   //AmateurShow 엔티티에서 String Schedule 쪼개서 LocalDate BeginDate, EndDate 필드도 따로 만들어서 저장하는 것도 좋아보임
+    public List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow (Long memberId){
+        memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        //AmateurShowRepository.findByEndDateGreaterThanEqual(today);
+        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
+
+        LocalDate today = LocalDate.now();
+
+        Collator collator = Collator.getInstance(Locale.KOREAN); //한글 사전식 정렬
+
+        return shows.stream()
+                .filter(show -> parseSchedule(show.getSchedule())
+                        .map(dates -> !today.isAfter(dates[1])) // 종료일이 오늘 이후인 경우만
+                        .orElse(false))
+                .sorted(Comparator
+                        .comparing((AmateurShow show) ->
+                                parseSchedule(show.getSchedule())
+                                        .map(dates -> dates[0])  // 시작일 기준
+                                        .orElse(LocalDate.MAX))
+                        .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator))
+                )
+                .limit(10)
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .detailAddress(show.getDetailAddress())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+    }
     //@Override
     //public ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId){
     //    return null;
