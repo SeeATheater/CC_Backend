@@ -1,14 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    mem_limit: 100m
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
   # 블루 배포
   app-blue:
     image: ddhi7/ccapp:latest #이미지는 동일 이미지 사용 : (깃허브 플젝 -> ccapp 이미지)
