@@ -1,4 +1,4 @@
-package cc.backend.config.jwt;
+package cc.backend.config.jwt.dto;
 
 import lombok.Builder;
 import lombok.Data;

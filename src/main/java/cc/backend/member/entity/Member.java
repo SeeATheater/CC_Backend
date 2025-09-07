@@ -34,6 +34,7 @@ public class Member extends BaseEntity {
 
     private String address;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String phone;
@@ -51,6 +52,9 @@ public class Member extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ActiveStatus active_status;
 
+    @Column(name = "kakao_id")
+    private String kakaoId;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Board> boards;
 
@@ -65,7 +69,7 @@ public class Member extends BaseEntity {
 
     @Builder
     public Member(String username, String name, Role role, String address, String email, String phone,
-                       String birth_date, String gender, String password, String delivery_address, String inactive_date) {
+                       String birth_date, String gender, String password, String delivery_address, String inactive_date,String kakaoId) {
         this.username = username;
         this.name = name;
         this.role = role;
@@ -76,6 +80,7 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.password = password;
         this.delivery_address = delivery_address;
+        this.kakaoId = kakaoId;
         this.inactive_date = inactive_date;
         this.active_status = ActiveStatus.ACTIVE;
     }
@@ -95,6 +100,14 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "performer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberLike> likesReceived = new ArrayList<>();
+
+    public void updateKakaoId(String kakaoId) {
+        this.kakaoId = kakaoId;
+    }
+
+    public void updateUsername(String newUsername) {
+        this.username = newUsername;
+    }
 
     public void updateMemberDetail(
             String username,

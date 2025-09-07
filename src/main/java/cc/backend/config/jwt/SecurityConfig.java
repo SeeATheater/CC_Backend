@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/login/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
 
                         .requestMatchers("/kakaoPay/**").permitAll() // 카카오페이 관련 API 허용
 

@@ -1,7 +1,6 @@
 package cc.backend.member.repository;
 
 import cc.backend.member.entity.Member;
-import cc.backend.notice.entity.MemberNotice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +19,6 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     Page<Member> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
 
+    boolean existsByUsername(String username);
 
 }

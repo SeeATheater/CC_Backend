@@ -33,7 +33,17 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4010", "토큰이 유효하지 않습니다."),
     MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4011", "해당 사용자게에게 관리자 권한이 없습니다."),
     MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
-    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4013", "해당 회원은 이미 활성화 상태입니다,"),
+    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
+    INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
+    INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
+    INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
+
+    //KAKAO
+    KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),
+    KAKAO_USER_INFO_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4002", "카카오 사용자 정보 요청에 실패했습니다."),
+    INVALID_KAKAO_USER_INFO(HttpStatus.BAD_REQUEST, "KAKAO4003", "카카오 사용자 정보가 유효하지 않습니다."),
+    MEMBER_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "KAKAO4004", "이미 다른 역할로 가입된 계정입니다."),
+
 
     // MEMBER TICKET ERROR
     MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),

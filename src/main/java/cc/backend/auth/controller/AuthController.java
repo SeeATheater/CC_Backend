@@ -1,9 +1,10 @@
-package cc.backend.member;
+package cc.backend.auth.controller;
 
 
 import cc.backend.config.jwt.CustomUserDetails;
-import cc.backend.config.jwt.TokenDTO;
+import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.config.jwt.TokenProvider;
+import cc.backend.config.jwt.dto.RefreshTokenRequest;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,21 +12,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 
-@Tag(name = "DevAuth", description = "개발자용 토큰 발급 API")
+@Tag(name = "Auth", description = "Auth API")
 @RestController
-@RequestMapping("/login/dev")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
-public class DevAuthController {
+public class AuthController {
 
     private final TokenProvider tokenProvider;
     private final MemberRepository memberRepository;
@@ -48,7 +45,7 @@ public class DevAuthController {
             - admin@test.com
             """
     )
-    @PostMapping
+    @PostMapping("/dev/login")
     public ResponseEntity<TokenDTO> devLogin(
             @RequestParam String email
     ) {
@@ -60,13 +57,27 @@ public class DevAuthController {
         Member member = memberRepository.findMemberByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계정이 존재하지 않습니다."));
 
-        CustomUserDetails userDetails = new CustomUserDetails(member);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-
-        TokenDTO tokenDto = tokenProvider.generateTokenDto(authentication);
+        TokenDTO tokenDto = tokenProvider.generateTokenDto(member);
 
         return ResponseEntity.ok(tokenDto);
+    }
+
+    @Operation(
+            summary = "개발자용 액세스 토큰 재발급",
+            description = "refresh token을 통해 access token을 재발급합니다."
+    )
+    @PostMapping("/dev/refresh")
+    public ResponseEntity<TokenDTO> refresh(@RequestBody RefreshTokenRequest request) {
+        TokenDTO tokenDto = tokenProvider.refreshAccessToken(request.getRefreshToken());
+        return ResponseEntity.ok(tokenDto);
+    }
+    @Operation(
+            summary = "로그아웃"
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        tokenProvider.logout(userDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 }
