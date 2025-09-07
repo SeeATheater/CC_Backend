@@ -1,0 +1,39 @@
+package cc.backend.kakaoPay.controller;
+
+import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
+import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
+import cc.backend.kakaoPay.service.KakaoPayBusinessService;
+import cc.backend.kakaoPay.service.KakaoPayService;
+import cc.backend.member.entity.Member;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/kakaoPay")
+public class KakaoPayController {
+
+    private final KakaoPayBusinessService kakaoPayBusinessService;
+
+    // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
+    @PostMapping("/ready")
+    @Operation(summary = "카카오페이 결제 준비", description = "카카오페이 결제창 URL을 발급합니다.")
+    public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam Long ticketId,
+                                                       @AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(kakaoPayBusinessService.preparePayment(ticketId, String.valueOf(member.getId())));
+    }
+
+    // 결제 승인 요청 (카카오페이 redirect 후 호출)
+    @GetMapping("/approve")
+    @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "결제 완료 후 카카오 서버에서 approval_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
+    public ApiResponse<KakaoPayApproveResponseDTO> approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
+                                                    @RequestParam("pg_token") String pgToken) {
+
+        return ApiResponse.onSuccess(kakaoPayBusinessService.completePayment(partnerOrderId, pgToken));
+    }
+}

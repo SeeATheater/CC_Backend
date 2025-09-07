@@ -51,6 +51,18 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_TICKET_STOCK(HttpStatus.BAD_REQUEST, "TICKET4002", "주문 수량이 재고를 초과했습니다"),
     MEMBER_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "TICKET4003", "이미 취소하신 티켓입니다."),
     MEMBER_TICKET_WRONG_STATUS(HttpStatus.BAD_REQUEST, "TICKET4004", "티켓의 상태가 적절하지 않습니다."),
+    MEMBER_TICKET_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "TICKET4005", "이미 예매된 티켓입니다."),
+    MEMBER_TICKET_TID_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4006", "존재하지 않는 결제 고유 번호(TID) 입니다."),
+    MEMBER_TICKET_STATUS_INVALID(HttpStatus.BAD_REQUEST, "TICKET4007", "유효하지 않은 티켓 상태입니다."),
+    MEMBER_TICKET_EXPIRED(HttpStatus.BAD_REQUEST, "TICKET4008", "티켓이 만료되었습니다."),
+    NOT_MEMBER_TICKET_OWNER(HttpStatus.FORBIDDEN, "TICKET4009", "해당 티켓의 소유자가 아닙니다."),
+
+    // REAL TICKET ERROR
+    REAL_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "REALTICKET4000", "존재하지 않는 실제 티켓입니다."),
+    REAL_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "REALTICKET4001", "이미 취소하신 티켓입니다."),
+    INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "REALTICKET4002", "지원하지 않는 티켓 타입입니다."),
+    REAL_TICKET_CANCEL_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "REALTICKET4004", "티켓 취소 가능 기한이 이미 지났습니다."),
+    NOT_REAL_TICKET_OWNER(HttpStatus.FORBIDDEN, "REALTICKET4005", "해당 실제 티켓의 소유자가 아닙니다."),
 
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "IMAGE4000", "이미지를 찾을 수 없습니다."),
     NOT_FOUND_IN_S3(HttpStatus.NOT_FOUND, "S34000", "해당 이미지가 S3 내에 존재하지 않습니다."),

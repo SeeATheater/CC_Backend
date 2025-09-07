@@ -17,7 +17,8 @@ public class MemberTicketResponseDTO {
     private String bookingNumber;
     private String showTitle;
     private int quantity;
-    private String place;
+    //private String place;
+    private String detailAddress; // 상세 주소
     private LocalDateTime reserveDate;
     private LocalDateTime performanceDateTime;
     private LocalDateTime cancelAvailableUntil;
@@ -29,7 +30,7 @@ public class MemberTicketResponseDTO {
                 .memberTicketId(ticket.getId())
                 .bookingNumber(ticket.getBookingNumber())
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
-                .place(ticket.getAmateurTicket().getAmateurShow().getPlace())
+                .detailAddress(ticket.getAmateurTicket().getAmateurShow().getDetailAddress())
                 .quantity(ticket.getQuantity())
                 .reserveDate(ticket.getReserveDate())
                 .performanceDateTime(ticket.getPerformanceDateTime())

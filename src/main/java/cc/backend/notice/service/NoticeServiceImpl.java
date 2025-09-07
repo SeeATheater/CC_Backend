@@ -126,7 +126,7 @@ public class NoticeServiceImpl implements NoticeService {
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.AMATEURSHOW)
-                        .message("소극장 공연 " + '"' + amateurShow.getName() + '"' + " 등록 완료! 소극장 공연 페이지에서 확인해보세요!")
+                        .message("소극장 공연 " + "'" + amateurShow.getName() + "'" + " 등록 완료! 소극장 공연 페이지에서 확인해보세요!")
                         .contentId(amateurShowId)
                         .build()
         );
@@ -199,7 +199,7 @@ public class NoticeServiceImpl implements NoticeService {
 
         Notice notice = noticeRepository.save(Notice.builder()
                 .type(NoticeType.TICKET)
-                .message("'" + event.getAmateurShow().getName() + '"' + " 공연 예약이 완료되었습니다.")
+                .message("'" + event.getAmateurShow().getName() + "'" + " 공연 예약이 완료되었습니다.")
                 .contentId(event.getAmateurTicket().getId())
                 .build()
         );
@@ -219,5 +219,55 @@ public class NoticeServiceImpl implements NoticeService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public NoticeResponseDTO.NoticeDTO notifyApproval(ApproveShowEvent event) {
+        Notice notice = noticeRepository.save(Notice.builder()
+                .type(NoticeType.AMATEURSHOW)
+                .message("요청하신" + "'" + event.getAmateurShow().getName() + "'"+ "공연 등록이 승인되었습니다.")
+                .contentId(event.getAmateurShow().getId())
+                .build()
+        );
+
+        memberNoticeRepository.save(MemberNotice.builder()
+                .notice(notice)
+                .member(event.getMember())
+                .build()
+        );
+
+        return NoticeResponseDTO.NoticeDTO.builder()
+                .id(notice.getId())
+                .noticeType(notice.getType())
+                .message(notice.getMessage())
+                .contentId(notice.getContentId())
+                .createdAt(notice.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public NoticeResponseDTO.NoticeDTO notifyRejection(RejectShowEvent event){
+        Notice notice = noticeRepository.save(Notice.builder()
+                .type(NoticeType.AMATEURSHOW)
+                .message("요청하신" + "'" + event.getAmateurShow().getName() + "'" + "공연 등록이 반려되었습니다." + "\n"
+                        + event.getAmateurShow().getRejectReason())
+                .contentId(event.getAmateurShow().getId())
+                .build()
+        );
+
+        memberNoticeRepository.save(MemberNotice.builder()
+                .notice(notice)
+                .member(event.getMember())
+                .build()
+        );
+
+        return NoticeResponseDTO.NoticeDTO.builder()
+                .id(notice.getId())
+                .noticeType(notice.getType())
+                .message(notice.getMessage())
+                .contentId(notice.getContentId())
+                .createdAt(notice.getCreatedAt())
+                .build();
+    }
 
 }

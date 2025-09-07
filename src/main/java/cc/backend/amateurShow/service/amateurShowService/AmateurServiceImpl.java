@@ -32,6 +32,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Collator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -67,14 +68,14 @@ public class AmateurServiceImpl implements AmateurService {
         AmateurShow newAmateurShow = amateurShowRepository.save(amateurShow);
 
         // 나머지도 저장
-        saveRelatedEntity(requestDTO, amateurShow);
+        saveRelatedEntity(requestDTO, newAmateurShow);
 
         //포스터사진 저장(1개만)
-        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
+        ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
         ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                 .keyName(dto.getKeyName())
                 .imageUrl(dto.getImageUrl())
-                .filePath(FilePath.poster)
+                .filePath(FilePath.amateurShow)
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
@@ -96,7 +97,7 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         // response
-        return AmateurConverter.toAmateurEnrollDTO(amateurShow);
+        return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
     }
 
     private void saveRelatedEntity(AmateurEnrollRequestDTO requestDTO, AmateurShow amateurShow) {
@@ -143,14 +144,14 @@ public class AmateurServiceImpl implements AmateurService {
 
         //포스터 사진 수정
         //기존 이미지 삭제
-        Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.poster, amateurShow.getId());
+        Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId());
         ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
         if(!dto.getImageUrl().isEmpty()){
             imageService.deleteImage(existingImage.getId(), memberId);
             ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                     .keyName(dto.getKeyName())
                     .imageUrl(dto.getImageUrl())
-                    .filePath(FilePath.poster)
+                    .filePath(FilePath.amateurShow)
                     .contentId(amateurShow.getId())
                     .memberId(memberId)
                     .build();
@@ -317,7 +318,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
         amateurShowRepository.delete(amateurShow);
 
-        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.poster, amateurShowId);
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.amateurShow, amateurShowId);
         images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
     }
 
@@ -340,7 +341,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         // 오늘 날짜를 가진 회차가 있는 공연만
         return allShows.stream()
@@ -350,7 +351,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
-                        .place(show.getPlace())
+                        .detailAddress(show.getDetailAddress())
                         .schedule(show.getSchedule())
                         .posterImageUrl(show.getPosterImageUrl())
                         .build())
@@ -381,7 +382,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
                 // 오늘 날짜가 schedule 기간 내에 포함된 공연 필터링
@@ -391,7 +392,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
-                        .place(show.getPlace())
+                        .detailAddress(show.getDetailAddress())
                         .schedule(show.getSchedule())
                         .posterImageUrl(show.getPosterImageUrl())
                         .build())
@@ -413,7 +414,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> shows = amateurShowRepository.findAll();
+        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
 
         return shows.stream()
                 .filter(show -> parseSchedule(show.getSchedule())
@@ -428,7 +429,8 @@ public class AmateurServiceImpl implements AmateurService {
                 .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
-                        .place(show.getPlace())
+                        //.place(show.getPlace())
+                        .detailAddress(show.getDetailAddress())
                         .schedule(show.getSchedule())
                         .posterImageUrl(show.getPosterImageUrl())
                         .build())
@@ -441,7 +443,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        List<AmateurShow> allShows = amateurShowRepository.findAll();
+        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
         LocalDate today = LocalDate.now();
 
         List<AmateurShowResponseDTO.AmateurShowList> result = new ArrayList<>();
@@ -456,7 +458,8 @@ public class AmateurServiceImpl implements AmateurService {
                 result.add(AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
-                        .place(show.getPlace())
+                        //.place(show.getPlace())
+                        .detailAddress(show.getDetailAddress())
                         .schedule(show.getSchedule())
                         .posterImageUrl(show.getPosterImageUrl())
                         .build());
@@ -486,13 +489,47 @@ public class AmateurServiceImpl implements AmateurService {
         return shows.map(show -> AmateurShowResponseDTO.MyShowAmateurShowList.builder()
                 .amateurShowId(show.getId())
                 .name(show.getName())
-                .place(show.getPlace())
+                //.place(show.getPlace())
+                .detailAddress(show.getDetailAddress())
                 .schedule(show.getSchedule())
                 .posterImageUrl(show.getPosterImageUrl())
                 .status(status)
                 .build());
     }
 
+    @Override   //AmateurShow 엔티티에서 String Schedule 쪼개서 LocalDate BeginDate, EndDate 필드도 따로 만들어서 저장하는 것도 좋아보임
+    public List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow (Long memberId){
+        memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        //AmateurShowRepository.findByEndDateGreaterThanEqual(today);
+        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
+
+        LocalDate today = LocalDate.now();
+
+        Collator collator = Collator.getInstance(Locale.KOREAN); //한글 사전식 정렬
+
+        return shows.stream()
+                .filter(show -> parseSchedule(show.getSchedule())
+                        .map(dates -> !today.isAfter(dates[1])) // 종료일이 오늘 이후인 경우만
+                        .orElse(false))
+                .sorted(Comparator
+                        .comparing((AmateurShow show) ->
+                                parseSchedule(show.getSchedule())
+                                        .map(dates -> dates[0])  // 시작일 기준
+                                        .orElse(LocalDate.MAX))
+                        .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator))
+                )
+                .limit(10)
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .detailAddress(show.getDetailAddress())
+                        .schedule(show.getSchedule())
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+    }
     //@Override
     //public ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId){
     //    return null;

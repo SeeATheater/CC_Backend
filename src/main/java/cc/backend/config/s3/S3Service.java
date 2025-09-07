@@ -86,26 +86,27 @@ public class S3Service {
     }
 
     public void deleteFile(String keyName, Long memberId) {
+        // 회원 검증
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
-
-        if(doesObjectExist(keyName, memberId)) {
-            try {
-                DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                        .bucket(bucket2)
-                        .key(keyName)
-                        .build();
-
-                s3Client.deleteObject(deleteObjectRequest);
-                log.info("Deleted file from S3: {}", keyName);
-            } catch (Exception e) {
-                log.error("Failed to delete file from S3: {}", keyName, e);
-                throw new RuntimeException("파일 삭제 실패: " + e.getMessage());
-            }
-
+        // S3에 존재하는지 확인
+        if (!doesObjectExist(keyName, memberId)) {
+            throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
         }
-        throw new RuntimeException("해당 파일이 S3에 존재하지 않음");
 
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket2)
+                    .key(keyName)
+                    .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("Deleted file from S3: {}", keyName);
+        } catch (Exception e) {
+            log.error("Failed to delete file from S3: {}", keyName, e);
+            throw new RuntimeException("파일 삭제 실패: " + e.getMessage());
+        }
     }
 
     /**

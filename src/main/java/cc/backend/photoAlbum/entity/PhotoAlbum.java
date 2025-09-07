@@ -24,7 +24,7 @@ public class PhotoAlbum extends BaseEntity {
 
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amateur_show_id")
     private AmateurShow amateurShow;
 

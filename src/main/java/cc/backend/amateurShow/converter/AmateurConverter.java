@@ -19,13 +19,19 @@ public class AmateurConverter {
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())
-                .place(requestDTO.getPlace())
+                .performerName(member.getName()) // 등록자 이름으로 기본 설정
+                .hallName(requestDTO.getHallName())
+                .roadAddress(requestDTO.getRoadAddress())
+                .detailAddress(requestDTO.getDetailAddress())
                 .schedule(requestDTO.getSchedule())
                 .runtime(requestDTO.getRuntime())
                 .summary(requestDTO.getSummary())
                 .account(requestDTO.getAccount())
+                .bankName(requestDTO.getBankName())
+                .depositor(requestDTO.getDepositor())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
+                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl())
                 .build();
     }
 
@@ -36,6 +42,7 @@ public class AmateurConverter {
         return AmateurEnrollResponseDTO.AmateurEnrollResult.builder()
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
+                .memberId(amateurShow.getMember().getId())
                 .build();
     }
 
@@ -210,9 +217,16 @@ public class AmateurConverter {
                 .collect(Collectors.toList());
 
         return AmateurShowResponseDTO.AmateurShowResult.builder()
+                .memberId(amateurShow.getMember().getId())
                 .amateurShowId(amateurShow.getId())
                 .name(amateurShow.getName())
-                .place(amateurShow.getPlace())
+                .performerName(amateurShow.getPerformerName())
+                .detailAddress(amateurShow.getDetailAddress())
+                .roadAddress(amateurShow.getRoadAddress())
+                .hallName(amateurShow.getHallName())
+                .bankName(amateurShow.getBankName())
+                .depositor(amateurShow.getDepositor())
+                //.place(amateurShow.getPlace())
                 .schedule(amateurShow.getSchedule())
                 .runtime(amateurShow.getRuntime())
                 .account(amateurShow.getAccount())

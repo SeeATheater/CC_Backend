@@ -45,7 +45,6 @@ public class Board extends BaseEntity {
     private Member member;
 
     @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id")
     @Where(clause = "file_path = 'board'")
     private List<Image> images = new ArrayList<>();
 

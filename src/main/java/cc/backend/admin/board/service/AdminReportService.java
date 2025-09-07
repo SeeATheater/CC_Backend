@@ -98,22 +98,4 @@ public class AdminReportService {
         return result;
     }
 
-
-    /**
-     * 게시글/댓글 삭제
-     */
-    @Transactional
-    public void deleteReportedTarget(ReportTarget targetType, Long targetId) {
-        if (targetType == ReportTarget.BOARD) {
-            Board board = boardRepository.findById(targetId)
-                    .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-            boardRepository.delete(board); // soft delete
-        } else if (targetType == ReportTarget.COMMENT) {
-            Comment comment = commentRepository.findById(targetId)
-                    .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
-            commentRepository.delete(comment); // soft delete
-        }
-    }
-
-
 }

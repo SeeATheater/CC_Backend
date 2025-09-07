@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
     private final Member member;
@@ -27,9 +26,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
     }
-
 
     @Override
     public String getPassword() {
@@ -42,20 +40,11 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
+    public boolean isAccountNonExpired() { return true; }
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
+    public boolean isAccountNonLocked() { return true; }
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
+    public boolean isCredentialsNonExpired() { return true; }
     @Override
     public boolean isEnabled() {
         return member.getActive_status() == ActiveStatus.ACTIVE;

@@ -48,7 +48,6 @@ public class MemberTicketController {
             description = "소극장 공연 티켓 예매 첫화면에서 공연 회차를 선택하기전 조회하는 기능입니다. 등록된 공연의 모든 회차가 조회 됩니다.",
             parameters = {
                     @Parameter(name = "amateurShowId", description = "공연 ID", required = true),
-                    @Parameter(name = "member", hidden = true)
             }
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
@@ -80,7 +79,6 @@ public class MemberTicketController {
             description = "소극장 공연 티켓 예매 두번째화면에서 티켓 종류를 선택하기 전 조회하는 기능입니다. 등록된 공연의 모든 티켓이 조회됩니다.",
             parameters = {
                     @Parameter(name = "amateurShowId", description = "공연 ID", required = true),
-                    @Parameter(name = "member", hidden = true)
             }
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
@@ -111,7 +109,6 @@ public class MemberTicketController {
                     @Parameter(name = "amateurShowId", description = "공연 ID", required = true),
                     @Parameter(name = "amateurRoundId", description = "회차 ID", required = true),
                     @Parameter(name = "amateurTicketId", description = "티켓 ID", required = true),
-                    @Parameter(name = "member", hidden = true)
             },
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -154,6 +151,8 @@ public class MemberTicketController {
                 memberTicketService.createTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
         );
     }
+
+
 
 
 }
