@@ -5,7 +5,7 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
-    mem_limit: 100m
+    mem_limit: 128m
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -26,6 +26,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      - redis
 
   app-green:
     #그린 배포
@@ -44,3 +46,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+    driver: local
