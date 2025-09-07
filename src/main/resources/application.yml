@@ -28,7 +28,7 @@ spring:
             client-name: Google
   data:
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${REDIS_HOST}
       port: 6379
 
 
