@@ -22,6 +22,11 @@ public class KakaoUserInfo {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KakaoAccount {
         private String email;
+
+        private String name;
+
+        @JsonProperty("phone_number")
+        private String phoneNumber;
     }
 
     @Getter

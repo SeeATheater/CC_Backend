@@ -12,12 +12,11 @@ import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.UUID;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +27,7 @@ public class AuthService {
     private final KakaoClient kakaoClient;
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final Random random = new Random();
 
     public TokenDTO kakaoLogin(String authorizationCode, Role role) {
         // 인가 코드로 액세스 토큰 획득
@@ -45,9 +44,14 @@ public class AuthService {
     private Member findOrCreateMember(KakaoUserInfo userInfo, Role role) {
         String email = userInfo.getKakaoAccount().getEmail();
         String nickname = userInfo.getProperties().getNickname();
+        String name = userInfo.getKakaoAccount().getName();
+        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
+
         String kakaoId = userInfo.getId().toString();
 
-        if (email == null || nickname == null) {
+       if (email == null || nickname == null || name == null || phoneNumber == null)  {
+            log.error("필수 정보 누락 - 이메일: {}, 닉네임: {}, 이름: {}, 전화번호: {}",
+                    email, nickname, name, phoneNumber);
             throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
         }
 
@@ -65,7 +69,7 @@ public class AuthService {
             if (member.getKakaoId() == null) {
                 member.updateKakaoId(kakaoId);
             }
-            member.updateNickname(nickname);
+
             return member;
         }
 
@@ -75,31 +79,42 @@ public class AuthService {
     private Member createNewMember(KakaoUserInfo userInfo, Role role, String kakaoId) {
         String email = userInfo.getKakaoAccount().getEmail();
         String nickname = userInfo.getProperties().getNickname();
+        String name = userInfo.getKakaoAccount().getName();
+        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
 
-        String username = generateUsername(email, role);
+        String username = generateUsername(nickname);
 
         Member newMember = Member.builder()
                 .username(username)
-                .name(nickname)
+                .name(name)
                 .email(email)
+                .phone(phoneNumber)
                 .role(role)
                 .kakaoId(kakaoId)
-                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .build();
 
         return memberRepository.save(newMember);
     }
 
-    //유저네임 = 이메일 + 역할
-    private String generateUsername(String email, Role role) {
-        String baseUsername = email.split("@")[0] + "_" + role.name().toLowerCase();
+    //유저네임 = 닉네임 + 랜덤숫자 3개
+    private String generateUsername(String nickname) {
+        String username;
+        int maxAttempts = 100; // 무한 루프 방지를 위한 최대 시도 횟수
+        int attempts = 0;
 
-        String username = baseUsername;
-        int counter = 1;
-        while (memberRepository.existsByUsername(username)) {
-            username = baseUsername + "_" + counter;
-            counter++;
-        }
+        do {
+            // 3자리 랜덤 숫자 생성 (000 ~ 999)
+            String randomSuffix = String.format("%03d", random.nextInt(1000));
+            username = nickname + randomSuffix;
+            attempts++;
+
+            if (attempts >= maxAttempts) {
+                // 최대 시도 횟수 초과 시 타임스탬프 추가
+                username = nickname + System.currentTimeMillis() % 1000;
+                break;
+            }
+
+        } while (memberRepository.existsByUsername(username));
 
         return username;
     }

@@ -105,10 +105,6 @@ public class Member extends BaseEntity {
         this.kakaoId = kakaoId;
     }
 
-    public void updateNickname(String nickname) {
-        this.name = nickname; //카카오의 닉네임 == CC 이름
-    }
-
     public void updateUsername(String newUsername) {
         this.username = newUsername;
     }
