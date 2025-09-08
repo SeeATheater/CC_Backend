@@ -5,6 +5,7 @@ import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.request.BoardSearchRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
+import cc.backend.board.dto.response.BoardListResponse;
 import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.Board;
 import cc.backend.board.entity.BoardLike;
@@ -166,18 +167,25 @@ public class BoardService {
 
     //게시글 조회
     @Transactional(readOnly = true)
-    public Slice<BoardDetailResponse> getBoards(BoardType boardType, int page, int size) {
+    public Slice<BoardListResponse> getBoards(BoardType boardType, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Slice<Board> boardSlice = boardRepository.findAllByBoardTypeOrderByIdDesc(boardType, pageable);
-        return boardSlice.map(BoardDetailResponse::from);
+        return boardSlice.map(BoardListResponse::from);
     }
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public BoardDetailResponse getBoard(Long boardId) {
+    public BoardDetailResponse getBoard(Long boardId, Long memberId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
-        return BoardDetailResponse.from(board);
+
+        // 현재 사용자가 좋아요 눌렀는지 확인
+        boolean liked = false;
+        if (memberId != null) {
+            liked = boardLikeRepository.existsByMemberIdAndBoardId(memberId, boardId);
+        }
+
+        return BoardDetailResponse.from(board,liked);
     }
 
     //게시글 좋아요
@@ -207,17 +215,17 @@ public class BoardService {
 
     //핫게시판 조회
     @Transactional(readOnly = true)
-    public List<BoardDetailResponse> getHotBoards() {
+    public List<BoardListResponse> getHotBoards() {
         List<HotBoard> hotBoards = hotBoardRepository.findTop10ByOrderByBoard_CreatedAtDesc();
         // 등록일 순으로 정렬
         return hotBoards.stream()
                 .sorted(Comparator.comparing(hb -> hb.getBoard().getCreatedAt()))
-                .map(hb -> BoardDetailResponse.from(hb.getBoard()))
+                .map(hb -> BoardListResponse.from(hb.getBoard()))
                 .collect(Collectors.toList());
     }
 
     //게시판 검색
-    public Slice<BoardDetailResponse> searchBoards(BoardSearchRequest request) {
+    public Slice<BoardListResponse> searchBoards(BoardSearchRequest request) {
         if (request.getKeyword() == null || request.getKeyword().trim().isEmpty()) {
             // 검색어가 없으면 일반 조회
             return getBoards(request.getBoardType(), request.getPage(), request.getSize());
@@ -249,17 +257,17 @@ public class BoardService {
             }
         }
 
-        return boardSlice.map(BoardDetailResponse::from);
+        return boardSlice.map(BoardListResponse::from);
     }
 
     //내가 쓴 게시글 리스트 조회
     @Transactional(readOnly = true)
-    public Slice<BoardDetailResponse> getMyBoards(Long memberId, int page, int size) {
+    public Slice<BoardListResponse> getMyBoards(Long memberId, int page, int size) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Slice<Board> boardSlice = boardRepository.findAllByMemberIdOrderByIdDesc(member.getId(), pageable);
-        return boardSlice.map(BoardDetailResponse::from);
+        return boardSlice.map(BoardListResponse::from);
     }
 
     // --------------- 내부 메서드 ------------

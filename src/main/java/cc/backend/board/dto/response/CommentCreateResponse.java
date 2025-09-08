@@ -19,6 +19,9 @@ public class CommentCreateResponse {
     @Schema(description = "댓글 내용", example = "정말 좋은 글이네요! 감사합니다.")
     private String content;
 
+    @Schema(description = "작성자 ID", example = "123")
+    private Long memberId;
+
     @Schema(description = "작성자명 (게시글 작성자: '작성자', 그 외: '익명')", example = "작성자")
     private String writer;
 
@@ -33,6 +36,7 @@ public class CommentCreateResponse {
                 .commentId(comment.getId())
                 .boardId(comment.getBoard().getId())
                 .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
+                .memberId(comment.getMember().getId())
                 .writer(writer)
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
                 .build();

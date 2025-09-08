@@ -21,6 +21,9 @@ public class CommentResponse {
     @Schema(description = "댓글 내용 (삭제된 경우 '삭제된 댓글입니다.' 표시)", example = "정말 좋은 글이네요! 감사합니다.")
     private String content;
 
+    @Schema(description = "작성자 ID", example = "123")
+    private Long memberId;
+
     @Schema(description = "작성자명 (게시글 작성자: '작성자', 그 외: '익명')", example = "익명")
     private String writer; // 실명 or 익명
 
@@ -36,7 +39,10 @@ public class CommentResponse {
     @Schema(description = "좋아요 수", example = "5")
     private int likeCount;
 
-    public static CommentResponse from(Comment comment, Long boardWriterId) {
+    @Schema(description = "현재 사용자가 좋아요 눌렀는지 여부", example = "true")
+    private boolean liked;
+
+    public static CommentResponse from(Comment comment, Long boardWriterId, boolean liked) {
         String writer;
         if (comment.getMember().getId().equals(boardWriterId)) {
             writer = "작성자";
@@ -47,6 +53,28 @@ public class CommentResponse {
                 .commentId(comment.getId())
                 .boardId(comment.getBoard().getId())
                 .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
+                .memberId(comment.getMember().getId())
+                .writer(writer)
+                .deleted(comment.isDeleted())
+                .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
+                .children(new ArrayList<>())
+                .likeCount(comment.getLikeCount())
+                .liked(liked)
+                .build();
+    }
+
+    public static CommentResponse fromForAdmin(Comment comment, Long boardWriterId) {
+        String writer;
+        if (comment.getMember().getId().equals(boardWriterId)) {
+            writer = "작성자";
+        } else {
+            writer = "익명";
+        }
+        return CommentResponse.builder()
+                .commentId(comment.getId())
+                .boardId(comment.getBoard().getId())
+                .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
+                .memberId(comment.getMember().getId())
                 .writer(writer)
                 .deleted(comment.isDeleted())
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
