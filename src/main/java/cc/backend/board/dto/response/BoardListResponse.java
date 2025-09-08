@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 @Getter
 @Builder
-@Schema(description = "게시글 상세 응답 DTO")
-public class BoardDetailResponse {
+@Schema(description = "게시글 목록 응답 DTO")
+public class BoardListResponse {
 
     @Schema(description = "게시글 ID", example = "1")
     private Long boardId;
@@ -43,16 +43,13 @@ public class BoardDetailResponse {
     @Schema(description = "작성자명 (홍보게시판: 실명, 일반게시판: 익명)", example = "홍길동")
     private String writer;
 
-    @Schema(description = "현재 사용자가 좋아요 눌렀는지 여부", example = "true")
-    private boolean liked;
-
     @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
     private LocalDateTime createdAt;
 
     @Schema(description = "수정일시", example = "2024-01-15T14:20:00")
     private LocalDateTime updatedAt;
 
-    public static BoardDetailResponse from(Board board, boolean liked) {
+    public static BoardListResponse from(Board board) {
         String writer;
         if (board.getBoardType() == BoardType.PROMOTION) {
             writer = board.getMember().getUsername();
@@ -65,7 +62,7 @@ public class BoardDetailResponse {
                 .map(Image::getImageUrl)
                 .collect(Collectors.toList());
 
-        return BoardDetailResponse.builder()
+        return BoardListResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())
                 .title(board.getTitle())
@@ -75,9 +72,9 @@ public class BoardDetailResponse {
                 .commentCount(board.getCommentCount())
                 .memberId(board.getMember().getId())
                 .writer(writer)
-                .liked(liked)
                 .createdAt(board.getCreatedAt())
                 .updatedAt(board.getUpdatedAt())
                 .build();
     }
 }
+
