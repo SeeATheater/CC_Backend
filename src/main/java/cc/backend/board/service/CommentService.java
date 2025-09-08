@@ -103,16 +103,25 @@ public class CommentService {
 
     // 댓글/대댓글 목록 조회
     @Transactional(readOnly = true)
-    public List<CommentResponse> getComments(Long boardId) {
+    public List<CommentResponse> getComments(Long boardId,Long memberId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
         List<Comment> comments = commentRepository.findByBoardOrderByCreatedAtAsc(board);
         Long boardWriterId = board.getMember().getId();
 
+        List<Long> commentIds = comments.stream()
+                .map(Comment::getId)
+                .collect(Collectors.toList());
+
+        //현재 사용자가 좋아요 눌렀는지 여부 한 번에 조회
+        List<Long> likedCommentIds = commentLikeRepository.findLikedCommentIdsByMemberAndCommentIds(memberId, commentIds);
+        Set<Long> likedCommentIdSet = new HashSet<>(likedCommentIds);
+
         //  모든 댓글을 Map<id, CommentResponse>로 변환
         Map<Long, CommentResponse> map = new LinkedHashMap<>();
         for (Comment comment : comments) {
-            map.put(comment.getId(), CommentResponse.from(comment, boardWriterId));
+            boolean liked = likedCommentIdSet.contains(comment.getId());
+            map.put(comment.getId(), CommentResponse.from(comment, boardWriterId,liked));
         }
 
         // 트리 구조로 변환
@@ -155,5 +164,34 @@ public class CommentService {
         }
     }
 
+    // 댓글/대댓글 목록 조회
+    @Transactional(readOnly = true)
+    public List<CommentResponse> getCommentsForAdmin(Long boardId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
+        List<Comment> comments = commentRepository.findByBoardOrderByCreatedAtAsc(board);
+        Long boardWriterId = board.getMember().getId();
+
+        //  모든 댓글을 Map<id, CommentResponse>로 변환
+        Map<Long, CommentResponse> map = new LinkedHashMap<>();
+        for (Comment comment : comments) {
+            map.put(comment.getId(), CommentResponse.fromForAdmin(comment, boardWriterId));
+        }
+
+        // 트리 구조로 변환
+        List<CommentResponse> result = new ArrayList<>();
+        for (Comment comment : comments) {
+            CommentResponse response = map.get(comment.getId());
+            if (comment.getParent() == null) {
+                // 최상위 댓글
+                result.add(response);
+            } else {
+                // 대댓글을 부모의 children에 추가
+                CommentResponse parentResponse = map.get(comment.getParent().getId());
+                parentResponse.getChildren().add(response);
+            }
+        }
+        return result;
+    }
 
 }

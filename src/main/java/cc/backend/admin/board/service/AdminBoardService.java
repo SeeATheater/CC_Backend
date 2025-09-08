@@ -54,7 +54,7 @@ public class AdminBoardService {
         List<CommentResponse> comments = new ArrayList<>();
         if (!board.isDeleted()) {
             // 삭제되지 않은 게시글의 경우에만 댓글 조회
-            comments = commentService.getComments(boardId);
+            comments = commentService.getCommentsForAdmin(boardId);
         }
 
         return AdminBoardDetailWithCommentsResponse.builder()

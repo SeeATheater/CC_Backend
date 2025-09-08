@@ -91,8 +91,10 @@ public class CommentController {
     )
     @GetMapping
     public ResponseEntity<List<CommentResponse>> getComments(
-            @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId) {
-        List<CommentResponse> comments = commentService.getComments(boardId);
+            @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
+            @Parameter(description = "회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member){
+
+        List<CommentResponse> comments = commentService.getComments(boardId,member.getId());
         return ResponseEntity.ok(comments);
     }
 

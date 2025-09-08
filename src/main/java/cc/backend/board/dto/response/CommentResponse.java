@@ -39,7 +39,31 @@ public class CommentResponse {
     @Schema(description = "좋아요 수", example = "5")
     private int likeCount;
 
-    public static CommentResponse from(Comment comment, Long boardWriterId) {
+    @Schema(description = "현재 사용자가 좋아요 눌렀는지 여부", example = "true")
+    private boolean liked;
+
+    public static CommentResponse from(Comment comment, Long boardWriterId, boolean liked) {
+        String writer;
+        if (comment.getMember().getId().equals(boardWriterId)) {
+            writer = "작성자";
+        } else {
+            writer = "익명";
+        }
+        return CommentResponse.builder()
+                .commentId(comment.getId())
+                .boardId(comment.getBoard().getId())
+                .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
+                .memberId(comment.getMember().getId())
+                .writer(writer)
+                .deleted(comment.isDeleted())
+                .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
+                .children(new ArrayList<>())
+                .likeCount(comment.getLikeCount())
+                .liked(liked)
+                .build();
+    }
+
+    public static CommentResponse fromForAdmin(Comment comment, Long boardWriterId) {
         String writer;
         if (comment.getMember().getId().equals(boardWriterId)) {
             writer = "작성자";
