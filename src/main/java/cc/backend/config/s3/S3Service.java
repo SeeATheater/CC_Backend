@@ -72,7 +72,6 @@ public class S3Service {
 
         PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
         String myURL = presignedRequest.url().toString();
-        myURL = myURL.replace(BUCKET_DOMAIN, "");
         String publicUrl = BUCKET_DOMAIN + keyName;
         log.info("Presigned URL to upload a file to: {}", myURL);
         log.info("HTTP method: {}", presignedRequest.httpRequest().method());
