@@ -52,7 +52,7 @@ public class BoardDetailResponse {
     @Schema(description = "수정일시", example = "2024-01-15T14:20:00")
     private LocalDateTime updatedAt;
 
-    public static BoardDetailResponse from(Board board, boolean liked) {
+    public static BoardDetailResponse from(Board board, boolean liked, List<String> imgUrls) {
         String writer;
         if (board.getBoardType() == BoardType.PROMOTION) {
             writer = board.getMember().getUsername();
@@ -60,10 +60,10 @@ public class BoardDetailResponse {
             writer = "익명";
         }
 
-        // 연관관계(이미지 엔티티)에서 이미지 URL 조회
-        List<String> imgUrls = board.getImages().stream()
-                .map(Image::getImageUrl)
-                .collect(Collectors.toList());
+//        // 연관관계(이미지 엔티티)에서 이미지 URL 조회 - Image 매핑없이 contentId와 filePath 로 접근
+//        List<String> imgUrls = board.getImages().stream()
+//                .map(Image::getImageUrl)
+//                .collect(Collectors.toList());
 
         return BoardDetailResponse.builder()
                 .boardId(board.getId())
