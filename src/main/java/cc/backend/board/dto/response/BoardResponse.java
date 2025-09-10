@@ -2,10 +2,7 @@ package cc.backend.board.dto.response;
 
 import cc.backend.board.entity.enums.BoardType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +10,7 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Schema(description = "게시글 작성/수정 응답 DTO")
 public class BoardResponse {
