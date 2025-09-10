@@ -129,7 +129,7 @@ public class BoardService {
             updateBoardImages(board, dto.getImageRequestDTOs(), memberId);
         }
 
-        // 수정된 이미지 URL 목록 조회
+        // 수정된 이미지 URL 목록 조회- imageUrl 필드 관련 수정필요
         List<String> updatedImgUrls = board.getImages().stream()
                 .map(Image::getImageUrl)
                 .collect(Collectors.toList());
@@ -185,7 +185,10 @@ public class BoardService {
             liked = boardLikeRepository.existsByMemberIdAndBoardId(memberId, boardId);
         }
 
-        return BoardDetailResponse.from(board,liked);
+        List<Image> BoardImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId);
+        List<String> imgUrls = BoardImages.stream().map(Image::getImageUrl).collect(Collectors.toList());
+
+        return BoardDetailResponse.from(board,liked, imgUrls);
     }
 
     //게시글 좋아요
