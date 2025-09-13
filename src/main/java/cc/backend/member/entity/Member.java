@@ -93,6 +93,10 @@ public class Member extends BaseEntity {
     public void reactivateMember(Member member) {
         this.active_status = ActiveStatus.ACTIVE;
     }
+    public void reactivateMember() {
+        this.active_status = ActiveStatus.ACTIVE;
+        this.inactive_date = null;
+    }
 
     // --공연진 좋아요--
     @OneToMany(mappedBy = "liker", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -126,4 +130,15 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.address = address;
     }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+    public void updateRole(Role newRole) {
+        this.role = newRole;
+    }
+
 }

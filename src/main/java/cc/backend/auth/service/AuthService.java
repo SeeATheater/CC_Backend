@@ -8,6 +8,7 @@ import cc.backend.auth.kakao.KakaoClient;
 import cc.backend.config.jwt.TokenProvider;
 import cc.backend.config.jwt.dto.TokenDTO;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -60,17 +61,26 @@ public class AuthService {
         if (existingMember.isPresent()) {
             Member member = existingMember.get();
 
-            //다른 역할로 로그인 요청한 경우
-            if (!member.getRole().equals(role)) {
-                throw new GeneralException(ErrorStatus.MEMBER_ROLE_ALREADY_EXISTS);
+            //활성 회원인 경우
+            if(member.getActive_status()==ActiveStatus.ACTIVE){
+                //다른 역할로 로그인 요청한 경우
+                if (!member.getRole().equals(role)) {
+                    throw new GeneralException(ErrorStatus.MEMBER_ROLE_ALREADY_EXISTS);
+                }
+
+                //같은 역할일 경우 로그인 처리
+                if (member.getKakaoId() == null) {
+                    member.updateKakaoId(kakaoId);
+                }
+
+                return member;
             }
 
-            //같은 역할일 경우 로그인 처리
-            if (member.getKakaoId() == null) {
-                member.updateKakaoId(kakaoId);
+            // 비활성화된 회원인 경우 - 재가입 처리
+            if (member.getActive_status() == ActiveStatus.INACTIVE) {
+                return reactivateMember(member, userInfo, role, kakaoId);
             }
 
-            return member;
         }
 
         return createNewMember(userInfo, role, kakaoId);
@@ -117,5 +127,28 @@ public class AuthService {
         } while (memberRepository.existsByUsername(username));
 
         return username;
+    }
+
+    //비활성화된 회원 재활성화
+    private Member reactivateMember(Member member, KakaoUserInfo userInfo, Role newRole, String kakaoId) {
+        String name = userInfo.getKakaoAccount().getName();
+        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
+        String nickname = userInfo.getProperties().getNickname();
+
+        String newUsername = generateUsername(nickname);
+
+        // 회원 정보 업데이트 및 재활성화
+        member.reactivateMember();
+        member.updateRole(newRole); // 역할 업데이트
+        member.updateName(name);
+        member.updateUsername(newUsername);
+        member.updatePhone(phoneNumber);
+
+        if (member.getKakaoId() == null) {
+            member.updateKakaoId(kakaoId);
+        }
+
+
+        return member;
     }
 }
