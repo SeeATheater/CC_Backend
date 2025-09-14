@@ -199,11 +199,8 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
             imageService.deleteImage(image.getId(), memberId);
         });
 
-        // DB 에서 다시 조회 → 이제 삭제된 애들은 빠져 있음
-        List<Image> remainingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
-
         // 삭제 후 남아있는 기존 사진
-        Set<String> existingUrls = remainingImages.stream()
+        Set<String> existingUrls = existingImages.stream()
                 .map(Image::getImageUrl)
                 .collect(Collectors.toSet());
 
