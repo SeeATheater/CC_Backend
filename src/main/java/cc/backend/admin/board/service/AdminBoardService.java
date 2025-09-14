@@ -75,6 +75,9 @@ public class AdminBoardService {
             Comment comment = commentRepository.findById(targetId)
                     .orElseThrow(() -> new GeneralException(ErrorStatus.COMMENT_NOT_FOUND));
             commentRepository.delete(comment); // soft delete
+
+            Board board = comment.getBoard();
+            board.decreaseCommentCount();
         }
     }
 
