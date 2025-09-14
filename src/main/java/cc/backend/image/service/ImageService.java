@@ -10,14 +10,17 @@ import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -93,13 +96,20 @@ public class ImageService {
     // 이미지 삭제-s3 동시 삭제 지원
     @Transactional
     public void deleteImage(Long imageId, Long memberId) {
-
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
-        // S3에서 객체 삭제
-        s3Service.deleteFile(image.getKeyName(), memberId);
-        // DB에서 이미지 정보 삭제
+
+        // DB에서 이미지 삭제
         imageRepository.delete(image);
+
+        // S3 삭제는 트랜잭션 바깥에서 수행
+        try {
+            s3Service.deleteFile(image.getKeyName(), memberId);
+        } catch (Exception e) {
+            // 로깅만 하고 예외 발생은 안 시킴
+            log.error("S3 삭제 실패: {}", image.getKeyName(), e);
+        }
     }
+
 
 }

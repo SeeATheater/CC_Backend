@@ -25,10 +25,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,7 +42,6 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     private final ImageRepository imageRepository;
     private final ImageService imageService;
     private final MemberRepository memberRepository;
-    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -181,7 +177,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
 
         AmateurShow amateurShow = amateurShowRepository.findById(requestDTO.getAmateurShowId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         PhotoAlbum updatedPhotoAlbum = photoAlbum.updatePhotoAlbum(requestDTO.getContent(), amateurShow);
 
@@ -189,8 +185,9 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
 
         // 프론트에서 받은 이미지 url 목록
-        List<String> newImageUrls = requestDTO.getImageRequestDTOs().stream()
-                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl).toList();
+        Set<String> newImageUrls = requestDTO.getImageRequestDTOs().stream()
+                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl)
+                .collect(Collectors.toSet());
 
         // 수정 후 사라진 사진들 - 삭제 대상 찾기
         List<Image> toDelete = existingImages.stream()
@@ -202,11 +199,14 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
             imageService.deleteImage(image.getId(), memberId);
         });
 
-        List<String> existingUrls = existingImages.stream()
+        // 삭제 후 남아있는 기존 사진
+        Set<String> existingUrls = existingImages.stream()
                 .map(Image::getImageUrl)
-                .toList();
+                .collect(Collectors.toSet());
+
         List<ImageRequestDTO.PartialImageRequestDTO> imageDTOs = requestDTO.getImageRequestDTOs();
-        // 수정 후 새로 생긴 사진들 - 저장 대상 찾기
+
+        // 수정 후 새로 생긴 사진들 - 기존 사진 셋에 없는 requestDTO 사진들은 추가 저장
         List<ImageRequestDTO.FullImageRequestDTO> toAdd = imageDTOs.stream()
                 .filter(imageDTO -> !existingUrls.contains(imageDTO.getImageUrl()))
                 .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
@@ -252,7 +252,12 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
 
-        if(!photoAlbum.getAmateurShow().getMember().getId().equals(memberId)){
+        AmateurShow show = photoAlbum.getAmateurShow();
+        if(show==null){
+            throw new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND);
+        }
+
+        if(!show.getMember().getId().equals(memberId)){
             throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
         }
 
