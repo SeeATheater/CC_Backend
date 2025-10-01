@@ -30,7 +30,7 @@ public class RealTicket extends BaseEntity {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "amateur_round_id", nullable = false)
+    @JoinColumn(name = "amateur_rounds_id", nullable = false)
     private AmateurRounds amateurRound;
 
     // 공연 제목

@@ -7,6 +7,7 @@ import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.member.entity.Member;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -119,6 +120,7 @@ public class AmateurConverter {
                         .performanceDateTime(r.getPerformanceDateTime())
                         .totalTicket(r.getTotalTicket())
                         .amateurShow(show)
+                        .realTickets(new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
     }
