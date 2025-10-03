@@ -418,7 +418,7 @@ public class AmateurServiceImpl implements AmateurService {
                 // 정렬: 판매 티켓 수 내림차순 → 시작일 오름차순
                 .sorted(Comparator
                         .comparing(AmateurShow::getTotalSoldTicket, Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparing(AmateurShow::getStart,Comparator.reverseOrder()))
+                        .thenComparing(AmateurShow::getStart))
                 .limit(10)
                 // DTO 변환
                 .map(show -> {
