@@ -5,6 +5,8 @@ import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ public class AmateurConverter {
 
     // --소극장 공연 생성--
     public static AmateurShow toAmateurShowEntity(Member member, AmateurEnrollRequestDTO requestDTO) {
+
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())

@@ -73,6 +73,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // AMATEURSHOW ERROR
     AMATEURSHOW_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURSHOW4000", "존재하지 않는 소극장 공연입니다."),
+    INVALID_DATE_RANGE(HttpStatus.NOT_ACCEPTABLE, "AMATEURSHOW4001", "공연 시작 날짜는 종료 날짜 이전이어햐 합니다."),
 
     // AMATEUR TICKET ERROR
     AMATEUR_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURTICKET4000", "존재하지 않는 소극장 공연 티켓입니다."),

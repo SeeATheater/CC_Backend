@@ -508,7 +508,7 @@ public class AmateurServiceImpl implements AmateurService {
 
         // 종료일이 오늘 이후인 공연만 DB에서 조회
         LocalDate today = LocalDate.now();
-        List<AmateurShow> shows = amateurShowRepository.findByEndDateGreaterThanEqual(today);
+        List<AmateurShow> shows = amateurShowRepository.findByEndGreaterThanEqual(today);
 
         return shows.stream()
                 // 시작일 기준 오름차순 → 이름 기준 오름차순(한글 사전식)
