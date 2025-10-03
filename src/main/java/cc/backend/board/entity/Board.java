@@ -46,7 +46,7 @@ public class Board extends BaseEntity {
 
     @OneToMany(fetch = FetchType.LAZY)
     @Where(clause = "file_path = 'board'")
-    private List<Image> images = new ArrayList<>();
+    private List<Image> images = new ArrayList<>(); //수정 필요
 
     @Builder.Default
     @Column(nullable = false)

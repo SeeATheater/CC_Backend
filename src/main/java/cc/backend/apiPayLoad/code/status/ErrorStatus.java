@@ -37,6 +37,7 @@ public enum ErrorStatus implements BaseErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
     INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
     INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
+    PHONENUM_ENCRYPT_FAIL(HttpStatus.BAD_REQUEST, "MEMBER4015", "전화번호 암호화 실패"),
 
     //KAKAO
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),

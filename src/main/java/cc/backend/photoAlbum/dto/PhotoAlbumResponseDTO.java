@@ -64,7 +64,7 @@ public class PhotoAlbumResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ScrollMemberPhotoAlbumDTO {
+    public static class ScrollMemberPhotoAlbumDTO { //커서 기반 페이징이지만 ui 관점에서 스크롤이라는 의미
         private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
         private boolean hasNext;
         private Long nextCursor;

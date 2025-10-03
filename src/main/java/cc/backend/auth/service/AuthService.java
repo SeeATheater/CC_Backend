@@ -11,6 +11,7 @@ import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.member.util.AESUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Random;
+
 
 @Service
 @RequiredArgsConstructor
@@ -90,7 +92,12 @@ public class AuthService {
         String email = userInfo.getKakaoAccount().getEmail();
         String nickname = userInfo.getProperties().getNickname();
         String name = userInfo.getKakaoAccount().getName();
-        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
+        String encryptedPhone = "";
+        try {
+            encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
+        }
 
         String username = generateUsername(nickname);
 
@@ -98,7 +105,7 @@ public class AuthService {
                 .username(username)
                 .name(name)
                 .email(email)
-                .phone(phoneNumber)
+                .phone(encryptedPhone)
                 .role(role)
                 .kakaoId(kakaoId)
                 .build();

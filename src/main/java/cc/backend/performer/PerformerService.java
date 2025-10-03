@@ -1,6 +1,7 @@
 package cc.backend.performer;
 
 
+import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
@@ -63,13 +64,14 @@ public class PerformerService {
         List<AmateurRounds> rounds =
                 amateurRoundsRepository.findByAmateurShow_IdOrderByRoundNumberAsc(amateurShowId);
 
+        String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
         if (rounds.isEmpty()) {
             return ShowReservationResponseDTO.builder()
                     .showId(show.getId())
                     .showTitle(show.getName())
                     .posterImageUrl(show.getPosterImageUrl())
                     .detailAddress(show.getDetailAddress())
-                    .schedule(show.getSchedule())
+                    .schedule(schedule)
                     .roundSummaries(Collections.emptyList())
                     .selectedRoundId(null)
                     .selectedPerformanceDateTime(null)

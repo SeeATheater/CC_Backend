@@ -1,5 +1,6 @@
 package cc.backend.search.dto;
 
+import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,12 +43,14 @@ public class SearchShowResponseDTO {
             case WAITING_APPROVAL -> "승인 대기";
             case REJECTED         -> "반려";
         };
+
+        String schedule = AmateurConverter.mergeSchedule(s.getStart(), s.getEnd());
         return SearchShowResponseDTO.builder()
                 .showId(s.getId())
                 .title(s.getName())
                 .performerName(s.getPerformerName())
                 .hallName(s.getHallName())
-                .schedule(s.getSchedule())
+                .schedule(schedule)
                 .posterImageUrl(s.getPosterImageUrl())
                 .status(statusLabel)
                 .build();

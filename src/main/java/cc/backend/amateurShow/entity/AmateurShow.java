@@ -7,7 +7,9 @@ import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import org.springframework.cglib.core.Local;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +27,8 @@ public class AmateurShow extends BaseEntity {
 
     private String name;
 
-    private String schedule;
+    private LocalDate start;
+    private LocalDate end;
 
     private String performerName; // 공연진 이름
 
@@ -98,10 +101,11 @@ public class AmateurShow extends BaseEntity {
     private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
     @Builder
-    public AmateurShow(String name, String detailAddress, String schedule, List<PhotoAlbum> photoAlbums) {
+    public AmateurShow(String name, String detailAddress, LocalDate start, LocalDate end, List<PhotoAlbum> photoAlbums) {
         this.name = name;
         this.detailAddress = detailAddress;
-        this.schedule = schedule;
+        this.start = start;
+        this.end = end;
         this.photoAlbums = photoAlbums;
     }
 
@@ -115,7 +119,8 @@ public class AmateurShow extends BaseEntity {
         if (dto.getBankName() != null) this.bankName = dto.getBankName();
         if (dto.getDepositor() != null) this.depositor = dto.getDepositor();
 
-        if (dto.getSchedule() != null) this.schedule = dto.getSchedule();
+        if (dto.getStart() != null) this.start = dto.getStart();
+        if (dto.getEnd() != null) this.end = dto.getEnd();
         if (dto.getRuntime() != null) this.runtime = dto.getRuntime();
         if (dto.getAccount() != null) this.account = dto.getAccount();
         if (dto.getContact() != null) this.contact = dto.getContact();
