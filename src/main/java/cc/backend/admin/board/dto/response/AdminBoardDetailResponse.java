@@ -31,13 +31,7 @@ public class AdminBoardDetailResponse {
     private List<String> imgUrls;
     private String specialMessage; // soft delete 메시지용
 
-    public static AdminBoardDetailResponse from(Board board) {
-        List<String> imageUrls = board.getImages() != null ?
-                board.getImages().stream()
-                        .map(Image::getImageUrl)
-                        .collect(Collectors.toList()) :
-                new ArrayList<>();
-
+    public static AdminBoardDetailResponse of(Board board, List<String> imgUrls) {
         return AdminBoardDetailResponse.builder()
                 .boardId(board.getId())
                 .title(board.getTitle())
@@ -50,7 +44,7 @@ public class AdminBoardDetailResponse {
                 .createdAt(board.getCreatedAt())
                 .updatedAt(board.getUpdatedAt())
                 .isDeleted(board.isDeleted())
-                .imgUrls(imageUrls)
+                .imgUrls(imgUrls)
                 .specialMessage(board.isDeleted() ?
                         "soft delete 게시물입니다. 자세한건 DB를 참고해주세요" : null)
                 .build();
