@@ -12,6 +12,9 @@ import cc.backend.board.entity.enums.ReportTarget;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentRepository;
 import cc.backend.board.service.CommentService;
+import cc.backend.image.FilePath;
+import cc.backend.image.entity.Image;
+import cc.backend.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,6 +35,7 @@ public class AdminBoardService {
     private final BoardRepository boardRepository;
     private final CommentService commentService;
     private final CommentRepository commentRepository;
+    private final ImageRepository imageRepository;
 
     //게시글 목록 조회
     @Transactional(readOnly = true)
@@ -48,7 +53,15 @@ public class AdminBoardService {
         Board board = boardRepository.findByIdIncludingDeleted(boardId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.BOARD_NOT_FOUND));
 
-        AdminBoardDetailResponse boardDetail = AdminBoardDetailResponse.from(board);
+
+        // 상세 조회에서는 모든 이미지 조회
+        List<String> imgUrls = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId)
+                .stream()
+                .map(Image::getImageUrl)
+                .collect(Collectors.toList());
+
+        AdminBoardDetailResponse boardDetail = AdminBoardDetailResponse.of(board, imgUrls);
+
 
         // 댓글 목록 조회
         List<CommentResponse> comments = new ArrayList<>();

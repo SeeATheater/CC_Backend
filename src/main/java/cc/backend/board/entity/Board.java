@@ -39,14 +39,9 @@ public class Board extends BaseEntity {
 
     private int commentCount = 0;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
-
-    @OneToMany(fetch = FetchType.LAZY)
-    @Where(clause = "file_path = 'board'")
-    private List<Image> images = new ArrayList<>(); //수정 필요
 
     @Builder.Default
     @Column(nullable = false)
