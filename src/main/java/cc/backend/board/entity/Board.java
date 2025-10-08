@@ -44,9 +44,9 @@ public class Board extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @Where(clause = "file_path = 'board'")
-    private List<Image> images = new ArrayList<>();
+//    @OneToMany(fetch = FetchType.LAZY)
+//    @Where(clause = "file_path = 'board'")
+//    private List<Image> images = new ArrayList<>();
 
     @Builder.Default
     @Column(nullable = false)

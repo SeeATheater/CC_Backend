@@ -36,10 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -129,8 +126,9 @@ public class BoardService {
             updateBoardImages(board, dto.getImageRequestDTOs(), memberId);
         }
 
-        // 수정된 이미지 URL 목록 조회- imageUrl 필드 관련 수정필요
-        List<String> updatedImgUrls = board.getImages().stream()
+        // 수정된 이미지 URL 목록 조회
+        List<String> updatedImgUrls = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId)
+                .stream()
                 .map(Image::getImageUrl)
                 .collect(Collectors.toList());
 
@@ -170,7 +168,18 @@ public class BoardService {
     public Slice<BoardListResponse> getBoards(BoardType boardType, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Slice<Board> boardSlice = boardRepository.findAllByBoardTypeOrderByIdDesc(boardType, pageable);
-        return boardSlice.map(BoardListResponse::from);
+
+        // 첫 번째 이미지 배치 조회
+        Map<Long, String> firstImageMap = getFirstImageMapForBoards(
+                boardSlice.getContent().stream()
+                        .map(Board::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return boardSlice.map(board -> BoardListResponse.of(
+                board,
+                firstImageMap.get(board.getId())
+        ));
     }
 
     //게시글 상세 조회
@@ -221,9 +230,20 @@ public class BoardService {
     public List<BoardListResponse> getHotBoards() {
         List<HotBoard> hotBoards = hotBoardRepository.findTop10ByOrderByBoard_CreatedAtDesc();
         // 등록일 순으로 정렬
-        return hotBoards.stream()
+        List<Board> boards = hotBoards.stream()
                 .sorted(Comparator.comparing(hb -> hb.getBoard().getCreatedAt()))
-                .map(hb -> BoardListResponse.from(hb.getBoard()))
+                .map(HotBoard::getBoard)
+                .collect(Collectors.toList());
+
+        // 첫 번째 이미지 배치 조회
+        Map<Long, String> firstImageMap = getFirstImageMapForBoards(
+                boards.stream()
+                        .map(Board::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return boards.stream()
+                .map(board -> BoardListResponse.of(board, firstImageMap.get(board.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -260,7 +280,16 @@ public class BoardService {
             }
         }
 
-        return boardSlice.map(BoardListResponse::from);
+        Map<Long, String> firstImageMap = getFirstImageMapForBoards(
+                boardSlice.getContent().stream()
+                        .map(Board::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return boardSlice.map(board -> BoardListResponse.of(
+                board,
+                firstImageMap.get(board.getId())
+        ));
     }
 
     //내가 쓴 게시글 리스트 조회
@@ -270,7 +299,16 @@ public class BoardService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Slice<Board> boardSlice = boardRepository.findAllByMemberIdOrderByIdDesc(member.getId(), pageable);
-        return boardSlice.map(BoardListResponse::from);
+        Map<Long, String> firstImageMap = getFirstImageMapForBoards(
+                boardSlice.getContent().stream()
+                        .map(Board::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return boardSlice.map(board -> BoardListResponse.of(
+                board,
+                firstImageMap.get(board.getId())
+        ));
     }
 
     // --------------- 내부 메서드 ------------
@@ -340,5 +378,23 @@ public class BoardService {
         if (!toAdd.isEmpty()) {
             imageService.saveImages(memberId, toAdd);
         }
+    }
+
+    //첫번 째 이미지만 조회 (N+1 문제 고려)
+    private Map<Long, String> getFirstImageMapForBoards(List<Long> boardIds) {
+        if (boardIds == null || boardIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 배치로 첫 번째 이미지 조회
+        List<Image> firstImages = imageRepository.findFirstByContentIds(boardIds, FilePath.board);
+
+        // contentId를 키로, imageUrl을 값으로 하는 Map 생성
+        return firstImages.stream()
+                .collect(Collectors.toMap(
+                        Image::getContentId,
+                        Image::getImageUrl,
+                        (existing, replacement) -> existing // 중복 키가 있으면 기존 값 유지
+                ));
     }
 }
