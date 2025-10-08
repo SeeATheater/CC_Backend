@@ -28,8 +28,8 @@ public class BoardListResponse {
     @Schema(description = "게시글 내용", example = "게시글 내용입니다. 반갑습니다!")
     private String content;
 
-    @Schema(description = "첨부 이미지 URL 목록")
-    private List<String> imgUrls;
+    @Schema(description = "대표 이미지 URL")
+    private String imgUrl;
 
     @Schema(description = "좋아요 수", example = "5")
     private int likeCount;
@@ -49,7 +49,7 @@ public class BoardListResponse {
     @Schema(description = "수정일시", example = "2024-01-15T14:20:00")
     private LocalDateTime updatedAt;
 
-    public static BoardListResponse from(Board board) {
+    public static BoardListResponse of(Board board, String firstImageUrl) {
         String writer;
         if (board.getBoardType() == BoardType.PROMOTION) {
             writer = board.getMember().getUsername();
@@ -57,17 +57,12 @@ public class BoardListResponse {
             writer = "익명";
         }
 
-        // 연관관계(이미지 엔티티)에서 이미지 URL 조회
-        List<String> imgUrls = board.getImages().stream()
-                .map(Image::getImageUrl)
-                .collect(Collectors.toList());
-
         return BoardListResponse.builder()
                 .boardId(board.getId())
                 .boardType(board.getBoardType())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .imgUrls(imgUrls)
+                .imgUrl(firstImageUrl)
                 .likeCount(board.getLikeCount())
                 .commentCount(board.getCommentCount())
                 .memberId(board.getMember().getId())
