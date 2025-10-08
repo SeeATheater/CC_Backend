@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = ScheduleDateValidator.class)
 public @interface ValidScheduleDate {
-    String message() default "";
+    String message() default "종료 날짜는 시작 날짜 이후여야 합니다.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

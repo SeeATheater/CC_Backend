@@ -10,14 +10,6 @@ public class ScheduleDateValidator implements ConstraintValidator<ValidScheduleD
     @Override
     public boolean isValid(AmateurEnrollRequestDTO dto, ConstraintValidatorContext context) {
 
-        if (dto.getStart().isAfter(dto.getEnd())) {
-            // 기본 메시지 대신 ErrorStatus 메시지로 설정
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(ErrorStatus.INVALID_DATE_RANGE.getMessage())
-                    .addConstraintViolation();
-            return false;
-        }
-
         return !dto.getStart().isAfter(dto.getEnd()); // start <= end
     }
 }
