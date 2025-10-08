@@ -37,6 +37,7 @@ public enum ErrorStatus implements BaseErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
     INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
     INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
+    PHONENUM_ENCRYPT_FAIL(HttpStatus.BAD_REQUEST, "MEMBER4015", "전화번호 암호화 실패"),
 
     //KAKAO
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),
@@ -72,6 +73,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // AMATEURSHOW ERROR
     AMATEURSHOW_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURSHOW4000", "존재하지 않는 소극장 공연입니다."),
+    INVALID_DATE_RANGE(HttpStatus.NOT_ACCEPTABLE, "AMATEURSHOW4001", "공연 시작 날짜는 종료 날짜 이전이어햐 합니다."),
 
     // AMATEUR TICKET ERROR
     AMATEUR_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURTICKET4000", "존재하지 않는 소극장 공연 티켓입니다."),

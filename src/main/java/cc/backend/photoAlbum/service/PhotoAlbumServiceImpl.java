@@ -25,10 +25,13 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static cc.backend.amateurShow.converter.AmateurConverter.mergeSchedule;
 import static java.util.stream.Collectors.toList;
 
 
@@ -70,13 +73,17 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
 
+        LocalDate start = newPhotoAlbum.getAmateurShow().getStart();
+        LocalDate end = newPhotoAlbum.getAmateurShow().getEnd();
+        String schedule = mergeSchedule(start, end);
+
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .performerName(amateurShow.getPerformerName())
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
                 .content(newPhotoAlbum.getContent())
                 .detailAddress(newPhotoAlbum.getAmateurShow().getDetailAddress())
-                .schedule(newPhotoAlbum.getAmateurShow().getSchedule())
+                .schedule(schedule)
                 .imageResultDTOs(imageResultDTOs)
                 .build();
     }
@@ -101,13 +108,17 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                         .uploadedAt(image.getUploadedAt())
                         .build()).toList();
 
+        LocalDate start = photoAlbum.getAmateurShow().getStart();
+        LocalDate end = photoAlbum.getAmateurShow().getEnd();
+        String schedule = mergeSchedule(start, end);
+
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(photoAlbum.getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
                 .performerName(photoAlbum.getAmateurShow().getPerformerName())
                 .content(photoAlbum.getContent())
                 .detailAddress(photoAlbum.getAmateurShow().getDetailAddress())
-                .schedule(photoAlbum.getAmateurShow().getSchedule())
+                .schedule(schedule)
                 .imageResultDTOs(imageResultDTOs)
                 .build();
     }
@@ -233,13 +244,17 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                                 .build())
                         .collect(toList());
 
+        LocalDate start = updatedPhotoAlbum.getAmateurShow().getStart();
+        LocalDate end = updatedPhotoAlbum.getAmateurShow().getEnd();
+        String schedule = mergeSchedule(start, end);
+
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(updatedPhotoAlbum.getId())
                 .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
                 .performerName(updatedPhotoAlbum.getAmateurShow().getPerformerName())
                 .content(updatedPhotoAlbum.getContent())
                 .detailAddress(updatedPhotoAlbum.getAmateurShow().getDetailAddress())
-                .schedule(updatedPhotoAlbum.getAmateurShow().getSchedule())
+                .schedule(schedule)
                 .imageResultDTOs(imageResultDTOs)
                 .build();
     }
@@ -329,4 +344,5 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .shows(showLists)
                 .build();
     }
+
 }

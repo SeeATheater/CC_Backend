@@ -348,31 +348,17 @@ public class AmateurServiceImpl implements AmateurService {
                 .filter(show -> show.getAmateurRounds().stream()
                         .anyMatch(round -> round.getPerformanceDateTime().toLocalDate().equals(today)))
                 .distinct()
-                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
-                        .amateurShowId(show.getId())
-                        .name(show.getName())
-                        .detailAddress(show.getDetailAddress())
-                        .schedule(show.getSchedule())
-                        .posterImageUrl(show.getPosterImageUrl())
-                        .build())
+                .map(show -> {
+                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    return AmateurShowResponseDTO.AmateurShowList.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .detailAddress(show.getDetailAddress())
+                            .schedule(schedule)
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
                 .collect(Collectors.toList());
-    }
-
-    // schedule 파싱하기
-    private Optional<LocalDate[]> parseSchedule(String schedule) {
-        try {
-            if (schedule == null || !schedule.contains("~")) return Optional.empty();
-
-            String[] parts = schedule.split("~"); // ~ 기준으로 자르고
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-
-            LocalDate start = LocalDate.parse(parts[0].trim(), formatter); // 시작일
-            LocalDate end = LocalDate.parse(parts[1].trim(), formatter); // 종료일
-
-            return Optional.of(new LocalDate[]{start, end});
-        } catch (Exception e) {
-            return Optional.empty();
-        }
     }
 
     // 현재 진행중인 소극장 공연 리스트 조회
@@ -385,21 +371,27 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
-                // 오늘 날짜가 schedule 기간 내에 포함된 공연 필터링
-                .filter(show -> parseSchedule(show.getSchedule())
-                        .map(dates -> !today.isBefore(dates[0]) && !today.isAfter(dates[1]))
-                        .orElse(false))
-                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
-                        .amateurShowId(show.getId())
-                        .name(show.getName())
-                        .detailAddress(show.getDetailAddress())
-                        .schedule(show.getSchedule())
-                        .posterImageUrl(show.getPosterImageUrl())
-                        .build())
+                // 오늘 날짜가 schedule 기간 내에 포함된 공연만 필터링
+                .filter(show -> {
+                    LocalDate start = show.getStart();
+                    LocalDate end = show.getEnd();
+                    return start != null && end != null
+                            && !today.isBefore(start)
+                            && !today.isAfter(end);
+                })
                 // 공연 시작일 기준 오름차순 정렬
-                .sorted(Comparator.comparing(show -> parseSchedule(show.getSchedule())
-                        .map(dates -> dates[0])
-                        .orElse(LocalDate.MAX)))
+                .sorted(Comparator.comparing(AmateurShow::getStart))
+                // DTO로 변환
+                .map(show -> {
+                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    return AmateurShowResponseDTO.AmateurShowList.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .detailAddress(show.getDetailAddress())
+                            .schedule(schedule)
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();
@@ -417,23 +409,28 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
 
         return shows.stream()
-                .filter(show -> parseSchedule(show.getSchedule())
-                        .map(dates -> !today.isAfter(dates[1]))  // 종료일이 오늘 이후인 경우만
-                        .orElse(false))
+                // 종료일이 오늘 이후인 공연만 필터링
+                .filter(show -> {
+                    LocalDate start = show.getStart();
+                    LocalDate end = show.getEnd();
+                    return start != null && end != null && !today.isAfter(end);
+                })
+                // 정렬: 판매 티켓 수 내림차순 → 시작일 오름차순
                 .sorted(Comparator
                         .comparing(AmateurShow::getTotalSoldTicket, Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparing(show -> parseSchedule(show.getSchedule())
-                                .map(dates -> dates[0])
-                                .orElse(LocalDate.MAX)))
+                        .thenComparing(AmateurShow::getStart))
                 .limit(10)
-                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
-                        .amateurShowId(show.getId())
-                        .name(show.getName())
-                        //.place(show.getPlace())
-                        .detailAddress(show.getDetailAddress())
-                        .schedule(show.getSchedule())
-                        .posterImageUrl(show.getPosterImageUrl())
-                        .build())
+                // DTO 변환
+                .map(show -> {
+                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    return AmateurShowResponseDTO.AmateurShowList.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .detailAddress(show.getDetailAddress())
+                            .schedule(schedule)
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 
@@ -455,12 +452,14 @@ public class AmateurServiceImpl implements AmateurService {
                     .max(Comparator.naturalOrder()); // 젤 늦은 날짜 추출
 
             if (lastDate.isPresent() && lastDate.get().isEqual(today)) { // 마지막 회차 날짜가 오늘인 경우
+                String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+
                 result.add(AmateurShowResponseDTO.AmateurShowList.builder()
                         .amateurShowId(show.getId())
                         .name(show.getName())
                         //.place(show.getPlace())
                         .detailAddress(show.getDetailAddress())
-                        .schedule(show.getSchedule())
+                        .schedule(schedule)
                         .posterImageUrl(show.getPosterImageUrl())
                         .build());
             }
@@ -486,47 +485,47 @@ public class AmateurServiceImpl implements AmateurService {
             shows = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
         }
 
-        return shows.map(show -> AmateurShowResponseDTO.MyShowAmateurShowList.builder()
-                .amateurShowId(show.getId())
-                .name(show.getName())
-                //.place(show.getPlace())
-                .detailAddress(show.getDetailAddress())
-                .schedule(show.getSchedule())
-                .posterImageUrl(show.getPosterImageUrl())
-                .status(status)
-                .build());
+
+        return shows.map(show -> {
+            String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+            return AmateurShowResponseDTO.MyShowAmateurShowList.builder()
+                    .amateurShowId(show.getId())
+                    .name(show.getName())
+                    //.place(show.getPlace())
+                    .detailAddress(show.getDetailAddress())
+                    .schedule(schedule)
+                    .posterImageUrl(show.getPosterImageUrl())
+                    .status(status)
+                    .build();
+        });
     }
 
-    @Override   //AmateurShow 엔티티에서 String Schedule 쪼개서 LocalDate BeginDate, EndDate 필드도 따로 만들어서 저장하는 것도 좋아보임
+    @Override
     public List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow (Long memberId){
         memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        //AmateurShowRepository.findByEndDateGreaterThanEqual(today);
-        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
-
-        LocalDate today = LocalDate.now();
-
         Collator collator = Collator.getInstance(Locale.KOREAN); //한글 사전식 정렬
 
+        // 종료일이 오늘 이후인 공연만 DB에서 조회
+        LocalDate today = LocalDate.now();
+        List<AmateurShow> shows = amateurShowRepository.findByEndGreaterThanEqual(today);
+
         return shows.stream()
-                .filter(show -> parseSchedule(show.getSchedule())
-                        .map(dates -> !today.isAfter(dates[1])) // 종료일이 오늘 이후인 경우만
-                        .orElse(false))
+                // 시작일 기준 오름차순 → 이름 기준 오름차순(한글 사전식)
                 .sorted(Comparator
-                        .comparing((AmateurShow show) ->
-                                parseSchedule(show.getSchedule())
-                                        .map(dates -> dates[0])  // 시작일 기준
-                                        .orElse(LocalDate.MAX))
-                        .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator))
-                )
+                        .comparing(AmateurShow::getStart)
+                        .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator)))
                 .limit(10)
-                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
-                        .amateurShowId(show.getId())
-                        .name(show.getName())
-                        .detailAddress(show.getDetailAddress())
-                        .schedule(show.getSchedule())
-                        .posterImageUrl(show.getPosterImageUrl())
-                        .build())
+                .map(show -> {
+                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    return AmateurShowResponseDTO.AmateurShowList.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .detailAddress(show.getDetailAddress())
+                            .schedule(schedule)
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
     }

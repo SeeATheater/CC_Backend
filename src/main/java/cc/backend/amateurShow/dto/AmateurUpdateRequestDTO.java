@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,7 +19,8 @@ public class AmateurUpdateRequestDTO {
     private String roadAddress; // 공연장 도로명 주소
     private String detailAddress; // 공연장 상세 주소
     //private String place; // 공연장 주소
-    private String schedule; // 공연 기간
+    private LocalDate start; // 공연 시작 날짜
+    private LocalDate end; // 공연 종료 날짜
     private String runtime; // 러닝타임
     private String bankName; // 은행명
     private String account; // 계좌번호

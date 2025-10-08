@@ -10,6 +10,7 @@ import cc.backend.member.MemberService;
 import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -31,13 +32,13 @@ public class AmateurController {
 
     @PostMapping(value = "/enroll")
     @Operation(summary = "소극장 공연 생성 API")
-    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @RequestBody AmateurEnrollRequestDTO requestDTO) {
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @Valid @RequestBody AmateurEnrollRequestDTO requestDTO) {
         return ApiResponse.onSuccess(amateurService.enrollShow(member.getId(), requestDTO));
     }
 
     @PatchMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 수정 API")
-    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@AuthenticationPrincipal(expression = "member") Member member, @PathVariable Long amateurShowId, @RequestBody AmateurUpdateRequestDTO requestDTO) {
+    public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@AuthenticationPrincipal(expression = "member") Member member, @PathVariable Long amateurShowId, @Valid @RequestBody AmateurUpdateRequestDTO requestDTO) {
         return ApiResponse.onSuccess(amateurService.updateShow(member.getId(), amateurShowId, requestDTO));
     }
 
