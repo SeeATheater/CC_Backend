@@ -42,7 +42,7 @@ public class MyTicketController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
                             description = "티켓 리스트 조회 성공",
-                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = MemberTicketListResponseDTO.class)))
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = RealTicketResponseDTO.class)))
                     ),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "400",
@@ -73,7 +73,7 @@ public class MyTicketController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
                             description = "티켓 상세 조회 성공",
-                            content = @Content(schema = @Schema(implementation = MemberTicketResponseDTO.class))
+                            content = @Content(schema = @Schema(implementation = RealTicketResponseDTO.class))
                     ),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "404",
@@ -107,7 +107,7 @@ public class MyTicketController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
                             description = "티켓 예약 취소 성공",
-                            content = @Content(schema = @Schema(implementation = MemberTicketResponseDTO.class))
+                            content = @Content(schema = @Schema(implementation = RealTicketResponseDTO.class))
                     ),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "404",

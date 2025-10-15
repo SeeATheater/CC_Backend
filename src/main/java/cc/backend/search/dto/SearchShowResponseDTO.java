@@ -36,13 +36,14 @@ public class SearchShowResponseDTO {
     private String status;
 
     public static SearchShowResponseDTO from(AmateurShow s){
-        String statusLabel = switch (s.getStatus()) {
-            case APPROVED_ONGOING -> "예매 진행 중";
-            case APPROVED_ENDED   -> "공연 종료";
-            case APPROVED_YET     -> "예정";
-            case WAITING_APPROVAL -> "승인 대기";
-            case REJECTED         -> "반려";
-        };
+//        String statusLabel = switch (s.getStatus()) {
+//            case APPROVED_ONGOING -> "예매 진행 중";
+//            case APPROVED_ENDED   -> "공연 종료";
+//            case APPROVED_YET     -> "예정";
+//            case WAITING_APPROVAL -> "승인 대기";
+//            case REJECTED         -> "반려";
+//        };
+        String statusLabel = s.getStatus().toString();
 
         String schedule = AmateurConverter.mergeSchedule(s.getStart(), s.getEnd());
         return SearchShowResponseDTO.builder()

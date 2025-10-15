@@ -7,9 +7,7 @@ import cc.backend.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -19,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> {
+public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>, JpaSpecificationExecutor<AmateurShow> {
     List<AmateurShow> findAllByMemberId(Long memberId);
 
     @Query("SELECT a FROM AmateurShow a WHERE a.id = :id")
@@ -73,4 +71,19 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
     @EntityGraph(attributePaths = {"amateurRounds", "amateurNotice"}, type = EntityGraph.EntityGraphType.FETCH)
     List<AmateurShow> findAllWithRounds();
 
+    List<AmateurShow> findByStatusIn(Collection<AmateurShowStatus> statuses);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AmateurShow s SET s.status = :newStatus WHERE s.id IN :ids")
+    void updateStatusByIds(@Param("ids") List<Long> ids, @Param("newStatus") AmateurShowStatus newStatus);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AmateurShow s SET s.status = 'ONGOING' " +
+            "WHERE s.status = 'YET' AND s.start <= :today AND s.end >= :today")
+    int updateShowsToOngoing(@Param("today") LocalDate today);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AmateurShow s SET s.status = 'ENDED' " +
+            "WHERE s.status = 'ONGOING' AND s.end < :today")
+    int updateShowsToEnded(@Param("today") LocalDate today);
 }

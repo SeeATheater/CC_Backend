@@ -529,9 +529,6 @@ public class AmateurServiceImpl implements AmateurService {
                 .collect(Collectors.toList());
 
     }
-    //@Override
-    //public ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId){
-    //    return null;
-    //}
+
     
 }
