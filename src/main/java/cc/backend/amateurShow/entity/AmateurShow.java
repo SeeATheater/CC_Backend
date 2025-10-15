@@ -1,13 +1,13 @@
 package cc.backend.amateurShow.entity;
 
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -63,10 +63,13 @@ public class AmateurShow extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(length = 30)
-    private AmateurShowStatus status = AmateurShowStatus.APPROVED_YET;
-//    @Enumerated(EnumType.STRING)
-//    @Builder.Default
-//    private AmateurStatus amateurStatus = AmateurStatus.YET;
+    private AmateurShowStatus status = AmateurShowStatus.YET; // default로 yet, 수정 필요
+
+    // 승인 여부 enum 분리
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(length = 30)
+    private ApprovalStatus approvalStatus = ApprovalStatus.WAITING; // default로 waiting
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -155,10 +158,10 @@ public class AmateurShow extends BaseEntity {
     }
 
     public void approve(){
-        this.status = AmateurShowStatus.APPROVED_ONGOING;
+        this.approvalStatus = ApprovalStatus.APPROVED;
     }
     public void reject(String rejectReason){
-        this.status = AmateurShowStatus.REJECTED;
+        this.approvalStatus = ApprovalStatus.REJECTED;
         this.rejectReason = rejectReason;
 
     }

@@ -32,13 +32,15 @@ public class PerformerMyShowResponseDTO {
     private String status;
 
     public static PerformerMyShowResponseDTO from(AmateurShow s) {
-        String statusLabel = switch (s.getStatus()) {
-            case APPROVED_ONGOING -> "예매 진행 중";
-            case APPROVED_ENDED   -> "공연 종료";
-            case APPROVED_YET     -> "예정";
-            case WAITING_APPROVAL -> "승인 대기";
-            case REJECTED         -> "반려";
-        };
+//        String statusLabel = switch (s.getStatus()) {
+//            case APPROVED_ONGOING -> "예매 진행 중";
+//            case APPROVED_ENDED   -> "공연 종료";
+//            case APPROVED_YET     -> "예정";
+//            case WAITING_APPROVAL -> "승인 대기";
+//            case REJECTED         -> "반려";
+//        };
+//
+        String  statusLabel = s.getStatus().toString();
 
         String schedule = mergeSchedule(s.getStart(), s.getEnd());
         return PerformerMyShowResponseDTO.builder()
