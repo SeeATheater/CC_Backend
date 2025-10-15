@@ -76,4 +76,14 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     @Modifying(clearAutomatically = true)
     @Query("UPDATE AmateurShow s SET s.status = :newStatus WHERE s.id IN :ids")
     void updateStatusByIds(@Param("ids") List<Long> ids, @Param("newStatus") AmateurShowStatus newStatus);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AmateurShow s SET s.status = 'ONGOING' " +
+            "WHERE s.status = 'YET' AND s.start <= :today AND s.end >= :today")
+    int updateShowsToOngoing(@Param("today") LocalDate today);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AmateurShow s SET s.status = 'ENDED' " +
+            "WHERE s.status = 'ONGOING' AND s.end < :today")
+    int updateShowsToEnded(@Param("today") LocalDate today);
 }
