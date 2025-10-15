@@ -67,7 +67,7 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long> 
     Page<AmateurShow> findByNameContainingIgnoreCase(String showName, Pageable pageable);
 
 
-
+    List<AmateurShow> findByEndGreaterThanEqual(LocalDate today);
 
 
     @Query("select a from AmateurShow a")

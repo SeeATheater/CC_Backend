@@ -11,6 +11,7 @@ import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.member.util.AESUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Random;
+
 
 @Service
 @RequiredArgsConstructor
@@ -46,13 +48,19 @@ public class AuthService {
         String email = userInfo.getKakaoAccount().getEmail();
         String nickname = userInfo.getProperties().getNickname();
         String name = userInfo.getKakaoAccount().getName();
-        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
+
+        String encryptedPhone = "";
+        try {
+            encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
+        }
 
         String kakaoId = userInfo.getId().toString();
 
-       if (email == null || nickname == null || name == null || phoneNumber == null)  {
+       if (email == null || nickname == null || name == null || encryptedPhone == null)  {
             log.error("필수 정보 누락 - 이메일: {}, 닉네임: {}, 이름: {}, 전화번호: {}",
-                    email, nickname, name, phoneNumber);
+                    email, nickname, name, encryptedPhone);
             throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
         }
 
@@ -90,7 +98,12 @@ public class AuthService {
         String email = userInfo.getKakaoAccount().getEmail();
         String nickname = userInfo.getProperties().getNickname();
         String name = userInfo.getKakaoAccount().getName();
-        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
+        String encryptedPhone = "";
+        try {
+            encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
+        }
 
         String username = generateUsername(nickname);
 
@@ -98,7 +111,7 @@ public class AuthService {
                 .username(username)
                 .name(name)
                 .email(email)
-                .phone(phoneNumber)
+                .phone(encryptedPhone)
                 .role(role)
                 .kakaoId(kakaoId)
                 .build();
@@ -132,17 +145,22 @@ public class AuthService {
     //비활성화된 회원 재활성화
     private Member reactivateMember(Member member, KakaoUserInfo userInfo, Role newRole, String kakaoId) {
         String name = userInfo.getKakaoAccount().getName();
-        String phoneNumber = userInfo.getKakaoAccount().getPhoneNumber();
         String nickname = userInfo.getProperties().getNickname();
-
         String newUsername = generateUsername(nickname);
 
-        // 회원 정보 업데이트 및 재활성화
+        String encryptedPhone = "";
+        try {
+            encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
+        }
+
+            // 회원 정보 업데이트 및 재활성화
         member.reactivateMember();
         member.updateRole(newRole); // 역할 업데이트
         member.updateName(name);
         member.updateUsername(newUsername);
-        member.updatePhone(phoneNumber);
+        member.updatePhone(encryptedPhone);
 
         if (member.getKakaoId() == null) {
             member.updateKakaoId(kakaoId);

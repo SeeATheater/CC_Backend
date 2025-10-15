@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static cc.backend.amateurShow.converter.AmateurConverter.mergeSchedule;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -38,11 +40,12 @@ public class PerformerMyShowResponseDTO {
             case REJECTED         -> "반려";
         };
 
+        String schedule = mergeSchedule(s.getStart(), s.getEnd());
         return PerformerMyShowResponseDTO.builder()
                 .showId(s.getId())
                 .title(s.getName())
                 .hallName(s.getHallName())
-                .schedule(s.getSchedule())
+                .schedule(schedule)
                 .status(statusLabel)
                 .build();
     }

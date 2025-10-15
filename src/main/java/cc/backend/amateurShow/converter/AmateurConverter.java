@@ -5,8 +5,12 @@ import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +21,7 @@ public class AmateurConverter {
 
     // --소극장 공연 생성--
     public static AmateurShow toAmateurShowEntity(Member member, AmateurEnrollRequestDTO requestDTO) {
+
         return AmateurShow.builder()
                 .member(member)
                 .name(requestDTO.getName())
@@ -24,7 +29,8 @@ public class AmateurConverter {
                 .hallName(requestDTO.getHallName())
                 .roadAddress(requestDTO.getRoadAddress())
                 .detailAddress(requestDTO.getDetailAddress())
-                .schedule(requestDTO.getSchedule())
+                .start(requestDTO.getStart())
+                .end(requestDTO.getEnd())
                 .runtime(requestDTO.getRuntime())
                 .summary(requestDTO.getSummary())
                 .account(requestDTO.getAccount())
@@ -120,7 +126,6 @@ public class AmateurConverter {
                         .performanceDateTime(r.getPerformanceDateTime())
                         .totalTicket(r.getTotalTicket())
                         .amateurShow(show)
-                        .realTickets(new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -218,6 +223,7 @@ public class AmateurConverter {
                         .build())
                 .collect(Collectors.toList());
 
+        String schedule = mergeSchedule(amateurShow.getStart(), amateurShow.getEnd());
         return AmateurShowResponseDTO.AmateurShowResult.builder()
                 .memberId(amateurShow.getMember().getId())
                 .amateurShowId(amateurShow.getId())
@@ -229,7 +235,7 @@ public class AmateurConverter {
                 .bankName(amateurShow.getBankName())
                 .depositor(amateurShow.getDepositor())
                 //.place(amateurShow.getPlace())
-                .schedule(amateurShow.getSchedule())
+                .schedule(schedule)
                 .runtime(amateurShow.getRuntime())
                 .account(amateurShow.getAccount())
                 .contact(amateurShow.getContact())
@@ -242,5 +248,29 @@ public class AmateurConverter {
                 .rounds(rounds)
                 .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
+    }
+
+    // start와 end 합쳐서 response용 schedule 만들기 - 컨버터 클래스의 인스턴스와 의존성 없으므로 static 설정
+    public static String mergeSchedule(LocalDate start, LocalDate end) {
+        try {
+            if (start == null || end == null) {
+                return "";
+            }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+            // 요일 한글 매핑
+            String[] days = {"월", "화", "수", "목", "금", "토", "일"};
+
+            String startStr = start.format(formatter)
+                    + " (" + days[start.getDayOfWeek().getValue() - 1] + ")";
+            String endStr   = end.format(formatter)
+                    + " (" + days[end.getDayOfWeek().getValue() - 1] + ")";
+
+            // 최종 결과: "2025.10.02 (목) ~ 2025.10.05 (일)"
+            return startStr + " ~ " + endStr;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }

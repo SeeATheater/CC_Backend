@@ -52,6 +52,12 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                     errors.merge(fieldName, errorMessage, (existingErrorMessage, newErrorMessage) -> existingErrorMessage + ", " + newErrorMessage);
                 });
 
+        e.getBindingResult().getGlobalErrors().forEach(globalError -> {
+            String objectName = globalError.getObjectName(); // DTO 이름
+            String errorMessage = Optional.ofNullable(globalError.getDefaultMessage()).orElse("");
+            errors.merge(objectName, errorMessage, (existing, newMsg) -> existing + ", " + newMsg);
+        });
+
         return handleExceptionInternalArgs(e,HttpHeaders.EMPTY,ErrorStatus.valueOf("_BAD_REQUEST"),request,errors);
     }
 
