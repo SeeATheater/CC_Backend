@@ -1,7 +1,7 @@
 //package cc.backend.admin.adminMyPage.component;
 //
-//import cc.backend.admin.adminMyPage.entity.Admin;
-//import cc.backend.admin.adminMyPage.repository.AdminRepository;
+//import cc.backend.member.entity.Member;
+//import cc.backend.member.repository.MemberRepository;
 //import lombok.*;
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.boot.ApplicationArguments;
@@ -14,21 +14,20 @@
 //@RequiredArgsConstructor
 //public class AdminInitializer implements ApplicationRunner {
 //
-//    private final AdminRepository adminRepository;
+//    private final MemberRepository memberRepository;
 //    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 //
 //    @Override
 //    public void run(ApplicationArguments args) throws Exception {
-//        if (adminRepository.count() == 0) {
+//        if (memberRepository.count() == 0) {
 //            log.info("관리자 계정이 없기 때문에, 관리자를 하나 생성함");
-//            Admin initialAdmin = Admin.builder()
-//                    .adminId("CC_admin")
+//            Member initialAdmin = Member.builder()
+//                    .username("CC_admin")
 //                    .password(bCryptPasswordEncoder.encode("ccadmin0520!"))
-//                    .accountNumber("123-456-7890")
 //                    .build();
 //
-//            adminRepository.save(initialAdmin);
-//            log.info("관리자 계정 생성 완, id : {}", initialAdmin.getAdminId());
+//            memberRepository.save(initialAdmin);
+//            log.info("관리자 계정 생성 완, id : {}", initialAdmin.getId());
 //
 //        }
 //    }

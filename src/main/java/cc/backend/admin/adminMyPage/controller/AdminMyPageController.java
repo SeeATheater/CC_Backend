@@ -28,12 +28,7 @@
 //        return ApiResponse.onSuccess(adminMyPageService.changePassword(requestDTO));
 //    }
 //
-//    @GetMapping("/account")
-//    @Operation(summary = "관리자 결제수단 조회 API")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ApiResponse<AdminAccountDetailDTO> getAccountDetails(){
-//        return ApiResponse.onSuccess(adminMyPageService.getAccountDetails());
-//    }
+//
 //
 //
 //}
