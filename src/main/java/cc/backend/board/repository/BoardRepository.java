@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long> {
     Slice<Board> findAllByBoardTypeOrderByIdDesc(BoardType boardType, Pageable pageable);
 
+    Slice<Board> findAllBy(Pageable pageable);
+
     @Query(value = "SELECT * FROM board WHERE id = :id", nativeQuery = true)
     Optional<Board> findByIdIncludingDeleted(@Param("id") Long id);
 

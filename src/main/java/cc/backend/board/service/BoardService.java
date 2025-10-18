@@ -163,7 +163,25 @@ public class BoardService {
         boardRepository.delete(board); //soft delete
     }
 
-    //게시글 조회
+    @Transactional(readOnly = true)
+    public Slice<BoardListResponse> getAllBoards(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Slice<Board> boardSlice = boardRepository.findAllBy(pageable);
+
+        // 첫 번째 이미지 배치 조회
+        Map<Long, String> firstImageMap = getFirstImageMapForBoards(
+                boardSlice.getContent().stream()
+                        .map(Board::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return boardSlice.map(board -> BoardListResponse.of(
+                board,
+                firstImageMap.get(board.getId())
+        ));
+    }
+
+    //타입별 게시글 조회
     @Transactional(readOnly = true)
     public Slice<BoardListResponse> getBoards(BoardType boardType, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
