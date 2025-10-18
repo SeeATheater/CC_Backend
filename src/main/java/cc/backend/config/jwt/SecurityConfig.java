@@ -61,6 +61,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/photoAlbums").permitAll()
                         .requestMatchers(HttpMethod.GET, "/boards").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/boards/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/boards/hot").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/ranking").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/today").permitAll()
                         .requestMatchers(HttpMethod.GET, "/amateurs/ongoing").permitAll()
