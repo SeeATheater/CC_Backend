@@ -89,7 +89,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.PhotoAlbumResultDTO getPhotoAlbum(Long photoAlbumId, Long memberId){
+    public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO getPhotoAlbum(Long photoAlbumId, Long memberId){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
@@ -98,28 +98,35 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
 
-        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = images.stream()
-                .map(image -> ImageResponseDTO.ImageResultDTO.builder()
-                        .id(image.getId())
-                        .keyName(image.getKeyName())
-                        .imageUrl(image.getImageUrl())
-                        .filePath(image.getFilePath())
-                        .contentId(image.getContentId())
-                        .uploadedAt(image.getUploadedAt())
-                        .build()).toList();
+//      조회용 presignedUrl 작동
+      List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = images.stream()
+                .map(image -> imageService.getImage(image.getId(), memberId))
+                .toList();
+
+
+//        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = images.stream()
+//                .map(image -> ImageResponseDTO.ImageResultDTO.builder()
+//                        .id(image.getId())
+//                        .keyName(image.getKeyName())
+//                        .imageUrl(image.getImageUrl())
+//                        .filePath(image.getFilePath())
+//                        .contentId(image.getContentId())
+//                        .uploadedAt(image.getUploadedAt())
+//                        .memberId(image.getMemberId())
+//                        .build()).toList();
 
         LocalDate start = photoAlbum.getAmateurShow().getStart();
         LocalDate end = photoAlbum.getAmateurShow().getEnd();
         String schedule = mergeSchedule(start, end);
 
-        return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
+        return PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO.builder()
                 .photoAlbumId(photoAlbum.getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
                 .performerName(photoAlbum.getAmateurShow().getPerformerName())
                 .content(photoAlbum.getContent())
                 .detailAddress(photoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(schedule)
-                .imageResultDTOs(imageResultDTOs)
+                .imageResultWithPresignedUrlDTOs(imageResultDTOs)
                 .build();
     }
 

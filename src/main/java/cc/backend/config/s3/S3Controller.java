@@ -17,7 +17,7 @@ import java.util.Map;
 @Tag(name = "S3 접근 Presigned Url 요청 api")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/upload/s3")
+@RequestMapping("/s3")
 public class S3Controller {
     private final S3Service s3Service;
 
@@ -27,12 +27,13 @@ public class S3Controller {
      * @return 업로드 URL과 public URL
      */
     @Operation(summary = "Image 한 개 업로드용 url 요청 API", description = "image 하나 = url 하나 필요")
-    @GetMapping("/presignedUrl")
-    public ResponseEntity<Map<String, String>> getPresignedUrl(@Parameter(description = "업로드할 이미지 파일의 확장자(jpg 또는 jpeg)", required = true) String imageExtension ,
-                                                               @Parameter(description = "이미지 업로드하는 기능(board, photoAlbum, amateurShow)", required = true) FilePath filePath,
-                                                               @AuthenticationPrincipal(expression = "member") Member member) {
-        Map<String, String> urlMap = s3Service.createPresignedUrl(imageExtension, filePath, member.getId());
-        return ResponseEntity.ok(urlMap);
+    @GetMapping("/uploadUrl")
+    public ResponseEntity<Map<String, String>> getPresignedPutUrl(
+            @Parameter(description = "업로드할 이미지 파일의 확장자(jpg, jpeg, png, gif)", required = true) @RequestParam @NotBlank String imageExtension,
+            @Parameter(description = "업로드할 기능(board, photoAlbum, amateurShow)", required = true) @RequestParam FilePath filePath,
+            @AuthenticationPrincipal(expression = "member") Member member) {
+
+        return ResponseEntity.ok(s3Service.createPresignedPutUrl(imageExtension, filePath, member.getId()));
     }
 
     /**
@@ -40,31 +41,47 @@ public class S3Controller {
      * @param extensions 이미지 확장자 리스트 (예: ["png", "jpg"])
      * @return List<Map<String, String>> 각 객체는 keyName, uploadUrl, publicUrl 포함
      */
-    @PostMapping("/presignedUrls")
+    @PostMapping("/uploadUrls")
     @Operation(summary = "Image 여러 개 업로드용 url 요청 API", description = "업로드할 image 개수 만큼 url 필요")
-    public ResponseEntity<List<Map<String, String>>> getPresignedUrls (@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "각 이미지의 확장자 jpg,jpeg,jpg ...를 따옴표 안에 나열", required = true)
-                                                                           @RequestBody List<@NotBlank String> extensions,
-                                                                       @Parameter(description = "이미지 업로드하는 기능(board, photoAlbum, amateurShow)", required = true) FilePath filePath,
-                                                                       @AuthenticationPrincipal(expression = "member") Member member) {
+    public ResponseEntity<List<Map<String, String>>> getPresignedPutUrls (
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "각 이미지의 확장자 jpg, jpeg, png, gif ...", required = true) @RequestBody List<@NotBlank String> extensions,
+            @Parameter(description = "업로드할 기능(board, photoAlbum, amateurShow)", required = true) @RequestParam FilePath filePath,
+            @AuthenticationPrincipal(expression = "member") Member member) {
 
-        if (extensions == null || extensions.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(s3Service.createPresignedPutUrls(extensions, filePath, member.getId()));
+    }
 
-        List<Map<String, String>> urls = s3Service.createPresignedUrls(extensions, filePath, member.getId());
+    @Operation(summary = "단일 파일 조회용 presigned URL", description = "keyName에 해당하는 파일 조회 URL 반환")
+    @GetMapping("/getUrl")
+    public ResponseEntity<String> getPresignedGetUrl(
+            @Parameter(description = "S3에 저장된 파일 keyName", required = true) @RequestParam String keyName,
+            @AuthenticationPrincipal(expression = "member") Member member) {
+
+        String url = s3Service.createPresignedGetUrl(keyName, member.getId());
+        return ResponseEntity.ok(url);
+    }
+
+    @Operation(summary = "다중 파일 조회용 presigned URL", description = "keyName 리스트에 해당하는 파일 조회 URL 리스트 반환")
+    @PostMapping("/getUrls")
+    public ResponseEntity<List<String>> getPresignedGetUrls(
+            @Parameter(description = "S3에 저장된 파일 keyName 리스트", required = true) @RequestBody List<String> keyNames,
+            @AuthenticationPrincipal(expression = "member") Member member) {
+
+        List<String> urls = s3Service.createPresignedGetUrls(keyNames, member.getId());
         return ResponseEntity.ok(urls);
     }
 
-    @DeleteMapping("/{keyName}")
+    @DeleteMapping("/delete")
     @Operation(summary = "keyName에 해당하는 파일 S3에서 삭제")
-    public void deleteFile(@PathVariable String keyName,
+    public void deleteFile(@RequestParam String keyName,
                            @AuthenticationPrincipal(expression = "member") Member member){
         s3Service.deleteFile(keyName, member.getId());
     }
 
-    @GetMapping("")
+    @GetMapping("/exist")
     @Operation(summary = "keyName에 해당하는 파일이 S3에 실제 존재하는지 확인")
-    public ResponseEntity<Boolean> doesObjectExist(@Parameter String keyName,
+    public ResponseEntity<Boolean> doesObjectExist(@RequestParam String keyName,
                                                    @AuthenticationPrincipal(expression = "member") Member member){
         return ResponseEntity.ok(s3Service.doesObjectExist(keyName, member.getId()));
     }
