@@ -45,6 +45,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     private final ImageRepository imageRepository;
     private final ImageService imageService;
     private final MemberRepository memberRepository;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -98,22 +99,24 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
 
-//      조회용 presignedUrl 작동
-      List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = images.stream()
-                .map(image -> imageService.getImage(image.getId(), memberId))
+        List<String> keyNames = images.stream()
+                .map(Image::getKeyName)
                 .toList();
 
+        Map<String, String> presignedUrls = s3Service.createPresignedGetUrls(keyNames, memberId);
 
-//        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = images.stream()
-//                .map(image -> ImageResponseDTO.ImageResultDTO.builder()
-//                        .id(image.getId())
-//                        .keyName(image.getKeyName())
-//                        .imageUrl(image.getImageUrl())
-//                        .filePath(image.getFilePath())
-//                        .contentId(image.getContentId())
-//                        .uploadedAt(image.getUploadedAt())
-//                        .memberId(image.getMemberId())
-//                        .build()).toList();
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = images.stream()
+                .map(img -> new ImageResponseDTO.ImageResultWithPresignedUrlDTO(
+                        img.getId(),
+                        img.getKeyName(),
+                        presignedUrls.get(img.getKeyName()),
+                        img.getFilePath(),
+                        img.getContentId(),
+                        img.getUploadedAt(),
+                        img.getMemberId()
+                ))
+                .toList();
+
 
         LocalDate start = photoAlbum.getAmateurShow().getStart();
         LocalDate end = photoAlbum.getAmateurShow().getEnd();

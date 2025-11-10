@@ -99,7 +99,7 @@ public class S3Service {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        if (keyName.isBlank()) {
+        if (keyName == null || keyName.isBlank()) {
             throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
         }
 
@@ -120,14 +120,15 @@ public class S3Service {
         return getUrl;
     }
 
-    public List<String> createPresignedGetUrls(List<String> keyNames, Long memberId) {
-
+    public Map<String, String> createPresignedGetUrls(List<String> keyNames, Long memberId) {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         return keyNames.stream()
-                .map(key -> createPresignedGetUrl(key, memberId))
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                        key -> key,
+                        key -> createPresignedGetUrl(key, memberId)
+                ));
     }
 
     public void deleteFile(String keyName, Long memberId) {

@@ -64,11 +64,11 @@ public class S3Controller {
 
     @Operation(summary = "다중 파일 조회용 presigned URL", description = "keyName 리스트에 해당하는 파일 조회 URL 리스트 반환")
     @PostMapping("/getUrls")
-    public ResponseEntity<List<String>> getPresignedGetUrls(
+    public ResponseEntity<Map<String, String>> getPresignedGetUrls(
             @Parameter(description = "S3에 저장된 파일 keyName 리스트", required = true) @RequestBody List<String> keyNames,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
-        List<String> urls = s3Service.createPresignedGetUrls(keyNames, member.getId());
+        Map<String, String> urls = s3Service.createPresignedGetUrls(keyNames, member.getId());
         return ResponseEntity.ok(urls);
     }
 
