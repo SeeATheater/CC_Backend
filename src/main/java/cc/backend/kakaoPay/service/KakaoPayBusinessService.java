@@ -50,6 +50,7 @@ public class KakaoPayBusinessService {
         KakaoPayReadyResponseDTO responseDTO = kakaoPayService.ready(ticketId, partnerUserId);
 
         if (responseDTO == null) {
+            // 재고 복구
             throw new RuntimeException("카카오페이 결제 준비 응답을 받지 못했습니다.");
         }
 
@@ -95,6 +96,7 @@ public class KakaoPayBusinessService {
         KakaoPayApproveResponseDTO responseDTO = kakaoPayService.approve(tid, partnerOrderId, partnerUserId, pgToken);
 
         if (responseDTO == null) {
+            // 재고복구
             throw new RuntimeException("카카오페이 결제 승인 응답을 받지 못했습니다.");
         }
 
