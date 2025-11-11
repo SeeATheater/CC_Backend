@@ -99,22 +99,22 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
 
-        List<String> keyNames = images.stream()
-                .map(Image::getKeyName)
-                .toList();
-
-        Map<String, String> presignedUrls = s3Service.createPresignedGetUrls(keyNames, memberId);
+        Map<String, String> presignedUrls = s3Service.createPresignedGetUrls(
+                images.stream().map(Image::getKeyName).toList(),
+                memberId
+        );
 
         List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = images.stream()
-                .map(img -> new ImageResponseDTO.ImageResultWithPresignedUrlDTO(
-                        img.getId(),
-                        img.getKeyName(),
-                        presignedUrls.get(img.getKeyName()),
-                        img.getFilePath(),
-                        img.getContentId(),
-                        img.getUploadedAt(),
-                        img.getMemberId()
-                ))
+                .map(img -> ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
+                        .id(img.getId())
+                        .keyName(img.getKeyName())
+                        .presignedUrl(presignedUrls.get(img.getKeyName()))
+                        .filePath(img.getFilePath())
+                        .contentId(img.getContentId())
+                        .uploadedAt(img.getUploadedAt())
+                        .memberId(img.getMemberId())
+                        .build()
+                )
                 .toList();
 
 

@@ -60,7 +60,12 @@ public class S3Service {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String keyName = filePath + "/" + uuid + "." + ext;
 
-        // MIME 타입 처리 (jpg는 image/jpeg) + 파일 확장자 whitelist 검사
+        // 파일 확장자 whitelist 검사
+        if (!ALLOWED_EXT.contains(ext)) {
+            throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
+        }
+
+        // MIME 타입 처리 (jpg는 image/jpeg)
         String mimeType = switch (ext) {
             case "jpg", "jpeg" -> "image/jpeg";
             case "png" -> "image/png";
@@ -121,13 +126,27 @@ public class S3Service {
     }
 
     public Map<String, String> createPresignedGetUrls(List<String> keyNames, Long memberId) {
+
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
+        // key별 presigned URL 생성
         return keyNames.stream()
                 .collect(Collectors.toMap(
                         key -> key,
-                        key -> createPresignedGetUrl(key, memberId)
+                        key -> {
+                            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                                    .bucket(bucketName)
+                                    .key(key)
+                                    .build();
+
+                            return s3Presigner.presignGetObject(
+                                    GetObjectPresignRequest.builder()
+                                            .signatureDuration(Duration.ofMinutes(10))
+                                            .getObjectRequest(getObjectRequest)
+                                            .build()
+                            ).url().toString();
+                        }
                 ));
     }
 

@@ -55,7 +55,7 @@ public class S3Controller {
     @Operation(summary = "단일 파일 조회용 presigned URL", description = "keyName에 해당하는 파일 조회 URL 반환")
     @GetMapping("/getUrl")
     public ResponseEntity<String> getPresignedGetUrl(
-            @Parameter(description = "S3에 저장된 파일 keyName", required = true) @RequestParam String keyName,
+            @Parameter(description = "S3에 저장된 파일 keyName", required = true) @RequestParam @NotBlank String keyName,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         String url = s3Service.createPresignedGetUrl(keyName, member.getId());
@@ -65,7 +65,7 @@ public class S3Controller {
     @Operation(summary = "다중 파일 조회용 presigned URL", description = "keyName 리스트에 해당하는 파일 조회 URL 리스트 반환")
     @PostMapping("/getUrls")
     public ResponseEntity<Map<String, String>> getPresignedGetUrls(
-            @Parameter(description = "S3에 저장된 파일 keyName 리스트", required = true) @RequestBody List<String> keyNames,
+            @Parameter(description = "S3에 저장된 파일 keyName 리스트", required = true) @RequestBody List<@NotBlank String> keyNames,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         Map<String, String> urls = s3Service.createPresignedGetUrls(keyNames, member.getId());
