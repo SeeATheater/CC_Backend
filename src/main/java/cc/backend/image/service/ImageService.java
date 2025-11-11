@@ -52,7 +52,7 @@ public class ImageService {
                 .filePath(requestDTO.getFilePath())
                 .contentId(requestDTO.getContentId())
                 .uploadedAt(LocalDateTime.now())
-                .memberId(requestDTO.getMemberId())
+                .memberId(memberId)
                 .build();
 
         Image newImage = imageRepository.save(image);
@@ -64,7 +64,7 @@ public class ImageService {
                 .filePath(newImage.getFilePath())
                 .contentId(newImage.getContentId())
                 .uploadedAt(newImage.getUploadedAt())
-                .memberId(newImage.getMemberId())
+                .memberId(memberId)
                 .build();
     }
 
@@ -77,15 +77,17 @@ public class ImageService {
     }
 
     // 이미지 단건 조회
-    public ImageResponseDTO.ImageResultDTO getImage(Long imageId, Long memberId){
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO getImage(Long imageId, Long memberId){
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
-        return ImageResponseDTO.ImageResultDTO.builder()
+
+        String presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
+        return ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
                 .id(image.getId())
                 .keyName(image.getKeyName())
-                .imageUrl(image.getImageUrl())
+                .presignedUrl(presignedUrl)
                 .filePath(image.getFilePath())
                 .contentId(image.getContentId())
                 .uploadedAt(image.getUploadedAt())

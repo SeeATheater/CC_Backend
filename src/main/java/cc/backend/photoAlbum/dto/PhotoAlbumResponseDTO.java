@@ -28,6 +28,20 @@ public class PhotoAlbumResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class PhotoAlbumResultWithPresignedUrlDTO {
+        private String performerName;
+        private Long photoAlbumId;
+        private String amateurShowName;
+        private String schedule;
+        private String detailAddress;
+        private String content;
+        private List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultWithPresignedUrlDTOs;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SinglePhotoAlbumDTO {
         private Long photoAlbumId;
         private String amateurShowName;

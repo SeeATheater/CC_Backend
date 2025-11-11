@@ -3,26 +3,23 @@ package cc.backend.config.s3;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.image.FilePath;
-import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -38,50 +35,119 @@ public class S3Service {
     private String BUCKET_DOMAIN;
 
     @Value("${AWS_S3_BUCKET}")
-    private String bucket2;
+    private String bucketName;
+
+    //파일 확장자 whitelist
+    private static final Set<String> ALLOWED_EXT = Set.of("png", "jpg", "jpeg", "gif");
 
     /**
      * presigned url을 생성해 주는 메소드. bucket v3에 생성해 줌
      * @param imageExtension 이미지의 확장자
      * @return upload url, public url
      */
-    //단일 객체 용 url - 사진 하나 올리기용
-    public Map<String, String> createPresignedUrl(String imageExtension, FilePath filePath, Long memberId) {
+    //단일 객체 put용 url - 사진 하나 올리기용
+    public Map<String, String> createPresignedPutUrl(String imageExtension, FilePath filePath, Long memberId) {
 
-        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        String keyName = UUID.randomUUID() + "." + imageExtension;
-        keyName = filePath + "/" +  keyName.replace("-", "");
-        String contentType = "image/" + imageExtension;
-        Map<String, String> metadata = Map.of(
-                "fileType", contentType,
-                "Content-Type", contentType
-        );
+        if (imageExtension == null || imageExtension.isBlank()) {
+            throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
+        }
+
+        String ext = imageExtension.toLowerCase();
+
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String keyName = filePath + "/" + uuid + "." + ext;
+
+        // 파일 확장자 whitelist 검사
+        if (!ALLOWED_EXT.contains(ext)) {
+            throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
+        }
+
+        // MIME 타입 처리 (jpg는 image/jpeg)
+        String mimeType = switch (ext) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            default -> throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
+        };
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
-                .bucket(bucket2)
+                .bucket(bucketName)
                 .key(keyName)
-                .metadata(metadata)
+                .contentType(mimeType)
                 .build();
 
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))  // The URL expires in 10 minutes.
-                .putObjectRequest(objectRequest)
-                .build();
+        PresignedPutObjectRequest presignedRequest =
+                s3Presigner.presignPutObject(PutObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(10))
+                        .putObjectRequest(objectRequest)
+                        .build());
 
+        String uploadUrl = presignedRequest.url().toString();
+        String imageUrl = BUCKET_DOMAIN + keyName;
 
-        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
-        String myURL = presignedRequest.url().toString();
-        String publicUrl = BUCKET_DOMAIN + keyName;
-        log.info("Presigned URL to upload a file to: {}", myURL);
+        log.info("Presigned URL to upload a file to: {}", uploadUrl);
         log.info("HTTP method: {}", presignedRequest.httpRequest().method());
 
-        Map<String, String> map = new ConcurrentHashMap<>();
-        map.put("uploadUrl", myURL);
-        map.put("publicUrl", publicUrl);
-        map.put("keyName", keyName);
+        return Map.of(
+                "uploadUrl", uploadUrl,
+                "imageUrl", imageUrl,
+                "keyName", keyName
+        );
+    }
 
-        return map;
+    //단일 객체 get용 url - 사진 하나 조회용
+    public String createPresignedGetUrl(String keyName, Long memberId) {
+
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        if (keyName == null || keyName.isBlank()) {
+            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
+        }
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(keyName)
+                .build();
+
+        PresignedGetObjectRequest presignedRequest =
+                s3Presigner.presignGetObject(GetObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(10))
+                        .getObjectRequest(getObjectRequest)
+                        .build());
+
+        String getUrl = presignedRequest.url().toString();
+        log.info("Presigned GET URL: {}", getUrl);
+
+        return getUrl;
+    }
+
+    public Map<String, String> createPresignedGetUrls(List<String> keyNames, Long memberId) {
+
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        // key별 presigned URL 생성
+        return keyNames.stream()
+                .collect(Collectors.toMap(
+                        key -> key,
+                        key -> {
+                            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                                    .bucket(bucketName)
+                                    .key(key)
+                                    .build();
+
+                            return s3Presigner.presignGetObject(
+                                    GetObjectPresignRequest.builder()
+                                            .signatureDuration(Duration.ofMinutes(10))
+                                            .getObjectRequest(getObjectRequest)
+                                            .build()
+                            ).url().toString();
+                        }
+                ));
     }
 
     public void deleteFile(String keyName, Long memberId) {
@@ -96,7 +162,7 @@ public class S3Service {
 
         try {
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                    .bucket(bucket2)
+                    .bucket(bucketName)
                     .key(keyName)
                     .build();
 
@@ -109,31 +175,38 @@ public class S3Service {
     }
 
     /**
-     * 다중 presigned URL 생성
+     * 다중 put용 presigned URL 생성
      * @param extensions 이미지 확장자 리스트 (ex: ["png", "jpg", "jpeg"])
-     * @return keyName과 uploadUrl, publicUrl 리스트 반환
+     * @return keyName과 uploadUrl 리스트 반환
      */
-    public List<Map<String, String>> createPresignedUrls(List<String> extensions, FilePath filePath, Long memberId) {
+    public List<Map<String, String>> createPresignedPutUrls(List<String> extensions, FilePath filePath, Long memberId) {
         return extensions.stream()
-                .map(ext -> createPresignedUrl(ext, filePath, memberId))
+                .map(ext -> createPresignedPutUrl(ext, filePath, memberId))
                 .collect(Collectors.toList());
     }
-
 
     public boolean doesObjectExist(String keyName, Long memberId) {
 
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        try {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                    .bucket(bucket2)
-                    .key(keyName)
-                    .build();
+        if (keyName == null || keyName.isBlank()) {
+            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
+        }
 
-            s3Client.headObject(headObjectRequest);
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(keyName)
+                .build();
+
+        try {
+            s3Client.headObject(request);
             return true;
-        } catch (S3Exception e) {
+        } catch (NoSuchKeyException e) {
             return false;
+        } catch (S3Exception e) {
+            // 존재하지 않는 게 아니라 실제 장애이므로 로깅 후 재던짐
+            log.error("Error checking S3 object: {}", e.awsErrorDetails().errorMessage());
+            throw e;
         }
     }
 

@@ -26,7 +26,7 @@ public class ImageController {
     @Operation(summary = "Image 한 개 저장", description = "s3 url 요청, PUT 이후 DB 저장 위해 호출 ")
     @PostMapping("")
     public ApiResponse<ImageResponseDTO.ImageResultDTO> saveImage( @AuthenticationPrincipal(expression = "member") Member member,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "s3 url 요청 후 받은 keyName과 publicUrl을 그대로 imageRequestDTO로 전달")
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "s3 url 요청 후 받은 keyName, imageUrl 그대로 imageRequestDTO로 전달")
             @RequestBody ImageRequestDTO.FullImageRequestDTO requestDTO) {
         return ApiResponse.onSuccess(imageService.saveImage(member.getId(), requestDTO));
     }
@@ -35,7 +35,7 @@ public class ImageController {
     @Operation(summary = "Image 여러 개 저장", description = " ")
     @PostMapping("/multipleImages")
     public ApiResponse<List<ImageResponseDTO.ImageResultDTO>> saveMultipleImages( @AuthenticationPrincipal(expression = "member") Member member,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "s3 urls 요청, PUT 이후 DB 저장 위해 호출")
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "uploadUrls에 PUT 이후 받은 keyName, imageUrl 그대로 imageRequestDTO로 전달")
             @RequestBody List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
         List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(member.getId(),requestDTOs);
 
@@ -54,7 +54,7 @@ public class ImageController {
     // 이미지 조회
     @Operation(summary = "DB에서 이미지 조회", description = "이미지 정보 조회 api ")
     @GetMapping("/{imageId}")
-    public ApiResponse<ImageResponseDTO.ImageResultDTO> getImage(@PathVariable Long imageId,
+    public ApiResponse<ImageResponseDTO.ImageResultWithPresignedUrlDTO> getImage(@PathVariable Long imageId,
                                                                  @AuthenticationPrincipal(expression = "member") Member member) {
         return ApiResponse.onSuccess(imageService.getImage(imageId, member.getId()));
     }

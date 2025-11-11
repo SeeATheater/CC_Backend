@@ -29,7 +29,7 @@ public class PhotoAlbumController {
 
     @GetMapping("/{photoAlbumId}")
     @Operation(summary = "사진첩 단건 조회 API", description = "공연별 사진첩을 단건 조회하는 API 입니다.")
-    public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultDTO> getPhotoAlbum(
+    public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO> getPhotoAlbum(
             @AuthenticationPrincipal(expression = "member") Member member,
             @PathVariable("photoAlbumId") Long photoAlbumId) {
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbum(photoAlbumId, member.getId()));
