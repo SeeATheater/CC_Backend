@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
 @Builder
 @Table(
         indexes = {
-                @Index(name = "idx_file_content", columnList = "filePath, content_id"),
-                @Index(name = "idx_uploaded_at", columnList = "uploadedAt")
+                @Index(name = "idx_file_content", columnList = "file_path, content_id"),
+                @Index(name = "idx_uploaded_at", columnList = "uploaded_at")
         }
 )
 public class Image {
