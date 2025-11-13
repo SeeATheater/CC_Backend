@@ -70,7 +70,6 @@ public class TokenProvider {
     }
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
-        log.info("🔍 클레임까지 옴 Claims: {}", claims);  // 여기서 claims 값을 확인
 
         String email = claims.getSubject();
 
