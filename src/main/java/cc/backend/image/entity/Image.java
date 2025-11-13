@@ -18,6 +18,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        indexes = {
+                @Index(name = "idx_file_content", columnList = "file_path, content_id"),
+                @Index(name = "idx_uploaded_at", columnList = "uploaded_at")
+        }
+)
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -36,9 +36,7 @@ url:
   access-token: https://oauth2.googleapis.com/token
   profile: https://www.googleapis.com/oauth2/v2/userinfo
 
-  jpa:
-    hibernate:
-      ddl-auto: update
+
 
 jwt:
   secret: ${JWT_SECRET}
