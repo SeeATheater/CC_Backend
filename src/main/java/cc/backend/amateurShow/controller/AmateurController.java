@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,18 +31,21 @@ public class AmateurController {
     private final MemberService memberService;
     private final AmateurService amateurService;
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @PostMapping(value = "/enroll")
     @Operation(summary = "소극장 공연 생성 API")
     public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> enrollShow(@AuthenticationPrincipal(expression = "member") Member member, @Valid @RequestBody AmateurEnrollRequestDTO requestDTO) {
         return ApiResponse.onSuccess(amateurService.enrollShow(member.getId(), requestDTO));
     }
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @PatchMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 수정 API")
     public ApiResponse<AmateurEnrollResponseDTO.AmateurEnrollResult> updateShow(@AuthenticationPrincipal(expression = "member") Member member, @PathVariable Long amateurShowId, @Valid @RequestBody AmateurUpdateRequestDTO requestDTO) {
         return ApiResponse.onSuccess(amateurService.updateShow(member.getId(), amateurShowId, requestDTO));
     }
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @DeleteMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 삭제 API")
     public ApiResponse<String> deleteShow(@AuthenticationPrincipal(expression = "member") Member member, @PathVariable Long amateurShowId) {
