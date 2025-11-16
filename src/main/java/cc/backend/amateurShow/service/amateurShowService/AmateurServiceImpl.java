@@ -64,6 +64,11 @@ public class AmateurServiceImpl implements AmateurService {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if (member.getRole() != Role.PERFORMER) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
+        }
+
         AmateurShow amateurShow = AmateurConverter.toAmateurShowEntity(member, requestDTO);
         AmateurShow newAmateurShow = amateurShowRepository.save(amateurShow);
 
@@ -137,10 +142,18 @@ public class AmateurServiceImpl implements AmateurService {
     @Override
     public AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long memberId, Long showId, AmateurUpdateRequestDTO requestDTO) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+                .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if (member.getRole() != Role.PERFORMER) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
+        }
 
         AmateurShow amateurShow = amateurShowRepository.findByIdWithDetails(showId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        if (!amateurShow.getMember().getId().equals(memberId)) { // 다른 공연자가 수정 못하게 방지
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
 
         //포스터 사진 수정
         //기존 이미지 삭제
@@ -312,10 +325,19 @@ public class AmateurServiceImpl implements AmateurService {
     @Override
     public void deleteShow(Long memberId, Long amateurShowId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if (member.getRole() != Role.PERFORMER) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
+        }
 
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        if (!amateurShow.getMember().getId().equals(memberId)) { // 다른 공연자가 삭제 못하게 방지
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
+
         amateurShowRepository.delete(amateurShow);
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.amateurShow, amateurShowId);
