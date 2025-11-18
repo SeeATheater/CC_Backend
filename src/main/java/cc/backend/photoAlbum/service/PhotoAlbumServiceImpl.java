@@ -192,14 +192,14 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         // 기존 이미지들 가져오기
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
 
-        // 프론트에서 받은 이미지 url 목록
+        // 프론트에서 받은 이미지 keyName 목록
         Set<String> newKeyNames = requestDTO.getImageRequestDTOs().stream()
                 .map(ImageRequestDTO.PartialImageRequestDTO::getKeyName)
                 .collect(Collectors.toSet());
 
-        // 수정 후 사라진 사진들 - 삭제 대상 찾기
+        // 수정 후 사라진 사진들 - 삭제 대상 찾기 (기존 keyName이 지금 목록에 없으면 삭제)
         List<Image> toDelete = existingImages.stream()
-                .filter(img -> !newKeyNames.contains(img.getImageUrl()))
+                .filter(img -> !newKeyNames.contains(img.getKeyName()))
                 .toList();
 
         // 삭제
@@ -208,15 +208,15 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         });
 
         // 삭제 후 남아있는 기존 사진
-        Set<String> existingUrls = existingImages.stream()
-                .map(Image::getImageUrl)
+        Set<String> existingKeyNames = existingImages.stream()
+                .map(Image::getKeyName)
                 .collect(Collectors.toSet());
 
         List<ImageRequestDTO.PartialImageRequestDTO> imageDTOs = requestDTO.getImageRequestDTOs();
 
         // 수정 후 새로 생긴 사진들 - 기존 사진 셋에 없는 requestDTO 사진들은 추가 저장
         List<ImageRequestDTO.FullImageRequestDTO> toAdd = imageDTOs.stream()
-                .filter(imageDTO -> !existingUrls.contains(imageDTO.getKeyName()))
+                .filter(imageDTO -> !existingKeyNames.contains(imageDTO.getKeyName()))
                 .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
                                 .keyName(imageDTO.getKeyName())
                                 .filePath(FilePath.photoAlbum)
