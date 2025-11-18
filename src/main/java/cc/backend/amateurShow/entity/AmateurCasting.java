@@ -21,6 +21,8 @@ public class AmateurCasting extends BaseEntity {
 
     private String castingImageUrl;
 
+    private String castingImageKeyName;
+
     private String actorName;
 
     private String castingName;
@@ -32,6 +34,10 @@ public class AmateurCasting extends BaseEntity {
     public void update(AmateurUpdateRequestDTO.UpdateCasting dto) {
         if (dto.getActorName() != null) this.actorName = dto.getActorName();
         if (dto.getCastingName() != null) this.castingName = dto.getCastingName();
-        if (dto.getCastingImageUrl() != null) this.castingImageUrl = dto.getCastingImageUrl();
+        if (dto.getCastingImageRequestDTO().getImageUrl() != null) this.castingImageUrl = dto.getCastingImageRequestDTO().getImageUrl();
+    }
+
+    public void updateCastingImageKeyName(String castingImageUrl) {
+        this.castingImageUrl = castingImageUrl;
     }
 }

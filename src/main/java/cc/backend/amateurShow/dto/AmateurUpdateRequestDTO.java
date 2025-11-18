@@ -28,7 +28,7 @@ public class AmateurUpdateRequestDTO {
     private String contact; // 연락처
     private String hashtag; // 해시태그
     private String summary; // 줄거리
-    private ImageRequestDTO.PartialImageRequestDTO imageRequestDTO; // 포스터 이미지 url
+    private ImageRequestDTO.PosterImageRequestDTO posterImageRequestDTO; // 포스터 이미지
     private AmateurUpdateRequestDTO.UpdateNotice notice; // 공지사항 -> 일대일 맵핑
     private List<UpdateCasting> casting; // 캐스팅 정보
     private List<UpdateTickets> tickets;
@@ -41,7 +41,7 @@ public class AmateurUpdateRequestDTO {
     public static class UpdateNotice {
         private Long noticeId;
         private String content;
-        private String noticeImageUrl;
+        private ImageRequestDTO.NoticeImageRequestDTO noticeImageRequestDTO;
         private String timeInfo;
     }
 
@@ -61,7 +61,7 @@ public class AmateurUpdateRequestDTO {
         private Long castingId;
         private String actorName;
         private String castingName;
-        private String castingImageUrl; // 캐스팅 이미지 url
+        private ImageRequestDTO.CastingImageRequestDTO castingImageRequestDTO; // 캐스팅 이미지
     }
 
     @Getter

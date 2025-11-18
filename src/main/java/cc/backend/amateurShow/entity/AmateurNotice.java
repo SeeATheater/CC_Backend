@@ -20,6 +20,8 @@ public class AmateurNotice extends BaseEntity {
 
     private String noticeImageUrl;
 
+    private String noticeImageKeyName;
+
     private String content;
 
     private String timeInfo;
@@ -30,7 +32,8 @@ public class AmateurNotice extends BaseEntity {
 
     public void update(AmateurUpdateRequestDTO.UpdateNotice dto) {
         if (dto.getContent() != null) this.content = dto.getContent();
-        if (dto.getNoticeImageUrl() != null) this.noticeImageUrl = dto.getNoticeImageUrl();
+        if (dto.getNoticeImageRequestDTO().getImageUrl() != null) this.noticeImageUrl = dto.getNoticeImageRequestDTO().getImageUrl();
+        if (dto.getNoticeImageRequestDTO().getKeyName() != null) this.noticeImageKeyName = dto.getNoticeImageRequestDTO().getKeyName();
         if (dto.getTimeInfo() != null) this.timeInfo = dto.getTimeInfo();
     }
 }

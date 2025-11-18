@@ -5,13 +5,10 @@ import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
-import cc.backend.apiPayLoad.code.status.ErrorStatus;
-import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +28,7 @@ public class AmateurConverter {
                 .detailAddress(requestDTO.getDetailAddress())
                 .start(requestDTO.getStart())
                 .end(requestDTO.getEnd())
+                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl())
                 .runtime(requestDTO.getRuntime())
                 .summary(requestDTO.getSummary())
                 .account(requestDTO.getAccount())
@@ -38,7 +36,6 @@ public class AmateurConverter {
                 .depositor(requestDTO.getDepositor())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
-                .posterKeyName(requestDTO.getPosterImageRequestDTO().getKeyName())
                 .build();
     }
 
@@ -61,7 +58,8 @@ public class AmateurConverter {
                         .amateurShow(amateurShow)
                         .actorName(casting.getActorName())
                         .castingName(casting.getCastingName())
-                        .castingImageUrl(casting.getCastingImageUrl())
+                        .castingImageUrl(casting.getCastingImageRequestDTO().getImageUrl())
+                        .castingImageKeyName(casting.getCastingImageRequestDTO().getKeyName())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -72,7 +70,7 @@ public class AmateurConverter {
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageUrl())
+                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl())
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
@@ -84,7 +82,7 @@ public class AmateurConverter {
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageUrl())
+                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl())
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
@@ -136,7 +134,7 @@ public class AmateurConverter {
                 .amateurShow(show)
                 .actorName(dto.getActorName())
                 .castingName(dto.getCastingName())
-                .castingImageUrl(dto.getCastingImageUrl())
+                .castingImageUrl(dto.getCastingImageRequestDTO().getImageUrl())
                 .build();
     }
 
@@ -236,6 +234,7 @@ public class AmateurConverter {
                 .bankName(amateurShow.getBankName())
                 .depositor(amateurShow.getDepositor())
                 //.place(amateurShow.getPlace())
+                .posterImageUrl(amateurShow.getPosterImageUrl())
                 .schedule(schedule)
                 .runtime(amateurShow.getRuntime())
                 .account(amateurShow.getAccount())

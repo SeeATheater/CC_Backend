@@ -30,8 +30,8 @@ public class SearchShowResponseDTO {
     @Schema(description = "일정 문자열", example = "2024.04.03(목) 19:00 ~ 2024.10.05(토) 14:00")
     private String schedule;
 
-    @Schema(description = "포스터 keyName URL")
-    private String posterKeyName;
+    @Schema(description = "포스터 URL")
+    private String posterImageUrl;
 
     @Schema(description = "공연 상태", example = "판매중")
     private String status;
@@ -54,7 +54,7 @@ public class SearchShowResponseDTO {
                 .hallName(s.getHallName())
                 .schedule(schedule)
                 .status(statusLabel)
-                .posterKeyName(s.getPosterKeyName())
+                .posterImageUrl(s.getPosterImageUrl())
                 .build();
     }
 
