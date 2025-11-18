@@ -78,7 +78,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
-
+        imageService.saveImage(memberId, fullImageRequestDTO);
 
         // 좋아요한 멤버리스트
         List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
@@ -100,24 +100,18 @@ public class AmateurServiceImpl implements AmateurService {
         Long memberId = amateurShow.getMember().getId();
         // 캐스팅
         List<AmateurCasting> castings = AmateurConverter.toAmateurCastingEntity(requestDTO.getCasting(), amateurShow);
-
-        if(!castings.isEmpty()) {
+        if (!castings.isEmpty()) {
             List<AmateurCasting> amateurCastings = amateurCastingRepository.saveAll(castings);
-            //캐스팅 사진 저장(1개씩)
-           amateurCastings.stream().map(
-                   amateurCasting -> {
-                       ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                               .keyName(amateurCasting.getCastingImageKeyName())
-                               .filePath(FilePath.amateurShow)
-                               .contentId(amateurShow.getId())
-                               .memberId(memberId)
-                               .build();
-
-                       imageService.saveImage(memberId, fullImageRequestDTO);
-                       return null;
-                   }
-                   );
-
+            // 캐스팅 사진 저장(1개씩)
+            amateurCastings.forEach(amateurCasting -> {
+                ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                        .keyName(amateurCasting.getCastingImageKeyName())
+                        .filePath(FilePath.amateurShow)
+                        .contentId(amateurShow.getId())
+                        .memberId(memberId)
+                        .build();
+                imageService.saveImage(memberId, fullImageRequestDTO);
+            });
         }
 
         // 공지사항
@@ -163,25 +157,30 @@ public class AmateurServiceImpl implements AmateurService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         //포스터 사진 수정
-        Image existingImage = imageRepository.findByFilePathAndKeyName(FilePath.amateurShow, requestDTO.getPosterImageRequestDTO().getKeyName());
         ImageRequestDTO.PosterImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
+        if (dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()) {
+            // 현재 포스터 이미지 조회 (show당 1개)
+            Image existingImage = imageRepository
+                    .findAllByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId())
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
 
-        //새로운 poster 사진이 첨부됐다면
-        if(!dto.getKeyName().isEmpty()){
-            // 기존 이미지 삭제
-            if(!existingImage.getKeyName().equals(dto.getKeyName())){
+            // 기존 keyName과 다르면 기존 이미지 삭제 후 교체
+            if (existingImage != null && !existingImage.getKeyName().equals(dto.getKeyName())) {
                 imageService.deleteImage(existingImage.getId(), memberId);
-                ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                        .keyName(dto.getKeyName())
-                        .filePath(FilePath.amateurShow)
-                        .contentId(amateurShow.getId())
-                        .memberId(memberId)
-                        .build();
-
-                imageService.saveImage(memberId, fullImageRequestDTO);
-                //amateurShow 엔티티 내 posterImageUrl 필드 수정
-                amateurShow.updatePosterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl());
             }
+
+            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                    .keyName(dto.getKeyName())
+                    .filePath(FilePath.amateurShow)
+                    .contentId(amateurShow.getId())
+                    .memberId(memberId)
+                    .build();
+
+            imageService.saveImage(memberId, fullImageRequestDTO);
+            //amateurShow 엔티티 내 posterImageUrl 필드 수정
+            amateurShow.updatePosterImageUrl(dto.getImageUrl());
 
         }
 

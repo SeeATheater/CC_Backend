@@ -14,7 +14,7 @@ public class RealTicketResponseDTO {
 
         private Long ticketId;                   // realTicket ID
         private String showTitle;                // 공연 제목
-        //private String posterImageUrl;           // 포스터 이미지 URL
+        private String posterImageUrl;           // 포스터 이미지 URL
         //private String place;                    // 장소
         private String detailAddress;            // 상세 주소
         private LocalDateTime performanceDateTime;       // 관람일 (시간 제외)
@@ -39,6 +39,7 @@ public class RealTicketResponseDTO {
                     .quantity(ticket.getQuantity())
                     .totalPrice(ticket.getTotalPrice())
                     .reservationStatus(ticket.getReservationStatus())
+                    .posterImageUrl(ticket.getPosterImageUrl())
                     //.cancelAvailableUntil(ticket.getCancelAvailableUntil())
                     //.cancelFeePolicyText(ticket.getCancelFeePolicyText())
                     .build();
@@ -56,6 +57,7 @@ public class RealTicketResponseDTO {
                                             .totalPrice(ticket.getTotalPrice())
                                             .reservationStatus(ticket.getReservationStatus()) // 이 시점에는 CANCELLED 상태
                                             .cancelAvailableUntil(ticket.getCancelAvailableUntil())
+                                            .posterImageUrl(ticket.getPosterImageUrl())
                                             .cancelFeePolicyText(ticket.getCancelFeePolicyText())
                                             .cancelFee(cancelFee) // 계산된 수수료
                                             .cancelAmount(cancelAmount) // 최종 환불액

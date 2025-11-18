@@ -13,14 +13,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+
 import java.util.stream.Collectors;
 @Slf4j
 @Service
@@ -74,14 +72,11 @@ public class ImageService {
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         Image image = imageRepository.findByKeyName(keyName);
+        if (image == null) {
+            throw new GeneralException(ErrorStatus.IMAGE_NOT_FOUND);
+        }
 
-        String presignedUrl = "";
-        if(image == null){
-            presignedUrl = "keyName에 해당하는 이미지가 존재하지 않습니다.";
-        }
-        else {
-            presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
-        }
+        String presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
 
         return ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
                 .id(image.getId())

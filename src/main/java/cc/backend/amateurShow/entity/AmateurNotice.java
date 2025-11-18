@@ -32,8 +32,10 @@ public class AmateurNotice extends BaseEntity {
 
     public void update(AmateurUpdateRequestDTO.UpdateNotice dto) {
         if (dto.getContent() != null) this.content = dto.getContent();
-        if (dto.getNoticeImageRequestDTO().getImageUrl() != null) this.noticeImageUrl = dto.getNoticeImageRequestDTO().getImageUrl();
-        if (dto.getNoticeImageRequestDTO().getKeyName() != null) this.noticeImageKeyName = dto.getNoticeImageRequestDTO().getKeyName();
+        if (dto.getNoticeImageRequestDTO() != null && dto.getNoticeImageRequestDTO().getImageUrl() != null)
+            this.noticeImageUrl = dto.getNoticeImageRequestDTO().getImageUrl();
+        if (dto.getNoticeImageRequestDTO() != null && dto.getNoticeImageRequestDTO().getKeyName() != null)
+            this.noticeImageKeyName = dto.getNoticeImageRequestDTO().getKeyName();
         if (dto.getTimeInfo() != null) this.timeInfo = dto.getTimeInfo();
     }
 }
