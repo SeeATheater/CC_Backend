@@ -139,7 +139,7 @@ public class ImageService {
                 .map(img -> ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
                         .id(img.getId())
                         .keyName(img.getKeyName())
-                        .presignedUrl(presignedUrls.get(img.getKeyName()))
+                        .presignedUrl(presignedUrls.get(img.getKeyName()))  //Map에서 keyName을 key로 조회한 value = presigned Url
                         .filePath(img.getFilePath())
                         .contentId(img.getContentId())
                         .uploadedAt(img.getUploadedAt())
