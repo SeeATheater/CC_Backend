@@ -17,7 +17,9 @@ import org.springframework.transaction.support.TransactionSynchronizationAdapter
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 @Slf4j
@@ -38,7 +40,7 @@ public class ImageService {
      * return ImageResultDTO
      */
     @Transactional
-    public ImageResponseDTO.ImageResultDTO saveImage(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO) {
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImage(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO) {
 
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         //S3에 실제 존재하는 이미지인지 검증
@@ -48,7 +50,6 @@ public class ImageService {
 
         Image image = Image.builder()
                 .keyName(requestDTO.getKeyName())
-                .imageUrl(requestDTO.getImageUrl())
                 .filePath(requestDTO.getFilePath())
                 .contentId(requestDTO.getContentId())
                 .uploadedAt(LocalDateTime.now())
@@ -57,33 +58,31 @@ public class ImageService {
 
         Image newImage = imageRepository.save(image);
 
-        return ImageResponseDTO.ImageResultDTO.builder()
-                .id(newImage.getId())
-                .keyName(newImage.getKeyName())
-                .imageUrl(newImage.getImageUrl())
-                .filePath(newImage.getFilePath())
-                .contentId(newImage.getContentId())
-                .uploadedAt(newImage.getUploadedAt())
-                .memberId(memberId)
-                .build();
+        return getImage(newImage.getKeyName(), memberId);
     }
 
     //다중 이미지 저장
     @Transactional
-    public List<ImageResponseDTO.ImageResultDTO> saveImages(Long memberId, List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
+    public List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> saveImages(Long memberId, List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
         return requestDTOs.stream()
                 .map(requestDTO-> saveImage(memberId, requestDTO))
                 .collect(Collectors.toList());
     }
 
     // 이미지 단건 조회
-    public ImageResponseDTO.ImageResultWithPresignedUrlDTO getImage(Long imageId, Long memberId){
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO getImage(String keyName, Long memberId){
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        Image image = imageRepository.findById(imageId)
-                .orElseThrow(()->new GeneralException(ErrorStatus.IMAGE_NOT_FOUND));
+        Image image = imageRepository.findByKeyName(keyName);
 
-        String presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
+        String presignedUrl = "";
+        if(image == null){
+            presignedUrl = "keyName에 해당하는 이미지가 존재하지 않습니다.";
+        }
+        else {
+            presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
+        }
+
         return ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
                 .id(image.getId())
                 .keyName(image.getKeyName())
@@ -95,6 +94,60 @@ public class ImageService {
                 .build();
     }
 
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO getPosterImage(String keyName, Long memberId){
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        Image image = imageRepository.findByFilePathAndKeyName(FilePath.amateurShow, keyName);
+
+        String presignedUrl = "";
+        if(image == null){
+            presignedUrl = "keyName에 해당하는 이미지가 존재하지 않습니다.";
+        }
+        else {
+            presignedUrl = s3Service.createPresignedGetUrl(image.getKeyName(), memberId);
+        }
+
+        return ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
+                .id(image.getId())
+                .keyName(image.getKeyName())
+                .presignedUrl(presignedUrl)
+                .filePath(image.getFilePath())
+                .contentId(image.getContentId())
+                .uploadedAt(image.getUploadedAt())
+                .memberId(image.getMemberId())
+                .build();
+    }
+
+
+    public List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> getImages(List<Image> images, Long memberId) {
+
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        if (images.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // keyName 기반 presigned URL 일괄 발급
+        Map<String, String> presignedUrls = s3Service.createPresignedGetUrls(
+                images.stream().map(Image::getKeyName).toList(),
+                memberId
+        );
+
+        // DTO 변환
+        return images.stream()
+                .map(img -> ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
+                        .id(img.getId())
+                        .keyName(img.getKeyName())
+                        .presignedUrl(presignedUrls.get(img.getKeyName()))
+                        .filePath(img.getFilePath())
+                        .contentId(img.getContentId())
+                        .uploadedAt(img.getUploadedAt())
+                        .memberId(img.getMemberId())
+                        .build()
+                )
+                .toList();
+    }
     // 이미지 삭제-s3 동시 삭제 지원
     @Transactional
     public void deleteImage(Long imageId, Long memberId) {
@@ -112,6 +165,5 @@ public class ImageService {
             log.error("S3 삭제 실패: {}", image.getKeyName(), e);
         }
     }
-
 
 }

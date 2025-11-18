@@ -21,4 +21,7 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
             @Param("contentIds") List<Long> contentIds,
             @Param("filePath") FilePath filePath
     );
+    Image findByKeyName(String keyName);
+
+    Image findByFilePathAndKeyName(FilePath filePath, String keyName);
 }

@@ -69,7 +69,7 @@ public class PerformerService {
             return ShowReservationResponseDTO.builder()
                     .showId(show.getId())
                     .showTitle(show.getName())
-                    .posterImageUrl(show.getPosterImageUrl())
+                    .posterKeyName(show.getPosterKeyName())
                     .detailAddress(show.getDetailAddress())
                     .schedule(schedule)
                     .roundSummaries(Collections.emptyList())

@@ -14,5 +14,5 @@ public class AmateurShowSimpleDTO {
     private String name;
     //private String place;
     private String detailAddress;
-    private String posterImageUrl;
+    private String posterKeyName;
 }

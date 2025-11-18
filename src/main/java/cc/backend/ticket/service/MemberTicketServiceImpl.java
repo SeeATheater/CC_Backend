@@ -137,7 +137,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .name(amateurShow.getName())
                 //.place(amateurShow.getPlace())
                 .detailAddress(amateurShow.getDetailAddress())
-                .posterImageUrl(amateurShow.getPosterImageUrl())
+                .posterKeyName(amateurShow.getPosterKeyName())
                 .build();
     }
 

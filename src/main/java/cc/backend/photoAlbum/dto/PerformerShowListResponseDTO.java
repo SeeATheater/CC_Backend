@@ -32,8 +32,8 @@ public class PerformerShowListResponseDTO {
         private Long showId;
         @Schema(description = "공연명")
         private String title;
-        @Schema(description = "포스터 URL")
-        private String posterImageUrl;
+        @Schema(description = "포스터 KeyName")
+        private String posterKeyName;
         @Schema(description = "공연장 주소")
         private String detailAddress;
         @Schema(description = "공연 상태")
@@ -43,7 +43,7 @@ public class PerformerShowListResponseDTO {
             return ShowList.builder()
                     .showId(s.getId())
                     .title(s.getName())
-                    .posterImageUrl(s.getPosterImageUrl())
+                    .posterKeyName(s.getPosterKeyName())
                     .detailAddress(s.getDetailAddress())
                     .status(s.getStatus())
                     .build();

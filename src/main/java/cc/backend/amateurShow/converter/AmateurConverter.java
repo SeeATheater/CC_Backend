@@ -38,7 +38,7 @@ public class AmateurConverter {
                 .depositor(requestDTO.getDepositor())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
-                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl())
+                .posterKeyName(requestDTO.getPosterImageRequestDTO().getKeyName())
                 .build();
     }
 
@@ -224,6 +224,7 @@ public class AmateurConverter {
                 .collect(Collectors.toList());
 
         String schedule = mergeSchedule(amateurShow.getStart(), amateurShow.getEnd());
+
         return AmateurShowResponseDTO.AmateurShowResult.builder()
                 .memberId(amateurShow.getMember().getId())
                 .amateurShowId(amateurShow.getId())
@@ -246,7 +247,6 @@ public class AmateurConverter {
                 .casting(castings)
                 .staff(staff)
                 .rounds(rounds)
-                .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
     }
 

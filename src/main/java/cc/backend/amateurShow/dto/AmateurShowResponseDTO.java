@@ -32,7 +32,7 @@ public class AmateurShowResponseDTO {
         private String contact; // 연락처
         private String hashtag; // 해시태그
         private String summary; // 줄거리
-        private String posterImageUrl;
+        private String posterPresignedUrl;
         private AmateurShowResult.Notice notice;
         private List<AmateurShowResult.Casting> casting; // 캐스팅 정보
         private List<AmateurShowResult.Staff> staff; // 감독 및 스태프 정보
@@ -103,7 +103,7 @@ public class AmateurShowResponseDTO {
         //private String place; // 공연장 주소
         private String detailAddress; // 공연장 상세 주소
         private String schedule;
-        private String posterImageUrl;
+        private String posterKeyName;
     }
 
     @Getter
@@ -116,7 +116,7 @@ public class AmateurShowResponseDTO {
         //private String place; // 공연장 주소
         private String detailAddress; // 공연장 상세 주소
         private String schedule;
-        private String posterImageUrl;
+        private String posterKeyName;
         private AmateurShowStatus status;
     }
 }

@@ -16,7 +16,6 @@ public class ImageRequestDTO {
     @Builder
     public static class PartialImageRequestDTO {
         private String keyName;
-        private String imageUrl;
     }
 
     @Getter
@@ -26,9 +25,6 @@ public class ImageRequestDTO {
     public static class FullImageRequestDTO {
         @Schema(description = "S3 객체 키", example = "board/uuid.png")
         private String keyName;
-
-        @Schema(description = "이미지 URL(publicUrl)", example = "https://s3.amazonaws.com/bucket/board/uuid.png")
-        private String imageUrl;
 
         @Schema(hidden = true)
         private FilePath filePath;

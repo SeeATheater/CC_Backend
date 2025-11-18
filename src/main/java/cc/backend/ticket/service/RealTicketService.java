@@ -49,7 +49,7 @@ public class RealTicketService {
                 .member(ticket.getMember())
                 .amateurRound(round)
                 .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
-                .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
+                .posterKeyName(ticket.getAmateurTicket().getAmateurShow().getPosterKeyName())
                 .detailAddress(ticket.getAmateurTicket().getAmateurShow().getDetailAddress())
                 .performanceDateTime(ticket.getPerformanceDateTime())
                 .reserveDateTime(ticket.getReserveDate())

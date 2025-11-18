@@ -74,15 +74,14 @@ public class AmateurServiceImpl implements AmateurService {
         ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
         ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                 .keyName(dto.getKeyName())
-                .imageUrl(dto.getImageUrl())
                 .filePath(FilePath.amateurShow)
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
 
-        //amateurShow 엔티티 내 posterImageUrl 필드에 추가 저장
-        String imageUrl = imageService.saveImage(memberId, fullImageRequestDTO).getImageUrl();
-        newAmateurShow.updatePosterImageUrl(imageUrl);
+        //amateurShow 엔티티 내 posterKeyName 필드에 추가 저장
+        String posterKeyName = imageService.saveImage(memberId, fullImageRequestDTO).getKeyName();
+        newAmateurShow.updatePosterKeyName(posterKeyName);
 
 
         // 좋아요한 멤버리스트
@@ -146,18 +145,17 @@ public class AmateurServiceImpl implements AmateurService {
         //기존 이미지 삭제
         Image existingImage = imageRepository.findByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId());
         ImageRequestDTO.PartialImageRequestDTO dto = requestDTO.getImageRequestDTO();
-        if(!dto.getImageUrl().isEmpty()){
+        if(!dto.getKeyName().isEmpty()){
             imageService.deleteImage(existingImage.getId(), memberId);
             ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                     .keyName(dto.getKeyName())
-                    .imageUrl(dto.getImageUrl())
                     .filePath(FilePath.amateurShow)
                     .contentId(amateurShow.getId())
                     .memberId(memberId)
                     .build();
             //amateurShow 엔티티 내 posterImageUrl 필드에 추가 저장
-            String imageUrl = imageService.saveImage(memberId, fullImageRequestDTO).getImageUrl();
-            amateurShow.updatePosterImageUrl(imageUrl);
+            String keyName = imageService.saveImage(memberId, fullImageRequestDTO).getKeyName();
+            amateurShow.updatePosterKeyName(keyName);
         }
 
         // 기본 정보 업데이트
@@ -355,7 +353,7 @@ public class AmateurServiceImpl implements AmateurService {
                             .name(show.getName())
                             .detailAddress(show.getDetailAddress())
                             .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
+                            .posterKeyName(show.getPosterKeyName())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -389,7 +387,7 @@ public class AmateurServiceImpl implements AmateurService {
                             .name(show.getName())
                             .detailAddress(show.getDetailAddress())
                             .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
+                            .posterKeyName(show.getPosterKeyName())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -428,7 +426,7 @@ public class AmateurServiceImpl implements AmateurService {
                             .name(show.getName())
                             .detailAddress(show.getDetailAddress())
                             .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
+                            .posterKeyName(show.getPosterKeyName())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -460,7 +458,7 @@ public class AmateurServiceImpl implements AmateurService {
                         //.place(show.getPlace())
                         .detailAddress(show.getDetailAddress())
                         .schedule(schedule)
-                        .posterImageUrl(show.getPosterImageUrl())
+                        .posterKeyName(show.getPosterKeyName())
                         .build());
             }
         }
@@ -494,7 +492,7 @@ public class AmateurServiceImpl implements AmateurService {
                     //.place(show.getPlace())
                     .detailAddress(show.getDetailAddress())
                     .schedule(schedule)
-                    .posterImageUrl(show.getPosterImageUrl())
+                    .posterKeyName(show.getPosterKeyName())
                     .status(status)
                     .build();
         });
@@ -523,7 +521,7 @@ public class AmateurServiceImpl implements AmateurService {
                             .name(show.getName())
                             .detailAddress(show.getDetailAddress())
                             .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
+                            .posterKeyName(show.getPosterKeyName())
                             .build();
                 })
                 .collect(Collectors.toList());
