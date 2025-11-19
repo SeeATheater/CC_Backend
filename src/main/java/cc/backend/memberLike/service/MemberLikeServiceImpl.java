@@ -100,4 +100,17 @@ public class MemberLikeServiceImpl implements MemberLikeService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
+    @Override
+    public boolean hasMemberLikedPerformer(Long likerId, Long performerId) {
+        memberRepository.findById(likerId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+
+        memberRepository.findById(performerId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Member liker = getMemberById(likerId);
+        Member performer = getMemberById(performerId);
+        return memberLikeRepository.existsByLikerAndPerformer(liker, performer);
+    }
+
 }

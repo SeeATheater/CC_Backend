@@ -10,4 +10,5 @@ public interface MemberLikeService {
     MemberLikeResponseDTO likePerformer(Long likerId, Long performerId);
     void cancelLikePerformer(Long likerId, Long performerId);
     List<MemberLikeResponseDTO> getLikedPerformers(Long memberId);
+    boolean hasMemberLikedPerformer(Long memberId, Long performerId);
 }
