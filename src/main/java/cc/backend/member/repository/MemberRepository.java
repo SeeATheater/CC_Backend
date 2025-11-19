@@ -1,6 +1,7 @@
 package cc.backend.member.repository;
 
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,10 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     boolean existsByUsername(String username);
 
+
+    Optional<Member> findByRole(Role role);
+
+    boolean existsByRole(Role role);
+
+    Optional<Member> findByUsername(String username);
 }

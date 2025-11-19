@@ -141,4 +141,7 @@ public class Member extends BaseEntity {
         this.role = newRole;
     }
 
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
 }
