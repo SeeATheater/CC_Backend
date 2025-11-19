@@ -6,6 +6,7 @@ import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.memberLike.dto.MemberLikeResponseDTO;
 import cc.backend.memberLike.entity.MemberLike;
@@ -103,10 +104,10 @@ public class MemberLikeServiceImpl implements MemberLikeService {
     @Override
     public boolean hasMemberLikedPerformer(Long likerId, Long performerId) {
         memberRepository.findById(likerId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
-
-        memberRepository.findById(performerId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        memberRepository.findByIdAndRole(performerId, Role.PERFORMER)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER));
 
         Member liker = getMemberById(likerId);
         Member performer = getMemberById(performerId);
