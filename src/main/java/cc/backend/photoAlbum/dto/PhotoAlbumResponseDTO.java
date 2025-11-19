@@ -47,7 +47,7 @@ public class PhotoAlbumResponseDTO {
         private String amateurShowName;
         private String performerName;
         private String detailAddress;
-        private String imageUrl;
+        private ImageResponseDTO.ImageResultWithPresignedUrlDTO imageResultWithPresignedUrlDTO;
     }
 
     @Builder

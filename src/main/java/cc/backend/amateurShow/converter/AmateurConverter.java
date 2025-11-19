@@ -5,13 +5,10 @@ import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
-import cc.backend.apiPayLoad.code.status.ErrorStatus;
-import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +28,8 @@ public class AmateurConverter {
                 .detailAddress(requestDTO.getDetailAddress())
                 .start(requestDTO.getStart())
                 .end(requestDTO.getEnd())
+                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl() != null ?
+                        requestDTO.getPosterImageRequestDTO().getImageUrl() : null)
                 .runtime(requestDTO.getRuntime())
                 .summary(requestDTO.getSummary())
                 .account(requestDTO.getAccount())
@@ -38,7 +37,6 @@ public class AmateurConverter {
                 .depositor(requestDTO.getDepositor())
                 .contact(requestDTO.getContact())
                 .hashtag(requestDTO.getHashtag())
-                .posterImageUrl(requestDTO.getPosterImageRequestDTO().getImageUrl())
                 .build();
     }
 
@@ -61,7 +59,10 @@ public class AmateurConverter {
                         .amateurShow(amateurShow)
                         .actorName(casting.getActorName())
                         .castingName(casting.getCastingName())
-                        .castingImageUrl(casting.getCastingImageUrl())
+                        .castingImageUrl(casting.getCastingImageRequestDTO().getImageUrl() != null ?
+                                casting.getCastingImageRequestDTO().getImageUrl() : null)
+                        .castingImageKeyName(casting.getCastingImageRequestDTO().getKeyName() != null ?
+                                casting.getCastingImageRequestDTO().getKeyName() : null)
                         .build())
                 .collect(Collectors.toList());
     }
@@ -72,7 +73,8 @@ public class AmateurConverter {
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageUrl())
+                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl() != null ?
+                        notice.getNoticeImageRequestDTO().getImageUrl() : null)
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
@@ -84,7 +86,8 @@ public class AmateurConverter {
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageUrl())
+                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl() != null ?
+                        notice.getNoticeImageRequestDTO().getImageUrl() : null)
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
@@ -136,7 +139,8 @@ public class AmateurConverter {
                 .amateurShow(show)
                 .actorName(dto.getActorName())
                 .castingName(dto.getCastingName())
-                .castingImageUrl(dto.getCastingImageUrl())
+                .castingImageUrl(dto.getCastingImageRequestDTO().getImageUrl() != null ?
+                        dto.getCastingImageRequestDTO().getImageUrl() : null)
                 .build();
     }
 
@@ -224,6 +228,7 @@ public class AmateurConverter {
                 .collect(Collectors.toList());
 
         String schedule = mergeSchedule(amateurShow.getStart(), amateurShow.getEnd());
+
         return AmateurShowResponseDTO.AmateurShowResult.builder()
                 .memberId(amateurShow.getMember().getId())
                 .amateurShowId(amateurShow.getId())
@@ -235,6 +240,7 @@ public class AmateurConverter {
                 .bankName(amateurShow.getBankName())
                 .depositor(amateurShow.getDepositor())
                 //.place(amateurShow.getPlace())
+                .posterImageUrl(amateurShow.getPosterImageUrl())
                 .schedule(schedule)
                 .runtime(amateurShow.getRuntime())
                 .account(amateurShow.getAccount())
@@ -246,7 +252,6 @@ public class AmateurConverter {
                 .casting(castings)
                 .staff(staff)
                 .rounds(rounds)
-                .posterImageUrl(amateurShow.getPosterImageUrl())
                 .build();
     }
 

@@ -32,7 +32,7 @@ public class PerformerShowListResponseDTO {
         private Long showId;
         @Schema(description = "공연명")
         private String title;
-        @Schema(description = "포스터 URL")
+        @Schema(description = "포스터 url")
         private String posterImageUrl;
         @Schema(description = "공연장 주소")
         private String detailAddress;

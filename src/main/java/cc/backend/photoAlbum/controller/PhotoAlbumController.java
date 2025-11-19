@@ -38,7 +38,7 @@ public class PhotoAlbumController {
     @PreAuthorize("hasRole('PERFORMER')")
     @PostMapping("")
     @Operation(summary = "사진첩 등록 API", description = "사진첩을 등록하는 API 입니다.")
-    public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultDTO> uploadPhotoAlbum(
+    public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO> uploadPhotoAlbum(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "imageRequestDTOs에는 presigned urls 호출로 받은 keyName, publicUrls 값만 전달")
     @RequestBody PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO,
             @AuthenticationPrincipal(expression = "member") Member member){

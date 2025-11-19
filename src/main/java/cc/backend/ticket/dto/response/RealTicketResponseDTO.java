@@ -29,16 +29,17 @@ public class RealTicketResponseDTO {
         private Integer cancelAmount;            // 최종 환불(취소) 금액
 
         public static RealTicketResponseDTO from(RealTicket ticket){
+
             return RealTicketResponseDTO.builder()
                     .ticketId(ticket.getId())
                     .showTitle(ticket.getShowTitle())
-                    .posterImageUrl(ticket.getPosterImageUrl())
                     .detailAddress(ticket.getDetailAddress())
                     .performanceDateTime(ticket.getPerformanceDateTime())
                     .reserveDateTime(ticket.getReserveDateTime())
                     .quantity(ticket.getQuantity())
                     .totalPrice(ticket.getTotalPrice())
                     .reservationStatus(ticket.getReservationStatus())
+                    .posterImageUrl(ticket.getPosterImageUrl())
                     //.cancelAvailableUntil(ticket.getCancelAvailableUntil())
                     //.cancelFeePolicyText(ticket.getCancelFeePolicyText())
                     .build();
@@ -49,7 +50,6 @@ public class RealTicketResponseDTO {
                 return RealTicketResponseDTO.builder()
                                             .ticketId(ticket.getId())
                                             .showTitle(ticket.getShowTitle())
-                                            .posterImageUrl(ticket.getPosterImageUrl())
                                             .detailAddress(ticket.getDetailAddress())
                                             .performanceDateTime(ticket.getPerformanceDateTime())
                                             .reserveDateTime(ticket.getReserveDateTime())
@@ -57,6 +57,7 @@ public class RealTicketResponseDTO {
                                             .totalPrice(ticket.getTotalPrice())
                                             .reservationStatus(ticket.getReservationStatus()) // 이 시점에는 CANCELLED 상태
                                             .cancelAvailableUntil(ticket.getCancelAvailableUntil())
+                                            .posterImageUrl(ticket.getPosterImageUrl())
                                             .cancelFeePolicyText(ticket.getCancelFeePolicyText())
                                             .cancelFee(cancelFee) // 계산된 수수료
                                             .cancelAmount(cancelAmount) // 최종 환불액

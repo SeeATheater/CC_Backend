@@ -40,14 +40,14 @@ public class AmateurEnrollRequestDTO {
     private List<Staff> staff; // 감독 및 스태프 정보
     private List<Rounds> rounds;
 
-    private ImageRequestDTO.PartialImageRequestDTO posterImageRequestDTO;
+    private ImageRequestDTO.PosterImageRequestDTO posterImageRequestDTO;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Notice {
         private String content;
-        private String noticeImageUrl;
+        private ImageRequestDTO.NoticeImageRequestDTO noticeImageRequestDTO;       //Notice 이미지
         private String timeInfo;
     }
 
@@ -65,7 +65,7 @@ public class AmateurEnrollRequestDTO {
     public static class Casting {
         private String actorName;
         private String castingName;
-        private String castingImageUrl; // 캐스팅 이미지 url
+        private ImageRequestDTO.CastingImageRequestDTO castingImageRequestDTO; // 캐스팅 이미지
     }
 
     @Getter

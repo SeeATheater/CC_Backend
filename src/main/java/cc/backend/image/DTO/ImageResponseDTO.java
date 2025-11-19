@@ -16,7 +16,6 @@ public class ImageResponseDTO {
     public static class ImageResultDTO {
         private Long id;
         private String keyName;
-        private String imageUrl;
         private FilePath filePath;
         private Long contentId;
         private LocalDateTime uploadedAt;

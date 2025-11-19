@@ -57,7 +57,6 @@ public class AdminPhotoAlbumService {
                 .map(image -> ImageResponseDTO.ImageResultDTO.builder()
                         .id(image.getId())
                         .keyName(image.getKeyName())
-                        .imageUrl(image.getImageUrl())
                         .filePath(image.getFilePath())
                         .contentId(image.getContentId())
                         .uploadedAt(image.getUploadedAt())

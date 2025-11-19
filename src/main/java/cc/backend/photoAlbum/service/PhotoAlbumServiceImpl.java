@@ -49,7 +49,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
     @Override
     @Transactional
-    public PhotoAlbumResponseDTO.PhotoAlbumResultDTO createPhotoAlbum(PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId){
+    public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO createPhotoAlbum(PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
@@ -66,26 +66,25 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .stream()
                 .map(dto-> ImageRequestDTO.FullImageRequestDTO.builder()
                         .keyName(dto.getKeyName())
-                        .imageUrl(dto.getImageUrl())
                         .filePath(FilePath.photoAlbum)
                         .contentId(newPhotoAlbum.getId())
                         .memberId(member.getId())
                         .build()).toList();
 
-        List<ImageResponseDTO.ImageResultDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = imageService.saveImages(memberId, fullImageRequestDTOs);
 
         LocalDate start = newPhotoAlbum.getAmateurShow().getStart();
         LocalDate end = newPhotoAlbum.getAmateurShow().getEnd();
         String schedule = mergeSchedule(start, end);
 
-        return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
+        return PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO.builder()
                 .performerName(amateurShow.getPerformerName())
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
                 .content(newPhotoAlbum.getContent())
                 .detailAddress(newPhotoAlbum.getAmateurShow().getDetailAddress())
                 .schedule(schedule)
-                .imageResultDTOs(imageResultDTOs)
+                .imageResultWithPresignedUrlDTOs(imageResultDTOs)
                 .build();
     }
 
@@ -99,24 +98,8 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, photoAlbumId);
 
-        Map<String, String> presignedUrls = s3Service.createPresignedGetUrls(
-                images.stream().map(Image::getKeyName).toList(),
-                memberId
-        );
-
-        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs = images.stream()
-                .map(img -> ImageResponseDTO.ImageResultWithPresignedUrlDTO.builder()
-                        .id(img.getId())
-                        .keyName(img.getKeyName())
-                        .presignedUrl(presignedUrls.get(img.getKeyName()))
-                        .filePath(img.getFilePath())
-                        .contentId(img.getContentId())
-                        .uploadedAt(img.getUploadedAt())
-                        .memberId(img.getMemberId())
-                        .build()
-                )
-                .toList();
-
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResultDTOs
+                = imageService.getImages(images, memberId);
 
         LocalDate start = photoAlbum.getAmateurShow().getStart();
         LocalDate end = photoAlbum.getAmateurShow().getEnd();
@@ -174,7 +157,11 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                             .amateurShowName(album.getAmateurShow().getName())
                             .performerName(performer.getName())
                             .detailAddress(album.getAmateurShow().getDetailAddress())
-                            .imageUrl(coverImage != null ? coverImage.getImageUrl() : null)
+                            .imageResultWithPresignedUrlDTO(
+                                    coverImage != null
+                                            ? imageService.getImages(List.of(coverImage), memberId).get(0)
+                                            : null
+                            )
                             .build();
                 })
                 .toList();
@@ -205,14 +192,14 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         // 기존 이미지들 가져오기
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.photoAlbum, updatedPhotoAlbum.getId());
 
-        // 프론트에서 받은 이미지 url 목록
-        Set<String> newImageUrls = requestDTO.getImageRequestDTOs().stream()
-                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl)
+        // 프론트에서 받은 이미지 keyName 목록
+        Set<String> newKeyNames = requestDTO.getImageRequestDTOs().stream()
+                .map(ImageRequestDTO.PartialImageRequestDTO::getKeyName)
                 .collect(Collectors.toSet());
 
-        // 수정 후 사라진 사진들 - 삭제 대상 찾기
+        // 수정 후 사라진 사진들 - 삭제 대상 찾기 (기존 keyName이 지금 목록에 없으면 삭제)
         List<Image> toDelete = existingImages.stream()
-                .filter(img -> !newImageUrls.contains(img.getImageUrl()))
+                .filter(img -> !newKeyNames.contains(img.getKeyName()))
                 .toList();
 
         // 삭제
@@ -221,17 +208,16 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         });
 
         // 삭제 후 남아있는 기존 사진
-        Set<String> existingUrls = existingImages.stream()
-                .map(Image::getImageUrl)
+        Set<String> existingKeyNames = existingImages.stream()
+                .map(Image::getKeyName)
                 .collect(Collectors.toSet());
 
         List<ImageRequestDTO.PartialImageRequestDTO> imageDTOs = requestDTO.getImageRequestDTOs();
 
         // 수정 후 새로 생긴 사진들 - 기존 사진 셋에 없는 requestDTO 사진들은 추가 저장
         List<ImageRequestDTO.FullImageRequestDTO> toAdd = imageDTOs.stream()
-                .filter(imageDTO -> !existingUrls.contains(imageDTO.getImageUrl()))
+                .filter(imageDTO -> !existingKeyNames.contains(imageDTO.getKeyName()))
                 .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
-                                .imageUrl(imageDTO.getImageUrl())
                                 .keyName(imageDTO.getKeyName())
                                 .filePath(FilePath.photoAlbum)
                                 .contentId(updatedPhotoAlbum.getId())
@@ -245,7 +231,6 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                         .stream()
                         .map(image -> ImageResponseDTO.ImageResultDTO.builder()
                                 .id(image.getId())
-                                .imageUrl(image.getImageUrl())
                                 .keyName(image.getKeyName())
                                 .filePath(FilePath.photoAlbum)
                                 .contentId(image.getContentId())

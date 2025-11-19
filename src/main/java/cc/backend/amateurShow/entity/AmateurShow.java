@@ -145,8 +145,8 @@ public class AmateurShow extends BaseEntity {
         this.totalSoldTicket = Math.max(0, this.totalSoldTicket - quantity);
     }
 
-    public void updatePosterImageUrl(String imageUrl){
-        this.posterImageUrl = imageUrl;
+    public void updatePosterImageUrl(String posterImageUrl){
+        this.posterImageUrl = posterImageUrl;
     }
 
 

@@ -84,16 +84,15 @@ public class BoardService {
                     .stream()
                     .map(imageDto -> ImageRequestDTO.FullImageRequestDTO.builder()
                             .keyName(imageDto.getKeyName())
-                            .imageUrl(imageDto.getImageUrl())
                             .filePath(FilePath.board) // FilePath enum 사용
                             .contentId(savedBoard.getId()) // 저장된 게시글 ID 사용
                             .memberId(memberId)
                             .build())
                     .collect(Collectors.toList());
 
-            List<ImageResponseDTO.ImageResultDTO> savedImages = imageService.saveImages(memberId, fullImageRequestDTOs);
+            List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> savedImages = imageService.saveImages(memberId, fullImageRequestDTOs);
             imgUrls = savedImages.stream()
-                    .map(ImageResponseDTO.ImageResultDTO::getImageUrl)
+                    .map(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getPresignedUrl)
                     .collect(Collectors.toList());
         }
 
@@ -361,13 +360,13 @@ public class BoardService {
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, board.getId());
 
         // 프론트에서 받은 새로운 이미지 URL 목록
-        List<String> newImageUrls = newImageDTOs.stream()
-                .map(ImageRequestDTO.PartialImageRequestDTO::getImageUrl)
+        List<String> newKeyNames = newImageDTOs.stream()
+                .map(ImageRequestDTO.PartialImageRequestDTO::getKeyName)
                 .collect(Collectors.toList());
 
         // 삭제 대상 찾기 (기존 이미지 중 새로운 목록에 없는 것들)
         List<Image> toDelete = existingImages.stream()
-                .filter(img -> !newImageUrls.contains(img.getImageUrl()))
+                .filter(img -> !newKeyNames.contains(img.getKeyName()))
                 .collect(Collectors.toList());
 
         // 삭제 처리
@@ -382,9 +381,8 @@ public class BoardService {
 
         // 추가 대상 찾기 (새로운 이미지 중 기존에 없는 것들)
         List<ImageRequestDTO.FullImageRequestDTO> toAdd = newImageDTOs.stream()
-                .filter(imageDTO -> !existingUrls.contains(imageDTO.getImageUrl()))
+                .filter(imageDTO -> !existingUrls.contains(imageDTO.getKeyName()))
                 .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
-                        .imageUrl(imageDTO.getImageUrl())
                         .keyName(imageDTO.getKeyName())
                         .filePath(FilePath.board)
                         .contentId(board.getId())

@@ -134,7 +134,7 @@ public class S3Service {
         return keyNames.stream()
                 .collect(Collectors.toMap(
                         key -> key,
-                        key -> {
+                        key -> {    //key를  인자로 받아 presigned Url 반환하는 람다 함수
                             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                                     .bucket(bucketName)
                                     .key(key)
