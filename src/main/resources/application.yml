@@ -51,9 +51,9 @@ kakaopay:
   cid: TC0ONETIME
   base-url: https://open-api.kakaopay.com
   url:
-    approval: http://localhost:8080/kakaoPay/approve
-    cancel: http://localhost:8080/kakaoPay/cancel
-    fail: http://localhost:8080/kakaoPay/fail
+    approval: ${KAKAOPAY_APPROVE_URL}
+    cancel: ${KAKAOPAY_CANCEL_URL}
+    fail: ${KAKAOPAY_FAIL_URL}
 management:
   endpoints:
     web:
