@@ -30,14 +30,16 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "MEMBER4001", "접근 권한이 없는 사용자 입니다."),
     MEMBER_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4002", "이미 존재하는 사용자(이메일) 입니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4003", "비밀번호가 일치하지 않습니다."),
-    MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4010", "토큰이 유효하지 않습니다."),
-    MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4011", "해당 사용자게에게 관리자 권한이 없습니다."),
-    MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
-    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4012", "해당 회원은 이미 활성화 상태입니다,"),
+    MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4004", "토큰이 유효하지 않습니다."),
+    MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4005", "해당 사용자게에게 관리자 권한이 없습니다."),
+    MEMBER_NOT_PERFORMER(HttpStatus.FORBIDDEN, "MEMBER4011", "등록자 계정이 아니기에 접근권한이 없습니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
     INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
     INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
     PHONENUM_ENCRYPT_FAIL(HttpStatus.BAD_REQUEST, "MEMBER4015", "전화번호 암호화 실패"),
+    MEMBER_ALREADY_DEACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4016", "해당 회원은 이미 탈퇴(비활성화) 상태입니다,"),
+    MEMBER_ALREADY_ACTIVATED(HttpStatus.BAD_REQUEST, "MEMBER4017", "해당 회원은 이미 활성화 상태입니다,"),
+
 
     //KAKAO
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "KAKAO4001", "카카오 토큰 요청에 실패했습니다."),
@@ -97,6 +99,8 @@ public enum ErrorStatus implements BaseErrorCode {
     COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMENT4002", "댓글 수정/삭제 권한이 없습니다."),
     COMMENT_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, "COMMENT4003", "대댓글의 depth는 1까지만 허용됩니다."),
     COMMENT_BOARD_MISMATCH(HttpStatus.BAD_REQUEST, "COMMENT4004", "해당 댓글은 이 게시글에 속하지 않습니다."),
+
+    // REPORT ERROR
     ALREADY_REPORTED(HttpStatus.BAD_REQUEST, "REPORT4001", "이미 신고한 게시글입니다."),
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REPORT4002", "본인이 작성한 글/댓글은 신고할 수 없습니다."),
 
@@ -106,12 +110,9 @@ public enum ErrorStatus implements BaseErrorCode {
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다."),
 
     // MEMBER LIKE ERROR
-
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE4001", "존재하지 않는 좋아요입니다."),
     DUPLICATE_LIKE(HttpStatus.BAD_REQUEST, "LIKE4002", "이미 좋아요한 공연진입니다."),
 
-    // MYPAGE ERROR
-    MEMBER_NOT_PERFORMER(HttpStatus.FORBIDDEN, "MYPAGE4001", "등록자 계정이 아니기에 마이페이지 접근권한이 없습니다."),
 
     // ADMIN ERROR
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN4001", "관리자 계정이 없습니다");

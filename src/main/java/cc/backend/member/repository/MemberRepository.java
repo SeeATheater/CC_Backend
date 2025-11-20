@@ -28,4 +28,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     boolean existsByRole(Role role);
 
     Optional<Member> findByUsername(String username);
+
+    Optional<Member> findByIdAndRole(Long id, Role role);
+
 }

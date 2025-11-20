@@ -4,8 +4,10 @@ import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.entity.Member;
 import cc.backend.memberLike.dto.MemberLikeResponseDTO;
 import cc.backend.memberLike.service.MemberLikeService;
+import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -40,5 +42,11 @@ public class MemberLikeController {
     @Operation(summary = "좋아요한 공연진 목록 조회", description = "사용자가 좋아요한 공연진 목록을 조회하는 기능입니다.")
     public ApiResponse<List<MemberLikeResponseDTO>> getLikedPerformers(@AuthenticationPrincipal(expression = "member") Member member) {
         return ApiResponse.onSuccess(memberLikeService.getLikedPerformers(member.getId()));
+    }
+
+    @GetMapping("/like/{performerId}")
+    @Operation(summary = "공연진 좋아요 여부 API", description = "사용자가 특정 공연진에 대해 좋아요를 눌렀는지 여부를 조회하는 기능입니다.")
+    public ApiResponse<Boolean> getPerformerLikeStatus(@AuthenticationPrincipal(expression = "member") Member member, @PathVariable Long performerId) {
+        return ApiResponse.onSuccess(memberLikeService.hasMemberLikedPerformer(member.getId(), performerId));
     }
 }
