@@ -31,6 +31,7 @@ public class AdminInitializer implements ApplicationRunner {
             log.info("관리자 계정이 없기 때문에, 임시 관리자를 하나 생성함");
             Member initialAdmin = Member.builder()
                     .username("CC_admin")
+                    .email("seeatheateradmin@gmail.com")
                     .name("임시 관리자")
                     .role(Role.ADMIN)
                     .password(bCryptPasswordEncoder.encode(defaultAdminPassword))
