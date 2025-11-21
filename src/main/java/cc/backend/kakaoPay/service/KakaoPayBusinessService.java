@@ -32,10 +32,10 @@ public class KakaoPayBusinessService {
     private final KakaoPayService kakaoPayService;
 
     // 결제 준비 비즈니스 로직
-    public KakaoPayReadyResponseDTO preparePayment(Long ticketId, String partnerUserId) {
+    public KakaoPayReadyResponseDTO preparePayment(Long memberTicketId, String partnerUserId) {
 
         // DB에서 결제할 티켓 정보를 미리 조회
-        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
+        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(memberTicketId)
                                                           .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 현재 로그인한 사용자(partnerUserId)와 티켓의 소유주가 같은지 확인
@@ -47,7 +47,7 @@ public class KakaoPayBusinessService {
         preemptStock(memberTicket);
 
         // 카카오페이 결제 준비 API 호출
-        KakaoPayReadyResponseDTO responseDTO = kakaoPayService.ready(ticketId, partnerUserId);
+        KakaoPayReadyResponseDTO responseDTO = kakaoPayService.ready(memberTicketId, partnerUserId);
 
         if (responseDTO == null) {
             // 재고 복구

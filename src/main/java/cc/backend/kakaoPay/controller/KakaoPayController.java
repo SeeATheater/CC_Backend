@@ -23,9 +23,9 @@ public class KakaoPayController {
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
     @Operation(summary = "카카오페이 결제 준비", description = "카카오페이 결제창 URL을 발급합니다.")
-    public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam Long ticketId,
+    public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam Long memberTicketId,
                                                        @AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(kakaoPayBusinessService.preparePayment(ticketId, String.valueOf(member.getId())));
+        return ApiResponse.onSuccess(kakaoPayBusinessService.preparePayment(memberTicketId, String.valueOf(member.getId())));
     }
 
     // 결제 승인 요청 (카카오페이 redirect 후 호출)
