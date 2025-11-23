@@ -42,7 +42,7 @@ public class KakaoPayController {
     @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "결제 중단 시 카카오 서버에서 cancel_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
     public ApiResponse<String> cancel(@RequestParam("partner_order_id") String partnerOrderId) {
         kakaoPayBusinessService.stopPayment(partnerOrderId);
-        return ApiResponse.onSuccess("결제가 취소되었습니다. (재고 복구 완료)");
+        return ApiResponse.onSuccess("결제가 취소되었습니다.");
     }
 
     // 결제 실패 (시간 초과 15분)
@@ -50,6 +50,6 @@ public class KakaoPayController {
     @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "15분간 결제 미완료 시 카카오 서버에서 fail_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
     public ApiResponse<String> fail(@RequestParam("partner_order_id") String partnerOrderId) {
         kakaoPayBusinessService.stopPayment(partnerOrderId);
-        return ApiResponse.onSuccess("결제에 실패했습니다. (재고 복구 완료)");
+        return ApiResponse.onSuccess("결제에 실패했습니다.");
     }
 }
