@@ -41,9 +41,9 @@ public class KakaoPayService {
     @Value("${kakaopay.url.fail}")
     private String failUrl;
 
-    public KakaoPayReadyResponseDTO ready(Long ticketId, String partnerUserId) {
+    public KakaoPayReadyResponseDTO ready(Long memberTicketId, String partnerUserId) {
 
-        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
+        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(memberTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 재고 상태 검증
@@ -57,13 +57,13 @@ public class KakaoPayService {
 
         KakaoPayReadyRequestDTO requestDTO = KakaoPayReadyRequestDTO.builder()
                 .cid(cid)
-                .partnerOrderId(String.valueOf(ticketId))
+                .partnerOrderId(String.valueOf(memberTicketId))
                 .partnerUserId(partnerUserId)
                 .itemName(itemName)
                 .quantity(memberTicket.getQuantity())
                 .totalAmount(memberTicket.getTotalPrice())
                 .taxFreeAmount(0)
-                .approvalUrl(approvalUrl + "?partner_order_id=" + ticketId)
+                .approvalUrl(approvalUrl + "?partner_order_id=" + memberTicketId)
                 .cancelUrl(cancelUrl)
                 .failUrl(failUrl)
                 .build();

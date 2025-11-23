@@ -90,8 +90,8 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         //티켓 예매 알림 이벤트 생성
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
 
-
-        realTicketService.createRealTicketFromMemberTicket(saved.getId());
+        // realTicket은 API를 사용해 호출
+        //realTicketService.createRealTicketFromMemberTicket(saved.getId());
         return MemberTicketCreateResponseDTO.builder()
                 .memberTicketId(saved.getId())
                 .bookingNumber(bookingNumber)
