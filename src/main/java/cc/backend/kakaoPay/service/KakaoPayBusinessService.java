@@ -16,12 +16,14 @@ import cc.backend.ticket.service.RealTicketService;
 import cc.backend.ticket.util.CancelPolicy;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class KakaoPayBusinessService {
 
     private final MemberTicketRepository memberTicketRepository;
@@ -100,6 +102,8 @@ public class KakaoPayBusinessService {
                 throw new RuntimeException("카카오페이 결제 승인 응답을 받지 못했습니다.");
             }
         } catch(Exception e) {
+            log.error("Payment approval failed for partnerOrderId={}: {}", partnerOrderId, e.getMessage(), e);
+
             // 결제 승인 실패 시 재고 복구
             amateurRoundsRepository.increaseStock(
                 memberTicket.getAmateurRound().getId(),
