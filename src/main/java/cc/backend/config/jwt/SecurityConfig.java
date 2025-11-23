@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -22,31 +24,40 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+
+        // 배포 환경
+        config.addAllowedOriginPattern("https://seeatheater.site");
+        config.addAllowedOriginPattern("https://www.seeatheater.site");
+        config.addAllowedOriginPattern("https://api.seeatheater.site");
+
+        // 개발 환경
+        config.addAllowedOriginPattern("http://localhost:*");
+
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowCredentials(true);
-                    // 실제 배포 환경 도메인
-                    config.addAllowedOrigin("https://seeatheater.site");
-                    config.addAllowedOrigin("https://www.seeatheater.site");
-                    config.addAllowedOrigin("https://api.seeatheater.site");
-
-                    // 개발 환경
-                    config.addAllowedOrigin("http://localhost:8080"); // '*' 대신 명시적 출처 사용
-                    config.addAllowedOrigin("http://localhost:5173"); // '*' 대신 명시적 출처 사용
-                    //config.addAllowedOrigin("*");
-                    config.addAllowedHeader("*");
-                    config.addAllowedMethod("*");
-                    return config;
-                }))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 비활성화
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/error").permitAll()
