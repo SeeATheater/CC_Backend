@@ -64,8 +64,8 @@ public class KakaoPayService {
                 .totalAmount(memberTicket.getTotalPrice())
                 .taxFreeAmount(0)
                 .approvalUrl(approvalUrl + "?partner_order_id=" + memberTicketId)
-                .cancelUrl(cancelUrl)
-                .failUrl(failUrl)
+                .cancelUrl(cancelUrl + "?partner_order_id=" + memberTicketId)
+                .failUrl(failUrl + "?partner_order_id=" + memberTicketId)
                 .build();
 
         // post 요청 (ready)
