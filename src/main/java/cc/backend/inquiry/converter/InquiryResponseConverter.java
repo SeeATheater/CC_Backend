@@ -19,6 +19,7 @@ public class InquiryResponseConverter {
                 .inquiryTitle(inquiry.getTitle())
                 .inquiryContent(inquiry.getContent())
                 .inquiryStatus(inquiry.getInquiryStatus().toString())
+                .repliedAt(inquiry.getRepliedAt())
                 .inquiryReply(inquiry.getReply())
                 .inquiryMemberName(inquiry.getMember().getName()).build();
     }

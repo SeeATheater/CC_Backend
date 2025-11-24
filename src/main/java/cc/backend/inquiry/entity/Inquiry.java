@@ -5,6 +5,8 @@ import cc.backend.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,6 +28,9 @@ public class Inquiry extends BaseEntity {
     private InquiryStatus inquiryStatus;
 
     private String reply;
+
+    @Column(name = "replied_at")
+    private LocalDateTime repliedAt;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

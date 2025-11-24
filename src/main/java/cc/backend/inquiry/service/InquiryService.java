@@ -42,6 +42,16 @@ public class InquiryService {
         return InquiryResponseConverter.toDetailDTO(inquiry);
     }
 
+    @Transactional
+    public void deleteInquiry(Long memberId, Long inquiryId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(()->new GeneralException(ErrorStatus.INQUIRY_NOT_FOUND));
+        if(!inquiry.getMember().getId().equals(member.getId())) {
+            throw new GeneralException(ErrorStatus.FORBIDDEN_INQUIRY_ACCESS);
+        }
+        inquiryRepository.delete(inquiry);
+    }
+
 
 
 }

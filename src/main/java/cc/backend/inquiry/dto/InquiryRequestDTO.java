@@ -17,10 +17,10 @@ public class InquiryRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateInquiryRequestDTO {
-        @Schema(description = "문의 제목")
+        @Schema(description = "문의 제목", example = "티켓 관련 문의합니다.")
         @NotBlank(message = "제목은 필수 입력 값입니다.")
         private String title;
-        @Schema(description = "문의 내용")
+        @Schema(description = "문의 내용", example = "문의 내용입니다.")
         @NotBlank(message = "내용은 필수 입력 값입니다.")
         private String content;
 
