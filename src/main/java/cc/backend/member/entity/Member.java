@@ -3,6 +3,7 @@ package cc.backend.member.entity;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.board.entity.Board;
 import cc.backend.domain.common.BaseEntity;
+import cc.backend.inquiry.entity.Inquiry;
 import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.memberLike.entity.MemberLike;
@@ -130,6 +131,10 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.address = address;
     }
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Inquiry> inquiries = new ArrayList<>();
+
 
     public void updateName(String name) {
         this.name = name;
