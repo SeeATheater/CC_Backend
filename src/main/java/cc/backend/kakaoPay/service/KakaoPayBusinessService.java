@@ -4,7 +4,6 @@ import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
-import cc.backend.kakaoPay.dto.responseDTO.KakaoPayCancelResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
@@ -17,12 +16,14 @@ import cc.backend.ticket.service.RealTicketService;
 import cc.backend.ticket.util.CancelPolicy;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class KakaoPayBusinessService {
 
     private final MemberTicketRepository memberTicketRepository;
@@ -91,13 +92,28 @@ public class KakaoPayBusinessService {
 
         // 멤버를 DB에서 추적하기
         String partnerUserId = memberTicket.getMember().getId().toString();
+        KakaoPayApproveResponseDTO responseDTO;
 
-        // 카카오페이 결제 승인 API 호출
-        KakaoPayApproveResponseDTO responseDTO = kakaoPayService.approve(tid, partnerOrderId, partnerUserId, pgToken);
+        try {
+            // 카카오페이 결제 승인 API 호출
+            responseDTO = kakaoPayService.approve(tid, partnerOrderId, partnerUserId, pgToken);
 
-        if (responseDTO == null) {
-            // 재고복구
-            throw new RuntimeException("카카오페이 결제 승인 응답을 받지 못했습니다.");
+            if (responseDTO == null) {
+                throw new RuntimeException("카카오페이 결제 승인 응답을 받지 못했습니다.");
+            }
+        } catch(Exception e) {
+            log.error("Payment approval failed for partnerOrderId={}: {}", partnerOrderId, e.getMessage(), e);
+
+            // 결제 승인 실패 시 재고 복구
+            amateurRoundsRepository.increaseStock(
+                memberTicket.getAmateurRound().getId(),
+                memberTicket.getQuantity()
+            );
+
+            memberTicket.updateReservationStatus(ReservationStatus.EXPIRED);
+            memberTicketRepository.save(memberTicket);
+
+            throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
 
         // 예약 확정 및 최종 티켓 생성
@@ -163,5 +179,28 @@ public class KakaoPayBusinessService {
         realTicketService.markTicketAsCancelled(realTicket);
 
         return RealTicketResponseDTO.from(realTicket, cancelFee, cancelAmount);
+    }
+
+    // 결제 중단(취소/실패) 시 재고 복구 로직
+    public void stopPayment(String partnerOrderId) {
+
+        Long ticketId = Long.valueOf(partnerOrderId);
+
+        MemberTicket memberTicket = memberTicketRepository.findById(ticketId)
+                                                          .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+
+        // 이미 처리된 건이면 패스
+        if (memberTicket.getReservationStatus() != ReservationStatus.PENDING) {
+            return;
+        }
+
+        // 1. 재고 복구 (증가)
+        amateurRoundsRepository.increaseStock(
+            memberTicket.getAmateurRound().getId(),
+            memberTicket.getQuantity()
+        );
+
+        // 2. 티켓 상태 변경
+        memberTicket.updateReservationStatus(ReservationStatus.EXPIRED);
     }
 }
