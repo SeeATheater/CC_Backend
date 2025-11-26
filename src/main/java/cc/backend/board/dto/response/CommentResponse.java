@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +43,12 @@ public class CommentResponse {
     @Schema(description = "현재 사용자가 좋아요 눌렀는지 여부", example = "true")
     private boolean liked;
 
+    @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "수정일시", example = "2024-01-15T14:20:00")
+    private LocalDateTime updatedAt;
+
     public static CommentResponse from(Comment comment, Long boardWriterId, boolean liked) {
         String writer;
         if (comment.getMember().getId().equals(boardWriterId)) {
@@ -60,6 +67,8 @@ public class CommentResponse {
                 .children(new ArrayList<>())
                 .likeCount(comment.getLikeCount())
                 .liked(liked)
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .build();
     }
 
@@ -80,6 +89,8 @@ public class CommentResponse {
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
                 .children(new ArrayList<>())
                 .likeCount(comment.getLikeCount())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .build();
     }
 }
