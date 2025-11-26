@@ -8,8 +8,11 @@ import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.inquiry.entity.Inquiry;
 import cc.backend.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,19 @@ public class AdminInquiryService {
         Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(()-> new GeneralException(ErrorStatus.INQUIRY_NOT_FOUND));
         inquiry.updateReply(requestDTO.getReplyContent());
         return AdminInquiryResponseConverter.toInquiryDetailDTO(inquiry);
+    }
 
+    public AdminInquiryResponseDTO.AdminInquiryListResponseDTO getInquiryList(String keyword,
+                                                                              Pageable pageable) {
+        Page<Inquiry> inquiryPage;
+        if (StringUtils.hasText(keyword)) {
+            // 제목 아니묜 내용
+            inquiryPage = inquiryRepository
+                    .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(keyword, keyword, pageable);
+        } else {
+            // 없으면
+            inquiryPage = inquiryRepository.findAll(pageable);
+        }
+        return AdminInquiryResponseConverter.toListDTO(inquiryPage);
     }
 }
