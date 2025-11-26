@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class InquiryResponseDTO {
 
@@ -51,11 +52,22 @@ public class InquiryResponseDTO {
         private String inquiryMemberName;
     }
 
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InquiryListResponseDTO {
+        private List<InquirySummaryResponseDTO> inquiryList;
+        private int page;
+        private int size;
+        private boolean hasNext;
+    }
+
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class  InquiryListResponseDTO {
+    public static class  InquirySummaryResponseDTO {
         @Schema(description = "문의 id")
         private Long inquiryId;
 

@@ -11,8 +11,12 @@ import cc.backend.inquiry.repository.InquiryRepository;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -40,6 +44,12 @@ public class InquiryService {
         }
 
         return InquiryResponseConverter.toDetailDTO(inquiry);
+    }
+
+    public InquiryResponseDTO.InquiryListResponseDTO getInquiryList(Long memberId, Pageable pageable) {
+        Member member = memberRepository.findById(memberId).orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        Slice<Inquiry> inquiries = inquiryRepository.findByMemberId(member.getId(), pageable);
+        return InquiryResponseConverter.toInquirySliceDTO(inquiries);
     }
 
     @Transactional
