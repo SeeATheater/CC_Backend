@@ -6,6 +6,7 @@ import cc.backend.amateurShow.entity.*;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.member.entity.Member;
+import org.springframework.data.domain.Slice;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -277,5 +278,33 @@ public class AmateurConverter {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public static AmateurShowResponseDTO.MyEnrolledAmateurShowDetail toMyEnrolledAmateurShowDetail(AmateurShow show) {
+
+        String schedule = mergeSchedule(show.getStart(), show.getEnd());
+        return AmateurShowResponseDTO.MyEnrolledAmateurShowDetail.builder()
+                .amateurShowId(show.getId())
+                .amateurShowName(show.getName())
+                .detailAddress(show.getDetailAddress())
+                .schedule(schedule)
+                .status(show.getStatus())
+                .rejectReason(show.getRejectReason())
+                .build();
+    }
+
+    public static AmateurShowResponseDTO.MyEnrolledAmateurShowList toMyEnrolledAmateurShowList(
+            Slice<AmateurShow> slice
+    ) {
+        List<AmateurShowResponseDTO.MyEnrolledAmateurShowDetail> shows =
+                slice.getContent().stream()
+                        .map(AmateurConverter::toMyEnrolledAmateurShowDetail)
+                        .toList();
+        return AmateurShowResponseDTO.MyEnrolledAmateurShowList.builder()
+                .shows(shows)
+                .page(slice.getNumber())
+                .size(slice.getSize())
+                .hasNext(slice.hasNext())
+                .build();
     }
 }

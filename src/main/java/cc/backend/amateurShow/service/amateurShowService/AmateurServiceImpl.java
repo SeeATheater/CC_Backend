@@ -516,35 +516,23 @@ public class AmateurServiceImpl implements AmateurService {
     }
 
     @Override
-    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyAmateurShow(Long memberId, AmateurShowStatus status, Pageable pageable) {
+    public AmateurShowResponseDTO.MyEnrolledAmateurShowList getMyAmateurShow(Long memberId, AmateurShowStatus status, Pageable pageable) {
+        // 멤버 여기서 뽑고
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-
+        // 공연자인지 한번 더 검사
         if (member.getRole() != Role.PERFORMER) {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
-
-        Slice<AmateurShow> shows;
-
+        // 여기서 슬라이싱으로 공연들 뽑아내고
+        Slice<AmateurShow> slice;
         if (status == null) {
-            shows = amateurShowRepository.findAllByMemberIdOrderByIdDesc(memberId, pageable);
+            slice = amateurShowRepository.findAllByMemberIdOrderByIdDesc(memberId, pageable);
         } else {
-            shows = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
+            slice = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
         }
 
-
-        return shows.map(show -> {
-            String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
-            return AmateurShowResponseDTO.MyShowAmateurShowList.builder()
-                    .amateurShowId(show.getId())
-                    .name(show.getName())
-                    //.place(show.getPlace())
-                    .detailAddress(show.getDetailAddress())
-                    .schedule(schedule)
-                    .posterImageUrl(show.getPosterImageUrl())
-                    .status(status)
-                    .build();
-        });
+        return AmateurConverter.toMyEnrolledAmateurShowList(slice);
     }
 
     @Override

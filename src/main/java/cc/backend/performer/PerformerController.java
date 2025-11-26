@@ -27,39 +27,39 @@ public class PerformerController {
     private final AmateurService amateurService;
     private final PerformerService performerService;
 
-    @PreAuthorize("hasRole('PERFOMER')")
+    @PreAuthorize("hasRole('PERFORMER')")
     @GetMapping("/myShow")
     @Operation(summary = "내가 등록한 공연 조회", description = "등록자 계정으로 등록한 공연들을 무한 스크롤 방식으로 조회합니다.")
-    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyShows(
+    public ApiResponse<AmateurShowResponseDTO.MyEnrolledAmateurShowList> getMyShows(
             @Parameter(description = "작성자 회원 ID", required = true)
             @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
-            @RequestParam int page,
-            @Parameter(description = "페이지 크기", required = true)
-            @RequestParam int size,
-            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: ONGOING, 공연 종료: ENDED)", required = false)
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "공연 상태 필터 (전체: null, 예매 진행 중: ONGOING, 공연 종료: ENDED, 반려 : REJECTED)")
             @RequestParam(required = false) AmateurShowStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
+        return ApiResponse.onSuccess(amateurService.getMyAmateurShow(member.getId(), status, pageable));
     }
 
-    @PreAuthorize("hasRole('PERFORMER')")
-    @GetMapping("/myPage/reserveList")
-    @Operation(summary = "예매 내역 조회 첫화면", description = "등록자 계정으로 예매내역 조회를 누를시 나오는 첫화면입니다.")
-    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getReserveList(
-            @Parameter(description = "작성자 회원 ID", required = true)
-            @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
-            @RequestParam int page,
-            @Parameter(description = "페이지 크기", required = true)
-            @RequestParam int size,
-            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: ONGOING, 공연 종료: ENDED)", required = false)
-            @RequestParam(required = false) AmateurShowStatus status
-    ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
-    }
+//    @PreAuthorize("hasRole('PERFORMER')")
+//    @GetMapping("/myPage/reserveList")
+//    @Operation(summary = "예매 내역 조회 첫화면", description = "등록자 계정으로 예매내역 조회를 누를시 나오는 첫화면입니다.")
+//    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getReserveList(
+//            @Parameter(description = "작성자 회원 ID", required = true)
+//            @AuthenticationPrincipal(expression = "member") Member member,
+//            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
+//            @RequestParam int page,
+//            @Parameter(description = "페이지 크기", required = true)
+//            @RequestParam int size,
+//            @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: ONGOING, 공연 종료: ENDED)", required = false)
+//            @RequestParam(required = false) AmateurShowStatus status
+//    ) {
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+//        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
+//    }
 
     @PreAuthorize("hasRole('PERFORMER')")
     @GetMapping("/{amateurShowId}")
