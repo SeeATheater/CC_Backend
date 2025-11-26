@@ -36,4 +36,10 @@ public class Inquiry extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
+
+    public void updateReply(String reply) {
+        this.reply = reply;
+        this.repliedAt = LocalDateTime.now();
+        this.inquiryStatus = InquiryStatus.REPLIED;
+    }
 }
