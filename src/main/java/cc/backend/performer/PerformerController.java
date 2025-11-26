@@ -5,6 +5,7 @@ import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.member.entity.Member;
+import cc.backend.performer.dto.PerformerEnrolledShowResponseDTO;
 import cc.backend.performer.dto.ShowReservationResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ public class PerformerController {
     @PreAuthorize("hasRole('PERFORMER')")
     @GetMapping("/myShow")
     @Operation(summary = "내가 등록한 공연 조회", description = "등록자 계정으로 등록한 공연들을 무한 스크롤 방식으로 조회합니다.")
-    public ApiResponse<AmateurShowResponseDTO.MyEnrolledAmateurShowList> getMyShows(
+    public ApiResponse<PerformerEnrolledShowResponseDTO.MyEnrolledAmateurShowList> getMyShows(
             @Parameter(description = "작성자 회원 ID", required = true)
             @AuthenticationPrincipal(expression = "member") Member member,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
@@ -41,7 +42,7 @@ public class PerformerController {
             @RequestParam(required = false) AmateurShowStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return ApiResponse.onSuccess(amateurService.getMyAmateurShow(member.getId(), status, pageable));
+        return ApiResponse.onSuccess(performerService.getMyAmateurShow(member.getId(), status, pageable));
     }
 
 //    @PreAuthorize("hasRole('PERFORMER')")

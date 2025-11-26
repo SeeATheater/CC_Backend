@@ -515,25 +515,7 @@ public class AmateurServiceImpl implements AmateurService {
         return result;
     }
 
-    @Override
-    public AmateurShowResponseDTO.MyEnrolledAmateurShowList getMyAmateurShow(Long memberId, AmateurShowStatus status, Pageable pageable) {
-        // 멤버 여기서 뽑고
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-        // 공연자인지 한번 더 검사
-        if (member.getRole() != Role.PERFORMER) {
-            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
-        }
-        // 여기서 슬라이싱으로 공연들 뽑아내고
-        Slice<AmateurShow> slice;
-        if (status == null) {
-            slice = amateurShowRepository.findAllByMemberIdOrderByIdDesc(memberId, pageable);
-        } else {
-            slice = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
-        }
 
-        return AmateurConverter.toMyEnrolledAmateurShowList(slice);
-    }
 
     @Override
     public List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow (Long memberId){

@@ -27,7 +27,6 @@ public interface AmateurService {
     List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId);
 
 
-    AmateurShowResponseDTO.MyEnrolledAmateurShowList getMyAmateurShow(Long memberId, AmateurShowStatus showStatus, Pageable pageable);
 
    // ReserveListResponseDTO getReserveListDetail(Long amateurShowId, Long memberId);
 }

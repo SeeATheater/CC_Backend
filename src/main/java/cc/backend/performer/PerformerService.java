@@ -2,6 +2,7 @@ package cc.backend.performer;
 
 
 import cc.backend.amateurShow.converter.AmateurConverter;
+import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
@@ -9,7 +10,10 @@ import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.performer.dto.PerformerMyShowResponseDTO;
+import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
+import cc.backend.member.repository.MemberRepository;
+import cc.backend.performer.dto.PerformerEnrolledShowResponseDTO;
 import cc.backend.performer.dto.ShowReservationResponseDTO;
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
@@ -31,6 +35,7 @@ public class PerformerService {
     private final AmateurShowRepository amateurShowRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final RealTicketRepository realTicketRepository;
+    private final MemberRepository  memberRepository;
 /*    public Slice<PerformerMyShowResponseDTO> getMyShows(Long memberId, String tab, Pageable pageable) {
 
         Slice<AmateurShow> slice;
@@ -54,6 +59,24 @@ public class PerformerService {
         return slice.map(PerformerMyShowResponseDTO::from);
         }*/
 
+    public PerformerEnrolledShowResponseDTO.MyEnrolledAmateurShowList getMyAmateurShow(Long memberId, AmateurShowStatus status, Pageable pageable) {
+        // 멤버 여기서 뽑고
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        // 공연자인지 한번 더 검사
+        if (member.getRole() != Role.PERFORMER) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
+        }
+        // 여기서 슬라이싱으로 공연들 뽑아내고
+        Slice<AmateurShow> slice;
+        if (status == null) {
+            slice = amateurShowRepository.findAllByMemberIdOrderByIdDesc(memberId, pageable);
+        } else {
+            slice = amateurShowRepository.findAllByMemberIdAndStatusOrderByIdDesc(memberId, status, pageable);
+        }
+
+        return AmateurConverter.toMyEnrolledAmateurShowList(slice);
+    }
     public ShowReservationResponseDTO getShowReservationList(Long amateurShowId, Long roundId) {
 
         // 1) 공연 로드
