@@ -78,7 +78,6 @@ public class BoardService {
         Board savedBoard = boardRepository.save(board);
 
         //이미지 저장
-        List<String> imgUrls = new ArrayList<>();
         if (dto.getImageRequestDTOs() != null && !dto.getImageRequestDTOs().isEmpty()) {
             List<ImageRequestDTO.FullImageRequestDTO> fullImageRequestDTOs = dto.getImageRequestDTOs()
                     .stream()
@@ -90,11 +89,13 @@ public class BoardService {
                             .build())
                     .collect(Collectors.toList());
 
-            List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> savedImages = imageService.saveImages(memberId, fullImageRequestDTOs);
-            imgUrls = savedImages.stream()
-                    .map(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getPresignedUrl)
-                    .collect(Collectors.toList());
+            imageService.saveImages(memberId, fullImageRequestDTOs);
         }
+
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.board, board.getId());
+        List<String> imgUrls = imageService.getImages(images, memberId).stream()
+                .map(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getPresignedUrl)
+                .toList();
 
         return BoardResponse.builder()
                 .boardId(savedBoard.getId())
@@ -126,10 +127,12 @@ public class BoardService {
         }
 
         // 수정된 이미지 URL 목록 조회
-        List<String> updatedImgUrls = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId)
-                .stream()
-                .map(Image::getImageUrl)
-                .collect(Collectors.toList());
+        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId);
+
+        List<String> updatedImgUrls = imageService.getImages(images, memberId).stream()
+                .map(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getPresignedUrl)
+                .toList();
+
 
         return BoardResponse.builder()
                 .boardId(board.getId())
@@ -211,8 +214,13 @@ public class BoardService {
             liked = boardLikeRepository.existsByMemberIdAndBoardId(memberId, boardId);
         }
 
-        List<Image> BoardImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId);
-        List<String> imgUrls = BoardImages.stream().map(Image::getImageUrl).collect(Collectors.toList());
+        List<Image> boardImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, boardId);
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageResults =
+                imageService.getImages(boardImages, memberId);
+
+        List<String> imgUrls = imageResults.stream()
+                .map(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getPresignedUrl)
+                .toList();
 
         return BoardDetailResponse.from(board,liked, imgUrls);
     }
@@ -405,12 +413,16 @@ public class BoardService {
         // 배치로 첫 번째 이미지 조회
         List<Image> firstImages = imageRepository.findFirstByContentIds(boardIds, FilePath.board);
 
-        // contentId를 키로, imageUrl을 값으로 하는 Map 생성
-        return firstImages.stream()
-                .collect(Collectors.toMap(
-                        Image::getContentId,
-                        Image::getImageUrl,
-                        (existing, replacement) -> existing // 중복 키가 있으면 기존 값 유지
-                ));
+        // 첫번째 이미지url 발급
+        Map<Long, String> map = new HashMap<>();
+        for (Image img : firstImages) {
+            String presignedUrl = imageService.getImages(List.of(img), img.getMemberId())
+                    .get(0)
+                    .getPresignedUrl();
+
+            map.put(img.getContentId(), presignedUrl);
+        }
+
+        return map;
     }
 }
