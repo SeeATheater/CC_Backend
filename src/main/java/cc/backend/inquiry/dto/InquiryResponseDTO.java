@@ -42,10 +42,10 @@ public class InquiryResponseDTO {
         @Schema(description = "문의 상태")
         private String inquiryStatus;
 
-        @Schema(description = "문의 답변 날짜")
+        @Schema(description = "문의 답변 날짜", nullable = true)
         private LocalDateTime repliedAt;
 
-        @Schema(description = "문의 답변 내용")
+        @Schema(description = "문의 답변 내용", nullable = true)
         private String inquiryReply;
 
         @Schema(description = "등록자 이름")

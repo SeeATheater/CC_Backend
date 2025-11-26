@@ -36,7 +36,7 @@ public class AdminInquiryService {
                                                                               Pageable pageable) {
         Page<Inquiry> inquiryPage;
         if (StringUtils.hasText(keyword)) {
-            // 제목 아니묜 내용
+            // 제목 or 내용
             inquiryPage = inquiryRepository
                     .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(keyword, keyword, pageable);
         } else {
