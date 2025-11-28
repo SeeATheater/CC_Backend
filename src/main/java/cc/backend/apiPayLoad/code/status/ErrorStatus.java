@@ -108,6 +108,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBERNOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBERNOTICE4001", "존재하지 않는 알림입니다."),
     // INQUIRY ERROR
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다."),
+    FORBIDDEN_INQUIRY_ACCESS(HttpStatus.NOT_FOUND, "INQUIRY4001", "로그인한 멤버가 작성하지 않는 문의글입니다."),
 
     // MEMBER LIKE ERROR
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE4001", "존재하지 않는 좋아요입니다."),
