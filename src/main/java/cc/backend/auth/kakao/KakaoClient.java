@@ -29,7 +29,7 @@ public class KakaoClient {
                 .build();
     }
 
-    public KakaoTokenResponse getAccessToken(String authorizationCode) {
+    public KakaoTokenResponse getAccessToken(String authorizationCode, String redirectUri) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", kakaoProperties.getClientId());
@@ -39,7 +39,7 @@ public class KakaoClient {
             params.add("client_secret", kakaoProperties.getClientSecret());
         }
 
-        params.add("redirect_uri", kakaoProperties.getRedirectUri());
+        params.add("redirect_uri", redirectUri);
         params.add("code", authorizationCode);
 
 

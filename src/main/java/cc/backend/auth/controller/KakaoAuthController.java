@@ -24,7 +24,7 @@ public class KakaoAuthController {
     public ResponseEntity<TokenDTO> kakaoCallback(
             @Valid @RequestBody KakaoCallbackRequest request) {
 
-        TokenDTO tokenDto = authService.kakaoLogin(request.getCode(), request.getRole());
+        TokenDTO tokenDto = authService.kakaoLogin(request.getCode(), request.getRedirectUri(), request.getRole());
 
         return ResponseEntity.ok(tokenDto);
     }
