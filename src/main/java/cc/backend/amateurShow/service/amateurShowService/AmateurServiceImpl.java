@@ -85,16 +85,16 @@ public class AmateurServiceImpl implements AmateurService {
                 .build();
         imageService.saveImage(memberId, fullImageRequestDTO);
 
-        // 좋아요한 멤버리스트
-        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
-        // 좋아요한 멤버가 한 명 이상일 때만
-        if(!memberLikers.isEmpty()) {
-            List<Member> likers = memberLikers.stream()
-                    .map(MemberLike::getLiker)
-                    .collect(Collectors.toList());
-
-            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
-        }
+//        // 좋아요한 멤버리스트
+//        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
+//        // 좋아요한 멤버가 한 명 이상일 때만
+//        if(!memberLikers.isEmpty()) {
+//            List<Member> likers = memberLikers.stream()
+//                    .map(MemberLike::getLiker)
+//                    .collect(Collectors.toList());
+//
+//            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
+//        }
 
         // response
         return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
@@ -131,6 +131,7 @@ public class AmateurServiceImpl implements AmateurService {
                     .memberId(memberId)
                     .build();
 
+            imageService.saveImage(memberId, fullImageRequestDTO);
         }
 
         // 티켓
