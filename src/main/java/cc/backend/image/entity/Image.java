@@ -37,10 +37,11 @@ public class Image {
 
     // 버킷 내 디렉토리 경로 (board, photoAlbum)
     @Enumerated(EnumType.STRING)
+    @Column(length = 12, nullable = false)
     private FilePath filePath;
 
     // board 와 photoAlbum 각각의 id (매핑없이 식별용)
-    @Column(name = "content_id")
+    @Column(name = "content_id", nullable = false)
     private Long contentId;
 
     // 업로드 시간

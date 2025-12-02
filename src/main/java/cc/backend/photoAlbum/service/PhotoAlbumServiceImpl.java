@@ -179,10 +179,14 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     @Transactional
     public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId){
         memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         PhotoAlbum photoAlbum = photoAlbumRepository.findById(photoAlbumId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PHOTOALBUM_NOT_FOUND));
+
+        if(!memberId.equals(photoAlbum.getAmateurShow().getMember().getId())) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
 
         AmateurShow amateurShow = amateurShowRepository.findById(requestDTO.getAmateurShowId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
