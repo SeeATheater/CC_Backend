@@ -76,7 +76,6 @@ public class S3Service {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(keyName)
-                .contentType(mimeType)
                 .build();
 
         PresignedPutObjectRequest presignedRequest =
@@ -104,9 +103,10 @@ public class S3Service {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        if (keyName == null || keyName.isBlank()) {
-            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
-        }
+        //예외처리 필요-추후개발(사진 업로드할때 아무것도 안넣으면 url 필드가 비어서 get할때도 계속 에러남 - 막아두거나 따로 처리해야할듯)
+//        if (keyName == null || keyName.isBlank()) {
+//            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
+//        }
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
