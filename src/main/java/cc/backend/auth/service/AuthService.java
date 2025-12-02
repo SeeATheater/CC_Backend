@@ -32,9 +32,9 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final Random random = new Random();
 
-    public TokenDTO kakaoLogin(String authorizationCode, Role role) {
+    public TokenDTO kakaoLogin(String authorizationCode, String redirectUri,Role role) {
         // 인가 코드로 액세스 토큰 획득
-        KakaoTokenResponse tokenResponse = kakaoClient.getAccessToken(authorizationCode);
+        KakaoTokenResponse tokenResponse = kakaoClient.getAccessToken(authorizationCode, redirectUri);
 
         KakaoUserInfo userInfo = kakaoClient.getUserInfo(tokenResponse.getAccessToken());
 

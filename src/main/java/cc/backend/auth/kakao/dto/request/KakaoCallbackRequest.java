@@ -15,5 +15,8 @@ public class KakaoCallbackRequest {
     private String code;
 
     @NotNull
+    private String redirectUri;
+
+    @NotNull
     private Role role;
 }
