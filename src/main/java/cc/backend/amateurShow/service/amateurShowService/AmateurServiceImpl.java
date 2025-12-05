@@ -24,11 +24,10 @@ import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -411,7 +410,7 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 현재 진행중인 소극장 공연 리스트 조회
     @Override
-    public Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable) {
+    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
@@ -444,7 +443,15 @@ public class AmateurServiceImpl implements AmateurService {
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), result.size());
-        return new PageImpl<>(result.subList(start, end), pageable, result.size());
+
+        List<AmateurShowResponseDTO.AmateurShowList> content = new ArrayList<>();
+        if (start < result.size()) {
+            content = result.subList(start, end);
+        }
+
+        boolean hasNext = end < result.size();
+
+        return new SliceImpl<>(content, pageable, hasNext);
     }
 
     // 소극장 공연 랭킹 리스트 조회

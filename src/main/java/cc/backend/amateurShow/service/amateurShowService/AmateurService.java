@@ -6,7 +6,6 @@ import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ public interface AmateurService {
     AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long memberId, Long showId, AmateurUpdateRequestDTO requestDTO);
     void deleteShow(Long memberId, Long amateurShowId);
     List<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId);
-    Page<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable);
+    Slice<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable);
     List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId);
     List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow(Long memberId);
     List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId);
