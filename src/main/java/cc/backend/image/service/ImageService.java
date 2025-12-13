@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 @Slf4j
 @Service
@@ -52,6 +53,30 @@ public class ImageService {
                 .contentId(requestDTO.getContentId())
                 .uploadedAt(LocalDateTime.now())
                 .memberId(memberId)
+                .build();
+
+        Image newImage = imageRepository.save(image);
+
+        return getImage(newImage.getKeyName(), memberId);
+    }
+
+    @Transactional
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImageWithImageUrl(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO, Optional<String> imageUrlOpt) {
+
+        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+        //S3에 실제 존재하는 이미지인지 검증
+        if(!s3Service.doesObjectExist(requestDTO.getKeyName(), memberId)) {
+            throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
+        }
+
+        String imageUrl = imageUrlOpt.orElse("");
+        Image image = Image.builder()
+                .keyName(requestDTO.getKeyName())
+                .filePath(requestDTO.getFilePath())
+                .contentId(requestDTO.getContentId())
+                .uploadedAt(LocalDateTime.now())
+                .memberId(memberId)
+                .imageUrl(imageUrl)
                 .build();
 
         Image newImage = imageRepository.save(image);
@@ -159,6 +184,45 @@ public class ImageService {
             // 로깅만 하고 예외 발생은 안 시킴
             log.error("S3 삭제 실패: {}", image.getKeyName(), e);
         }
+    }
+
+    @Transactional
+    public void updateImage(
+            Long memberId,
+            String keyName,
+            Optional<String> imageUrlOpt,
+            Long contentId,
+            FilePath filePath
+    ) {
+        if (keyName == null || keyName.isBlank()) {
+            return; // keyName 없으면 처리하지 않음
+        }
+
+        String imageUrl = imageUrlOpt.orElse("");
+
+        // 기존 이미지 조회 (filePath + contentId 기준)
+        Image existingImage = imageRepository
+                .findAllByFilePathAndContentId(filePath, contentId)
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        // 기존 이미지가 있고, keyName이 다르면 삭제 후 새로 저장
+        if (existingImage != null && !existingImage.getKeyName().equals(keyName)) {
+            deleteImage(existingImage.getId(), memberId);
+        }
+
+        // 새 이미지 저장
+        Image image = Image.builder()
+                .keyName(keyName)
+                .imageUrl(imageUrl)
+                .filePath(filePath)
+                .contentId(contentId)
+                .uploadedAt(LocalDateTime.now())
+                .memberId(memberId)
+                .build();
+
+        imageRepository.save(image);
     }
 
 }

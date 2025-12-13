@@ -83,18 +83,20 @@ public class AmateurServiceImpl implements AmateurService {
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
-        imageService.saveImage(memberId, fullImageRequestDTO);
 
-//        // 좋아요한 멤버리스트
-//        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
-//        // 좋아요한 멤버가 한 명 이상일 때만
-//        if(!memberLikers.isEmpty()) {
-//            List<Member> likers = memberLikers.stream()
-//                    .map(MemberLike::getLiker)
-//                    .collect(Collectors.toList());
-//
-//            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
-//        }
+        imageService.saveImageWithImageUrl(memberId, fullImageRequestDTO, Optional.ofNullable(dto.getImageUrl()));
+
+
+        // 좋아요한 멤버리스트
+        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
+        // 좋아요한 멤버가 한 명 이상일 때만
+        if(!memberLikers.isEmpty()) {
+            List<Member> likers = memberLikers.stream()
+                    .map(MemberLike::getLiker)
+                    .collect(Collectors.toList());
+
+            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
+        }
 
         // response
         return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
@@ -115,8 +117,13 @@ public class AmateurServiceImpl implements AmateurService {
                         .contentId(amateurShow.getId())
                         .memberId(memberId)
                         .build();
-                imageService.saveImage(memberId, fullImageRequestDTO);
-            });
+
+                imageService.saveImageWithImageUrl(
+                        memberId,
+                        fullImageRequestDTO,
+                        Optional.ofNullable(amateurCasting.getCastingImageUrl()));
+            }
+            );
         }
 
         // 공지사항
@@ -131,7 +138,10 @@ public class AmateurServiceImpl implements AmateurService {
                     .memberId(memberId)
                     .build();
 
-            imageService.saveImage(memberId, fullImageRequestDTO);
+            imageService.saveImageWithImageUrl(
+                    memberId,
+                    fullImageRequestDTO,
+                    Optional.ofNullable(requestDTO.getNotice().getNoticeImageRequestDTO().getImageUrl()));
         }
 
         // 티켓
@@ -170,32 +180,17 @@ public class AmateurServiceImpl implements AmateurService {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
         }
 
-        //포스터 사진 수정
         ImageRequestDTO.PosterImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
         if (dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()) {
-            // 현재 포스터 이미지 조회 (show당 1개)
-            Image existingImage = imageRepository
-                    .findAllByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId())
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            imageService.updateImage(
+                    memberId,
+                    dto.getKeyName(),
+                    Optional.ofNullable(dto.getImageUrl()),
+                    amateurShow.getId(),
+                    FilePath.amateurShow
+            );
 
-            // 기존 keyName과 다르면 기존 이미지 삭제 후 교체
-            if (existingImage != null && !existingImage.getKeyName().equals(dto.getKeyName())) {
-                imageService.deleteImage(existingImage.getId(), memberId);
-            }
-
-            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                    .keyName(dto.getKeyName())
-                    .filePath(FilePath.amateurShow)
-                    .contentId(amateurShow.getId())
-                    .memberId(memberId)
-                    .build();
-
-            imageService.saveImage(memberId, fullImageRequestDTO);
-            //amateurShow 엔티티 내 posterImageUrl 필드 수정
             amateurShow.updatePosterImageUrl(dto.getImageUrl());
-
         }
 
         // 기본 정보 업데이트
@@ -234,6 +229,18 @@ public class AmateurServiceImpl implements AmateurService {
                 }
             }
         }
+
+        //NoticeImage 수정
+        ImageRequestDTO.NoticeImageRequestDTO dto = Objects.requireNonNull(noticeDTO).getNoticeImageRequestDTO();
+        if (dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()) {
+            imageService.updateImage(
+                    amateurShow.getMember().getId(),
+                    dto.getKeyName(),
+                    Optional.ofNullable(dto.getImageUrl()),
+                    amateurShow.getId(),
+                    FilePath.amateurShow
+            );
+        }
     }
 
     private void updateCasting(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateCasting> dtos) {
@@ -257,6 +264,18 @@ public class AmateurServiceImpl implements AmateurService {
                 AmateurCasting newCasting = AmateurConverter.toSingleCasting(dto, show);
                 updatedList.add(newCasting);
             }
+
+            // 캐스팅 이미지 업데이트
+            ImageRequestDTO.CastingImageRequestDTO castingDTO = dto.getCastingImageRequestDTO();
+            if (castingDTO != null && castingDTO.getKeyName() != null && !castingDTO.getKeyName().isBlank()) {
+                imageService.updateImage(
+                        show.getMember().getId(),
+                        castingDTO.getKeyName(),
+                        Optional.ofNullable(castingDTO.getImageUrl()),
+                        show.getId(),
+                        FilePath.amateurShow
+                );
+            }
         }
 
         // 삭제
@@ -267,6 +286,7 @@ public class AmateurServiceImpl implements AmateurService {
         // 최종 리스트 갱신
         show.getAmateurCastingList().clear();
         show.getAmateurCastingList().addAll(updatedList);
+
     }
 
     private void updateStaff(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateStaff> dtos) {
