@@ -61,7 +61,10 @@ public class ImageService {
     }
 
     @Transactional
-    public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImageWithImageUrl(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO, Optional<String> imageUrlOpt) {
+    public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImageWithImageUrl(
+            Long memberId,
+            ImageRequestDTO.FullImageRequestDTO requestDTO,
+            Optional<String> imageUrlOpt) {
 
         memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
         //S3에 실제 존재하는 이미지인지 검증
@@ -186,32 +189,36 @@ public class ImageService {
         }
     }
 
+    //amateurShow(poster, notice, casting) 이미지 수정
     @Transactional
-    public void updateImage(
+    public void updateShowImage(
             Long memberId,
             String keyName,
             Optional<String> imageUrlOpt,
             Long contentId,
-            FilePath filePath
-    ) {
+            FilePath filePath) {
         if (keyName == null || keyName.isBlank()) {
             return; // keyName 없으면 처리하지 않음
         }
 
-        String imageUrl = imageUrlOpt.orElse("");
+        if (!s3Service.doesObjectExist(keyName, memberId)) {
+            throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
+        }
+        String imageUrl = imageUrlOpt.orElse(null);
 
         // 기존 이미지 조회 (filePath + contentId 기준)
         Image existingImage = imageRepository
-                .findAllByFilePathAndContentId(filePath, contentId)
-                .stream()
-                .findFirst()
-                .orElse(null);
+                .findByFilePathAndContentId(filePath, contentId);
 
         // 기존 이미지가 있고, keyName이 다르면 삭제 후 새로 저장
-        if (existingImage != null && !existingImage.getKeyName().equals(keyName)) {
-            deleteImage(existingImage.getId(), memberId);
+        if (existingImage != null) {
+            // keyName 변경이면 S3/DB 모두 삭제
+            if (!existingImage.getKeyName().equals(keyName)) {
+                deleteImage(existingImage.getId(), memberId);}
+            else {// 같은 keyName이면 DB row만 교체(중복 방지), S3는 유지
+                imageRepository.delete(existingImage);
+            }
         }
-
         // 새 이미지 저장
         Image image = Image.builder()
                 .keyName(keyName)

@@ -30,7 +30,7 @@ public class S3Controller {
     @GetMapping("/uploadUrl")
     public ResponseEntity<Map<String, String>> getPresignedPutUrl(
             @Parameter(description = "업로드할 이미지 파일의 확장자(jpg, jpeg, png, gif)", required = true) @RequestParam @NotBlank String imageExtension,
-            @Parameter(description = "업로드할 기능(board, photoAlbum, amateurShow)", required = true) @RequestParam FilePath filePath,
+            @Parameter(description = "업로드할 사진 종류(board, photoAlbum, amateurShow(포스터), notice, casting)", required = true) @RequestParam FilePath filePath,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         return ResponseEntity.ok(s3Service.createPresignedPutUrl(imageExtension, filePath, member.getId()));
@@ -46,7 +46,7 @@ public class S3Controller {
     public ResponseEntity<List<Map<String, String>>> getPresignedPutUrls (
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "각 이미지의 확장자 jpg, jpeg, png, gif ...", required = true) @RequestBody List<@NotBlank String> extensions,
-            @Parameter(description = "업로드할 기능(board, photoAlbum, amateurShow)", required = true) @RequestParam FilePath filePath,
+            @Parameter(description = "업로드할 기능(board, photoAlbum)", required = true) @RequestParam FilePath filePath,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         return ResponseEntity.ok(s3Service.createPresignedPutUrls(extensions, filePath, member.getId()));

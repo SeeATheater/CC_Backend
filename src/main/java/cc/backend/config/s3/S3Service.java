@@ -65,13 +65,13 @@ public class S3Service {
             throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
         }
 
-        // MIME 타입 처리 (jpg는 image/jpeg)
-        String mimeType = switch (ext) {
-            case "jpg", "jpeg" -> "image/jpeg";
-            case "png" -> "image/png";
-            case "gif" -> "image/gif";
-            default -> throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
-        };
+//        // MIME 타입 처리 (jpg는 image/jpeg)
+//        String mimeType = switch (ext) {
+//            case "jpg", "jpeg" -> "image/jpeg";
+//            case "png" -> "image/png";
+//            case "gif" -> "image/gif";
+//            default -> throw new GeneralException(ErrorStatus.INVALID_FILE_EXTENSION);
+//        };
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
