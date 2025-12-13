@@ -83,6 +83,9 @@ public class S3Controller {
     @Operation(summary = "keyName에 해당하는 파일이 S3에 실제 존재하는지 확인")
     public ResponseEntity<Boolean> doesObjectExist(@RequestParam String keyName,
                                                    @AuthenticationPrincipal(expression = "member") Member member){
+        if(keyName == null){
+            return ResponseEntity.ok(false);
+        }
         return ResponseEntity.ok(s3Service.doesObjectExist(keyName, member.getId()));
     }
 }

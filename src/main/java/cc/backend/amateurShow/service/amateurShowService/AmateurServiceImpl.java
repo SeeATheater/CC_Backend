@@ -77,6 +77,12 @@ public class AmateurServiceImpl implements AmateurService {
 
         //posterImageUrl 필드는 이미 Converter에서 기입, 포스터 사진 DB에만 저장(1개만)
         ImageRequestDTO.PosterImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
+
+        //poster 이미지는 없으면 에러
+        if(dto.getKeyName() == null){
+            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
+        }
+
         ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                 .keyName(dto.getKeyName())
                 .filePath(FilePath.amateurShow)
@@ -111,6 +117,12 @@ public class AmateurServiceImpl implements AmateurService {
             List<AmateurCasting> amateurCastings = amateurCastingRepository.saveAll(castings);
             // 캐스팅 사진 저장(1개씩)
             amateurCastings.forEach(amateurCasting -> {
+                String keyName = amateurCasting.getCastingImageKeyName();
+                // keyName 없으면 스킵
+                if (keyName == null || keyName.isBlank()) {
+                    return;
+                }
+
                 ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                         .keyName(amateurCasting.getCastingImageKeyName())
                         .filePath(FilePath.amateurShow)
@@ -121,9 +133,9 @@ public class AmateurServiceImpl implements AmateurService {
                 imageService.saveImageWithImageUrl(
                         memberId,
                         fullImageRequestDTO,
-                        Optional.ofNullable(amateurCasting.getCastingImageUrl()));
-            }
-            );
+                        Optional.ofNullable(amateurCasting.getCastingImageUrl())
+                );
+            });
         }
 
         // 공지사항
@@ -131,17 +143,22 @@ public class AmateurServiceImpl implements AmateurService {
         if (amateurNotice != null) {
             amateurNoticeRepository.save(amateurNotice);
 
-            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                    .keyName(requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName())
-                    .filePath(FilePath.amateurShow)
-                    .contentId(amateurShow.getId())
-                    .memberId(memberId)
-                    .build();
+            String keyName = requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName();
+            //keyName 비었으면 스킵
+            if (keyName != null && !keyName.isBlank()) {
+                ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                        .keyName(requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName())
+                        .filePath(FilePath.amateurShow)
+                        .contentId(amateurShow.getId())
+                        .memberId(memberId)
+                        .build();
 
-            imageService.saveImageWithImageUrl(
-                    memberId,
-                    fullImageRequestDTO,
-                    Optional.ofNullable(requestDTO.getNotice().getNoticeImageRequestDTO().getImageUrl()));
+                imageService.saveImageWithImageUrl(
+                        memberId,
+                        fullImageRequestDTO,
+                        Optional.ofNullable(requestDTO.getNotice().getNoticeImageRequestDTO().getImageUrl())
+                );
+            }
         }
 
         // 티켓
