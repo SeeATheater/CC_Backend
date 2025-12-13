@@ -286,7 +286,7 @@ public class AmateurServiceImpl implements AmateurService {
                 // 새 객체 추가
                 AmateurCasting newCasting = AmateurConverter.toSingleCasting(dto, show);
                 AmateurCasting savedCasting = amateurCastingRepository.save(newCasting);
-                updatedList.add(newCasting);
+                updatedList.add(savedCasting);
 
                 contentId = savedCasting.getId();
             }

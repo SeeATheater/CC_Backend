@@ -56,7 +56,7 @@ public class ImageService {
             throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
         }
 
-        String imageUrl = imageUrlOpt.orElse("");
+        String imageUrl = imageUrlOpt.orElse(null);
         Image image = Image.builder()
                 .keyName(requestDTO.getKeyName())
                 .filePath(requestDTO.getFilePath())
