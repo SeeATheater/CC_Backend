@@ -143,11 +143,11 @@ public class AmateurServiceImpl implements AmateurService {
         if (amateurNotice != null) {
             amateurNoticeRepository.save(amateurNotice);
 
-            String keyName = requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName();
+            ImageRequestDTO.NoticeImageRequestDTO noticeImageDTO = requestDTO.getNotice().getNoticeImageRequestDTO();
             //keyName 비었으면 스킵
-            if (keyName != null && !keyName.isBlank()) {
+            if (noticeImageDTO != null && noticeImageDTO.getKeyName() != null && !noticeImageDTO.getKeyName().isBlank()) {
                 ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                        .keyName(requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName())
+                        .keyName(noticeImageDTO.getKeyName())
                         .filePath(FilePath.notice)
                         .contentId(amateurNotice.getId())
                         .memberId(memberId)
@@ -156,7 +156,7 @@ public class AmateurServiceImpl implements AmateurService {
                 imageService.saveImageWithImageUrl(
                         memberId,
                         fullImageRequestDTO,
-                        Optional.ofNullable(requestDTO.getNotice().getNoticeImageRequestDTO().getImageUrl())
+                        Optional.ofNullable(noticeImageDTO.getImageUrl())
                 );
             }
         }
@@ -250,13 +250,14 @@ public class AmateurServiceImpl implements AmateurService {
         //NoticeImage 수정
         if (noticeDTO == null) return;
 
+        AmateurNotice notice = amateurShow.getAmateurNotice();
         ImageRequestDTO.NoticeImageRequestDTO dto = noticeDTO.getNoticeImageRequestDTO();
-        if (dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()) {
+        if (notice != null && dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()){
             imageService.updateShowImage(
                     amateurShow.getMember().getId(),
                     dto.getKeyName(),
                     Optional.ofNullable(dto.getImageUrl()),
-                    noticeDTO.getNoticeId(),
+                    notice.getId(),
                     FilePath.notice
             );
         }
@@ -272,17 +273,24 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurCasting> updatedList = new ArrayList<>();
 
         for (AmateurUpdateRequestDTO.UpdateCasting dto : dtos) {
+            Long contentId;
+
             if (dto.getCastingId() != null && existingMap.containsKey(dto.getCastingId())) {
                 // 기존 객체 수정
                 AmateurCasting existing = existingMap.get(dto.getCastingId());
                 existing.update(dto);
                 updatedList.add(existing);
                 existingMap.remove(dto.getCastingId());
+                contentId = existing.getId();
             } else {
                 // 새 객체 추가
                 AmateurCasting newCasting = AmateurConverter.toSingleCasting(dto, show);
+                AmateurCasting savedCasting = amateurCastingRepository.save(newCasting);
                 updatedList.add(newCasting);
+
+                contentId = savedCasting.getId();
             }
+
 
             // 캐스팅 이미지 업데이트
             ImageRequestDTO.CastingImageRequestDTO castingDTO = dto.getCastingImageRequestDTO();
@@ -291,7 +299,7 @@ public class AmateurServiceImpl implements AmateurService {
                         show.getMember().getId(),
                         castingDTO.getKeyName(),
                         Optional.ofNullable(castingDTO.getImageUrl()),
-                        dto.getCastingId(),
+                        contentId,
                         FilePath.casting
                 );
             }

@@ -41,23 +41,7 @@ public class ImageService {
     @Transactional
     public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImage(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO) {
 
-        memberRepository.findById(memberId).orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-        //S3에 실제 존재하는 이미지인지 검증
-        if(!s3Service.doesObjectExist(requestDTO.getKeyName(), memberId)) {
-            throw new GeneralException(ErrorStatus.NOT_FOUND_IN_S3);
-        }
-
-        Image image = Image.builder()
-                .keyName(requestDTO.getKeyName())
-                .filePath(requestDTO.getFilePath())
-                .contentId(requestDTO.getContentId())
-                .uploadedAt(LocalDateTime.now())
-                .memberId(memberId)
-                .build();
-
-        Image newImage = imageRepository.save(image);
-
-        return getImage(newImage.getKeyName(), memberId);
+        return saveImageWithImageUrl(memberId, requestDTO, Optional.empty());
     }
 
     @Transactional
