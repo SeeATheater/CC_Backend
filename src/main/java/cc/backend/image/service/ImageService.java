@@ -127,7 +127,7 @@ public class ImageService {
 
 
     public List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> getImages(List<Image> images, Long memberId) {
-
+        //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 

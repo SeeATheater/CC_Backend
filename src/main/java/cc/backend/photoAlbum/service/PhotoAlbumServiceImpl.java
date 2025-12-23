@@ -281,32 +281,40 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(int page, int size){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long memberId, int page, int size){
+
+        //로그인 검사
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
         // 최근 생성한 순서대로 photoAlbum 가져오기
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<PhotoAlbum> albumPage = photoAlbumRepository.findAll(pageable); // 또는 커스텀 쿼리 사용 가능
+        Page<PhotoAlbum> albumPage = photoAlbumRepository.findAll(pageable);
         List<PhotoAlbum> albums = albumPage.getContent(); //Page 벗기기
 
-        // 3. N+1 방지: 대표 이미지 조회
+        // N+1 방지: 대표 이미지 조회
         List<Long> albumIds = albums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        Map<Long, Image> albumImageMap = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
-                .stream()
-                .collect(Collectors.toMap(Image::getContentId, Function.identity()));
+        List<Image> images = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
 
+        // 1. images 전체를 한 번에 imageService에 넘김 -> 사진첩 개수만큼의 presignedUrl 발급을 한번에
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageDTOs = imageService.getImages(images, memberId);
+
+        // 2. DTO를 contentId 기준으로 Map으로 변환 -> 각 사진첩 dto에 발급받은 url 뿌려줌
+        Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> albumImageMap = imageDTOs.stream()
+                .collect(Collectors.toMap(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getContentId, Function.identity()));
         //DTO 변환
         List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = albums.stream()
                 .map(album -> {
-                    Image coverImage = albumImageMap.get(album.getId());
+                    ImageResponseDTO.ImageResultWithPresignedUrlDTO coverImageDTO = albumImageMap.get(album.getId());
                     return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
                             .photoAlbumId(album.getId())
                             .memberId(album.getAmateurShow().getMember().getId())
                             .performerName(album.getAmateurShow().getMember().getName())
                             .amateurShowName(album.getAmateurShow().getName())
-                            .imageUrl(coverImage != null ? coverImage.getImageUrl() : null)
+                            .imageUrl(coverImageDTO != null ? coverImageDTO.getPresignedUrl() : null)
                             .build();
                 })
                 .toList();

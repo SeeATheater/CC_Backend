@@ -69,7 +69,8 @@ public class PhotoAlbumController {
     @Operation(summary = "사진첩 삭제 API", description = "공연별 사진첩을 삭제하는 API 입니다.")
     public ApiResponse<String> deletePhotoAlbum(
             @PathVariable("photoAlbumId") Long photoAlbumId,
-            @AuthenticationPrincipal(expression = "member") Member member) {
+            @AuthenticationPrincipal(expression = "member") Member member
+    ) {
                 return ApiResponse.onSuccess(photoAlbumService.deletePhotoAlbum(photoAlbumId, member.getId()));
     }
 
@@ -77,8 +78,9 @@ public class PhotoAlbumController {
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(member.getId(), page, size));
     }
 
     @GetMapping("/member/{memberId}/shows")
