@@ -13,9 +13,9 @@ public interface PhotoAlbumService {
 
     public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO createPhotoAlbum(PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId);
     public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO getPhotoAlbum(Long photoAlbumId, Long memberId);
-    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, Long cursorId, int size);
+    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, int page, int size);
     public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId);
     public String deletePhotoAlbum(Long photoAlbumId, Long memberId);
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllPhotoAlbumList(Long cursorId, int size);
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(int page, int size);
     public PerformerShowListResponseDTO getPerformerShows(Long memberId, Pageable pageable);
 }
