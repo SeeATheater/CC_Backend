@@ -21,6 +21,13 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
     """)
     List<PhotoAlbum> searchPhotoAlbumByKeyword(@Param("keyword") String keyword);
 
+    /**
+     * Retrieves photo albums for the performer identified by the given id.
+     *
+     * @param performerId the id of the performer whose photo albums to retrieve
+     * @param pageable pagination and sorting information for the result page
+     * @return a Page of PhotoAlbum entities belonging to shows whose member.id equals {@code performerId}
+     */
     @Query("SELECT pa FROM PhotoAlbum pa " +
             "JOIN pa.amateurShow a " +
             "WHERE a.member.id = :performerId "
@@ -30,6 +37,13 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
             Pageable pageable
     );
 
+    /**
+     * Retrieve the next set of PhotoAlbum entities located before the given cursor, ordered by `updatedAt` descending.
+     *
+     * @param cursorId  an exclusive upper bound on album `id`; when `null` the query returns from the newest albums
+     * @param pageable  pagination and sorting constraints to apply to the result set
+     * @return a list of PhotoAlbum objects that match the cursor constraint, ordered by `updatedAt` descending
+     */
     @Query("SELECT p FROM PhotoAlbum p WHERE (:cursorId IS NULL OR p.id < :cursorId) ORDER BY p.updatedAt DESC")
     List<PhotoAlbum> findNextAlbums(@Param("cursorId") Long cursorId, Pageable pageable);
 }

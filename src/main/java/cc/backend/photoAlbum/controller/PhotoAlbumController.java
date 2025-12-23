@@ -35,6 +35,12 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbum(photoAlbumId, member.getId()));
     }
 
+    /**
+     * Creates a new photo album and returns its details along with presigned upload URLs.
+     *
+     * @param requestDTO details for the photo album to create; each imageRequestDTO must include only the `keyName` obtained from presigned URL generation
+     * @return a PhotoAlbumResultWithPresignedUrlDTO containing the created album's information and presigned URLs for image upload
+     */
     @PreAuthorize("hasRole('PERFORMER')")
     @PostMapping("")
     @Operation(summary = "사진첩 등록 API", description = "사진첩을 등록하는 API 입니다.")
@@ -45,6 +51,14 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.createPhotoAlbum(requestDTO, member.getId()));
     }
 
+    /**
+     * Retrieves a paginated feed of a performer's photo albums.
+     *
+     * @param performerId the ID of the performer whose photo album feed to retrieve
+     * @param page zero-based page index to fetch
+     * @param size maximum number of items to include in the page
+     * @return a PerformerPhotoAlbumDTO containing the requested page of the performer's photo album feed
+     */
     @GetMapping("/member/{memberId}")
     @Operation(summary = "등록자 계정의 전체 사진첩 피드 조회 API", description = "등록자의 사진첩 피드를 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO> getPhotoAlbumList(
@@ -55,6 +69,13 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), performerId, page, size));
     }
 
+    /**
+     * Updates an existing performer's photo album.
+     *
+     * @param photoAlbumId the id of the photo album to update
+     * @param requestDTO the updated album data; image entries should include presigned-upload key names
+     * @return the updated photo album result
+     */
     @PreAuthorize("hasRole('PERFORMER')")
     @PatchMapping("/{photoAlbumId}")
     @Operation(summary = "사진첩 수정 API", description = "공연별 사진첩을 수정하는 API 입니다.")
@@ -73,6 +94,13 @@ public class PhotoAlbumController {
                 return ApiResponse.onSuccess(photoAlbumService.deletePhotoAlbum(photoAlbumId, member.getId()));
     }
 
+    /**
+     * Retrieve a paginated list of the most recently created photo albums.
+     *
+     * @param page zero-based page index
+     * @param size number of items per page
+     * @return a ScrollMemberPhotoAlbumDTO containing recent photo albums and pagination metadata
+     */
     @GetMapping("")
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
@@ -81,6 +109,14 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(page, size));
     }
 
+    /**
+     * Retrieve a performer's shows including the total count and a paginated list.
+     *
+     * @param memberId the ID of the performer whose shows are being requested
+     * @param page     zero-based page index
+     * @param size     number of items per page
+     * @return an ApiResponse containing the performer's show list and total count
+     */
     @GetMapping("/member/{memberId}/shows")
     @Operation(summary = "특정 공연진의 공연 목록 조회(총 개수 + 리스트)")
     public ApiResponse<PerformerShowListResponseDTO> getPerformerShows(

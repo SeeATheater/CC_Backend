@@ -86,6 +86,14 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .build();
     }
 
+    /**
+     * Retrieve a photo album and its associated images presented with presigned URLs.
+     *
+     * @param photoAlbumId the ID of the photo album to retrieve
+     * @param memberId the ID of the requesting member (used for authorization and presigned URL generation)
+     * @return a DTO containing album metadata (performer, show, content, address, schedule) and image results with presigned URLs
+     * @throws GeneralException if the member is not authorized or the photo album does not exist
+     */
     @Override
     public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO getPhotoAlbum(Long photoAlbumId, Long memberId){
         Member member = memberRepository.findById(memberId)
@@ -114,6 +122,17 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .build();
     }
 
+    /**
+     * Retrieves a page of photo albums for a performer, including a representative cover image (presigned) for each album.
+     *
+     * Validates the requesting member and the performer exist; returns album entries sorted by creation date descending.
+     *
+     * @param memberId the id of the requesting member (used for authorization and presigned URL generation)
+     * @param performerId the id of the performer whose photo albums are requested
+     * @param page zero-based page index
+     * @param pageSize the number of albums per page
+     * @return a PerformerPhotoAlbumDTO containing the list of albums with optional cover images, the performer name, result count, and pagination info (hasNext and nextPage which is null when there is no next page)
+     */
     @Override
     public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, int page, int pageSize){
         //로그인 검사
@@ -255,6 +274,13 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .build();
     }
 
+    /**
+     * Delete a photo album and all its associated images after verifying the requesting member's ownership.
+     *
+     * @param photoAlbumId the id of the photo album to delete
+     * @param memberId     the id of the member performing the deletion; must own the album's amateur show
+     * @return             a confirmation message indicating the deletion was completed
+     */
     @Override
     @Transactional
     public String deletePhotoAlbum(Long photoAlbumId, Long memberId) {
@@ -280,6 +306,13 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return "삭제가 완료되었습니다.";
     }
 
+    /**
+     * Retrieve a paginated list of the most recently created photo albums, each including a representative cover image when available.
+     *
+     * @param page zero-based page index to retrieve
+     * @param size maximum number of albums to include in the page
+     * @return a ScrollMemberPhotoAlbumDTO containing the page of member photo album entries, a `hasNext` flag, and `nextPage` (next page index or `null`)
+     */
     @Override
     public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(int page, int size){
 
