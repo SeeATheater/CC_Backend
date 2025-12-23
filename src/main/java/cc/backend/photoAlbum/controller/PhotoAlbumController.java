@@ -39,7 +39,7 @@ public class PhotoAlbumController {
     @PostMapping("")
     @Operation(summary = "사진첩 등록 API", description = "사진첩을 등록하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO> uploadPhotoAlbum(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "imageRequestDTOs에는 presigned urls 호출로 받은 keyName, publicUrls 값만 전달")
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "imageRequestDTOs에는 presigned urls 호출로 받은 keyName 값만 전달")
     @RequestBody PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO,
             @AuthenticationPrincipal(expression = "member") Member member){
         return ApiResponse.onSuccess(photoAlbumService.createPhotoAlbum(requestDTO, member.getId()));
@@ -50,9 +50,9 @@ public class PhotoAlbumController {
     public ApiResponse<PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO> getPhotoAlbumList(
             @AuthenticationPrincipal(expression = "member") Member member,
             @PathVariable("memberId") Long performerId,
-            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), performerId, cursorId, size));
+        return ApiResponse.onSuccess(photoAlbumService.getPhotoAlbumList(member.getId(), performerId, page, size));
     }
 
     @PreAuthorize("hasRole('PERFORMER')")
@@ -76,9 +76,9 @@ public class PhotoAlbumController {
     @GetMapping("")
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
-            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.onSuccess(photoAlbumService.getAllPhotoAlbumList(cursorId, size));
+        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(page, size));
     }
 
     @GetMapping("/member/{memberId}/shows")

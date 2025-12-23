@@ -19,9 +19,7 @@ import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,39 +115,35 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, Long cursorId, int pageSize){
+    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, int page, int pageSize){
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
         Member performer = memberRepository.findById(performerId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         // 사진첩 단위 조회 (커서 기반)
-        List<PhotoAlbum> photoAlbums = photoAlbumRepository.findByPerformerWithCursor
-                (performerId, cursorId, PageRequest.of(0, pageSize + 1)
+
+        Page<PhotoAlbum> albumPage = photoAlbumRepository.findByPerformer(
+                performerId,
+                pageable
         );
-
         //다음 커서 설정
-        boolean hasNext = photoAlbums.size() > pageSize;
-        Long nextCursor = hasNext ? photoAlbums.get(pageSize - 1).getId() : null;
-
-        // 실제 응답할 데이터만 자르기(pageSize 보다 1개 더 가져옴)
-        List<PhotoAlbum> limitedAlbums = photoAlbums.stream()
-                .limit(pageSize)
-                .toList();
+        List<PhotoAlbum> albums = albumPage.getContent();
 
         // 대표 이미지 가져오기
-        List<Long> albumIds = limitedAlbums.stream()
+        List<Long> albumIds = albums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        // 쿼리 한번에 다 가져오기
         Map<Long, Image> albumImageMap = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
                 .stream()
                 .collect(Collectors.toMap(Image::getContentId, Function.identity()));
 
+
         // DTO 변환
-        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs = limitedAlbums.stream()
+        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs = albums.stream()
                 .map(album -> {
                     Image coverImage = albumImageMap.get(album.getId());
                     return PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
@@ -166,12 +160,15 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 })
                 .toList();
 
+        boolean hasNext = albumPage.hasNext();
+        Integer nextPage = hasNext ? page + 1 : null;
+
         return PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO.builder()
                 .singlePhotoAlbumDTOs(singlePhotoAlbumDTOs)
                 .performerName(performer.getName())
                 .number(singlePhotoAlbumDTOs.size())
                 .hasNext(hasNext)
-                .nextCursor(nextCursor)
+                .nextPage(nextPage)
                 .build();
     }
 
@@ -284,18 +281,15 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllPhotoAlbumList(Long cursorId, int size){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(int page, int size){
 
-        Pageable pageable = PageRequest.of(0, size + 1);
-        List<PhotoAlbum> albums = photoAlbumRepository.findNextAlbums(cursorId, pageable);
+        // 최근 생성한 순서대로 photoAlbum 가져오기
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<PhotoAlbum> albumPage = photoAlbumRepository.findAll(pageable); // 또는 커스텀 쿼리 사용 가능
+        List<PhotoAlbum> albums = albumPage.getContent(); //Page 벗기기
 
-        // 실제 응답할 데이터만 자르기(size 보다 1개 더 가져옴)
-        List<PhotoAlbum> limitedAlbums = albums.stream()
-                .limit(size)
-                .toList();
-
-        // 대표 이미지 조회 (N+1 방지)
-        List<Long> albumIds = limitedAlbums.stream()
+        // 3. N+1 방지: 대표 이미지 조회
+        List<Long> albumIds = albums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
@@ -304,7 +298,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .collect(Collectors.toMap(Image::getContentId, Function.identity()));
 
         //DTO 변환
-        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = limitedAlbums.stream()
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = albums.stream()
                 .map(album -> {
                     Image coverImage = albumImageMap.get(album.getId());
                     return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
@@ -318,12 +312,12 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .toList();
 
         // 다음 커서 설정
-        boolean hasNext = albums.size() > size;
-        Long nextCursor = hasNext ? limitedAlbums.get(limitedAlbums.size() - 1).getId() : null;
+        boolean hasNext = albumPage.hasNext();
+        Integer nextPage = hasNext ? page + 1 : null;
 
         return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
                 .photoAlbumDTOs(dtoList)
-                .nextCursor(nextCursor)
+                .nextPage(nextPage) // 커서 대신 다음 페이지 번호
                 .hasNext(hasNext)
                 .build();
     }

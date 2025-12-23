@@ -1,6 +1,7 @@
 package cc.backend.photoAlbum.repository;
 
 import cc.backend.photoAlbum.entity.PhotoAlbum;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,10 +23,11 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
 
     @Query("SELECT pa FROM PhotoAlbum pa " +
             "JOIN pa.amateurShow a " +
-            "WHERE a.member.id = :performerId " +
-            "AND (:cursorId IS NULL OR pa.id < :cursorId) " +
-            "ORDER BY pa.updatedAt DESC")
-    List<PhotoAlbum> findByPerformerWithCursor(@Param("performerId") Long performerId, @Param("cursorId") Long cursorId, Pageable pageable
+            "WHERE a.member.id = :performerId "
+    )
+    Page<PhotoAlbum> findByPerformer(
+            @Param("performerId") Long performerId,
+            Pageable pageable
     );
 
     @Query("SELECT p FROM PhotoAlbum p WHERE (:cursorId IS NULL OR p.id < :cursorId) ORDER BY p.updatedAt DESC")
