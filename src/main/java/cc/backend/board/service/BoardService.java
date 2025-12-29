@@ -367,38 +367,32 @@ public class BoardService {
         // 기존 이미지들 가져오기
         List<Image> existingImages = imageRepository.findAllByFilePathAndContentId(FilePath.board, board.getId());
 
-        // 프론트에서 받은 새로운 이미지 URL 목록
-        List<String> newKeyNames = newImageDTOs.stream()
+        // 기존 keyName 목록
+        Set<String> existingKeyNames = existingImages.stream()
+                .map(Image::getKeyName)
+                .collect(Collectors.toSet());
+
+        // 프론트에서 요청받은 keyName 목록
+        Set<String> newKeyNames = newImageDTOs.stream()
                 .map(ImageRequestDTO.PartialImageRequestDTO::getKeyName)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         // 삭제 대상 찾기 (기존 이미지 중 새로운 목록에 없는 것들)
-        List<Image> toDelete = existingImages.stream()
+        existingImages.stream()
                 .filter(img -> !newKeyNames.contains(img.getKeyName()))
-                .collect(Collectors.toList());
-
-        // 삭제 처리
-        toDelete.forEach(image -> {
-            imageService.deleteImage(image.getId(), memberId);
-        });
-
-        // 기존 이미지 URL 목록
-        List<String> existingUrls = existingImages.stream()
-                .map(Image::getImageUrl)
-                .collect(Collectors.toList());
+                .forEach(img -> imageService.deleteImage(img.getId(), memberId));
 
         // 추가 대상 찾기 (새로운 이미지 중 기존에 없는 것들)
         List<ImageRequestDTO.FullImageRequestDTO> toAdd = newImageDTOs.stream()
-                .filter(imageDTO -> !existingUrls.contains(imageDTO.getKeyName()))
-                .map(imageDTO -> ImageRequestDTO.FullImageRequestDTO.builder()
-                        .keyName(imageDTO.getKeyName())
+                .filter(dto -> !existingKeyNames.contains(dto.getKeyName()))
+                .map(dto -> ImageRequestDTO.FullImageRequestDTO.builder()
+                        .keyName(dto.getKeyName())
                         .filePath(FilePath.board)
                         .contentId(board.getId())
                         .memberId(memberId)
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
-        // 새로운 이미지들 저장
         if (!toAdd.isEmpty()) {
             imageService.saveImages(memberId, toAdd);
         }
