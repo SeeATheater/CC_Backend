@@ -297,36 +297,26 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        List<Image> images = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
+        Map<Long, String> firstImageMap =
+                getFirstImageMapForPhotoAlbums(albumIds);
 
-        // 1. images 전체를 한 번에 imageService에 넘김 -> 사진첩 개수만큼의 presignedUrl 발급을 한번에
-        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageDTOs = imageService.getImages(images, memberId);
-
-        // 2. DTO를 contentId 기준으로 Map으로 변환 -> 각 사진첩 dto에 발급받은 url 뿌려줌
-        Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> albumImageMap = imageDTOs.stream()
-                .collect(Collectors.toMap(ImageResponseDTO.ImageResultWithPresignedUrlDTO::getContentId, Function.identity()));
         //DTO 변환
-        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = albums.stream()
-                .map(album -> {
-                    ImageResponseDTO.ImageResultWithPresignedUrlDTO coverImageDTO = albumImageMap.get(album.getId());
-                    return PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
-                            .photoAlbumId(album.getId())
-                            .memberId(album.getAmateurShow().getMember().getId())
-                            .performerName(album.getAmateurShow().getMember().getName())
-                            .amateurShowName(album.getAmateurShow().getName())
-                            .imageUrl(coverImageDTO != null ? coverImageDTO.getPresignedUrl() : null)
-                            .build();
-                })
-                .toList();
-
-        // 다음 커서 설정
-        boolean hasNext = albumPage.hasNext();
-        Integer nextPage = hasNext ? page + 1 : null;
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList =
+                albums.stream()
+                        .map(album -> PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
+                                .photoAlbumId(album.getId())
+                                .memberId(album.getAmateurShow().getMember().getId())
+                                .performerName(album.getAmateurShow().getMember().getName())
+                                .amateurShowName(album.getAmateurShow().getName())
+                                .imageUrl(firstImageMap.get(album.getId()))
+                                .build()
+                        )
+                        .toList();
 
         return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
                 .photoAlbumDTOs(dtoList)
-                .nextPage(nextPage) // 커서 대신 다음 페이지 번호
-                .hasNext(hasNext)
+                .nextPage(albumPage.hasNext() ? page + 1 : null)
+                .hasNext(albumPage.hasNext())
                 .build();
     }
 
@@ -344,6 +334,27 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .totalCount(total)
                 .shows(showLists)
                 .build();
+    }
+    private Map<Long, String> getFirstImageMapForPhotoAlbums(List<Long> albumIds) {
+        if (albumIds == null || albumIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 배치로 대표 이미지 조회
+        List<Image> firstImages =
+                imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
+
+        Map<Long, String> result = new HashMap<>();
+
+        for (Image img : firstImages) {
+            String presignedUrl = imageService
+                    .getImages(List.of(img), img.getMemberId())
+                    .get(0)
+                    .getPresignedUrl();
+
+            result.put(img.getContentId(), presignedUrl);
+        }
+        return result;
     }
 
 }
