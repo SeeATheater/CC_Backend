@@ -59,7 +59,7 @@ public class PhotoAlbumResponseDTO {
         private String performerName;
         private Integer number;
         private boolean hasNext;
-        private Long nextCursor;
+        private Integer nextPage;
     }
 
     @Builder
@@ -78,10 +78,10 @@ public class PhotoAlbumResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ScrollMemberPhotoAlbumDTO { //커서 기반 페이징이지만 ui 관점에서 스크롤이라는 의미
+    public static class ScrollMemberPhotoAlbumDTO { //페이지 번호 기반
         private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
         private boolean hasNext;
-        private Long nextCursor;
+        private Integer nextPage;
     }
 
 

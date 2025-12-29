@@ -1,5 +1,5 @@
 package cc.backend.image;
 
 public enum FilePath {
-    board, photoAlbum, amateurShow
+    board, photoAlbum, amateurShow, notice, casting
 }

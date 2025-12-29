@@ -32,15 +32,16 @@ public class Image {
     // S3 객체 키 (예: "board/1.png") - 삭제나 조회 시 필요(객체 url에서 버킷 url 뺀 나머지 = filepath + 파일이름)
     private String keyName;
 
-    // 외부에 공개할 수 있는 URL (예: https://bucket.s3.region.amazonaws.com/board/1.png)
+    // 정적인 컨텐츠 전용 URL (poster, notice, actor 이미지 전용)
     private String imageUrl;
 
     // 버킷 내 디렉토리 경로 (board, photoAlbum)
     @Enumerated(EnumType.STRING)
+    @Column(length = 12, nullable = false)
     private FilePath filePath;
 
     // board 와 photoAlbum 각각의 id (매핑없이 식별용)
-    @Column(name = "content_id")
+    @Column(name = "content_id", nullable = false)
     private Long contentId;
 
     // 업로드 시간

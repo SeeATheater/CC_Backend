@@ -77,13 +77,21 @@ public class AmateurServiceImpl implements AmateurService {
 
         //posterImageUrl 필드는 이미 Converter에서 기입, 포스터 사진 DB에만 저장(1개만)
         ImageRequestDTO.PosterImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
+
+        //poster 이미지는 없으면 에러
+        if(dto.getKeyName() == null || dto.getKeyName().isBlank()){
+            throw new GeneralException(ErrorStatus.INVALID_S3_KEY);
+        }
+
         ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                 .keyName(dto.getKeyName())
                 .filePath(FilePath.amateurShow)
                 .contentId(newAmateurShow.getId())
                 .memberId(memberId)
                 .build();
-        imageService.saveImage(memberId, fullImageRequestDTO);
+
+        imageService.saveImageWithImageUrl(memberId, fullImageRequestDTO, Optional.ofNullable(dto.getImageUrl()));
+
 
         // 좋아요한 멤버리스트
         List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
@@ -109,13 +117,24 @@ public class AmateurServiceImpl implements AmateurService {
             List<AmateurCasting> amateurCastings = amateurCastingRepository.saveAll(castings);
             // 캐스팅 사진 저장(1개씩)
             amateurCastings.forEach(amateurCasting -> {
+                String keyName = amateurCasting.getCastingImageKeyName();
+                // keyName 없으면 스킵
+                if (keyName == null || keyName.isBlank()) {
+                    return;
+                }
+
                 ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
                         .keyName(amateurCasting.getCastingImageKeyName())
-                        .filePath(FilePath.amateurShow)
-                        .contentId(amateurShow.getId())
+                        .filePath(FilePath.casting)
+                        .contentId(amateurCasting.getId())
                         .memberId(memberId)
                         .build();
-                imageService.saveImage(memberId, fullImageRequestDTO);
+
+                imageService.saveImageWithImageUrl(
+                        memberId,
+                        fullImageRequestDTO,
+                        Optional.ofNullable(amateurCasting.getCastingImageUrl())
+                );
             });
         }
 
@@ -124,13 +143,22 @@ public class AmateurServiceImpl implements AmateurService {
         if (amateurNotice != null) {
             amateurNoticeRepository.save(amateurNotice);
 
-            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                    .keyName(requestDTO.getNotice().getNoticeImageRequestDTO().getKeyName())
-                    .filePath(FilePath.amateurShow)
-                    .contentId(amateurShow.getId())
-                    .memberId(memberId)
-                    .build();
+            ImageRequestDTO.NoticeImageRequestDTO noticeImageDTO = requestDTO.getNotice().getNoticeImageRequestDTO();
+            //keyName 비었으면 스킵
+            if (noticeImageDTO != null && noticeImageDTO.getKeyName() != null && !noticeImageDTO.getKeyName().isBlank()) {
+                ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
+                        .keyName(noticeImageDTO.getKeyName())
+                        .filePath(FilePath.notice)
+                        .contentId(amateurNotice.getId())
+                        .memberId(memberId)
+                        .build();
 
+                imageService.saveImageWithImageUrl(
+                        memberId,
+                        fullImageRequestDTO,
+                        Optional.ofNullable(noticeImageDTO.getImageUrl())
+                );
+            }
         }
 
         // 티켓
@@ -169,32 +197,17 @@ public class AmateurServiceImpl implements AmateurService {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
         }
 
-        //포스터 사진 수정
         ImageRequestDTO.PosterImageRequestDTO dto = requestDTO.getPosterImageRequestDTO();
         if (dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()) {
-            // 현재 포스터 이미지 조회 (show당 1개)
-            Image existingImage = imageRepository
-                    .findAllByFilePathAndContentId(FilePath.amateurShow, amateurShow.getId())
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            imageService.updateShowImage(
+                    memberId,
+                    dto.getKeyName(),
+                    Optional.ofNullable(dto.getImageUrl()),
+                    amateurShow.getId(),
+                    FilePath.amateurShow
+            );
 
-            // 기존 keyName과 다르면 기존 이미지 삭제 후 교체
-            if (existingImage != null && !existingImage.getKeyName().equals(dto.getKeyName())) {
-                imageService.deleteImage(existingImage.getId(), memberId);
-            }
-
-            ImageRequestDTO.FullImageRequestDTO fullImageRequestDTO = ImageRequestDTO.FullImageRequestDTO.builder()
-                    .keyName(dto.getKeyName())
-                    .filePath(FilePath.amateurShow)
-                    .contentId(amateurShow.getId())
-                    .memberId(memberId)
-                    .build();
-
-            imageService.saveImage(memberId, fullImageRequestDTO);
-            //amateurShow 엔티티 내 posterImageUrl 필드 수정
             amateurShow.updatePosterImageUrl(dto.getImageUrl());
-
         }
 
         // 기본 정보 업데이트
@@ -233,6 +246,21 @@ public class AmateurServiceImpl implements AmateurService {
                 }
             }
         }
+
+        //NoticeImage 수정
+        if (noticeDTO == null) return;
+
+        AmateurNotice notice = amateurShow.getAmateurNotice();
+        ImageRequestDTO.NoticeImageRequestDTO dto = noticeDTO.getNoticeImageRequestDTO();
+        if (notice != null && dto != null && dto.getKeyName() != null && !dto.getKeyName().isBlank()){
+            imageService.updateShowImage(
+                    amateurShow.getMember().getId(),
+                    dto.getKeyName(),
+                    Optional.ofNullable(dto.getImageUrl()),
+                    notice.getId(),
+                    FilePath.notice
+            );
+        }
     }
 
     private void updateCasting(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateCasting> dtos) {
@@ -245,16 +273,35 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurCasting> updatedList = new ArrayList<>();
 
         for (AmateurUpdateRequestDTO.UpdateCasting dto : dtos) {
+            Long contentId;
+
             if (dto.getCastingId() != null && existingMap.containsKey(dto.getCastingId())) {
                 // 기존 객체 수정
                 AmateurCasting existing = existingMap.get(dto.getCastingId());
                 existing.update(dto);
                 updatedList.add(existing);
                 existingMap.remove(dto.getCastingId());
+                contentId = existing.getId();
             } else {
                 // 새 객체 추가
                 AmateurCasting newCasting = AmateurConverter.toSingleCasting(dto, show);
-                updatedList.add(newCasting);
+                AmateurCasting savedCasting = amateurCastingRepository.save(newCasting);
+                updatedList.add(savedCasting);
+
+                contentId = savedCasting.getId();
+            }
+
+
+            // 캐스팅 이미지 업데이트
+            ImageRequestDTO.CastingImageRequestDTO castingDTO = dto.getCastingImageRequestDTO();
+            if (castingDTO != null && castingDTO.getKeyName() != null && !castingDTO.getKeyName().isBlank()) {
+                imageService.updateShowImage(
+                        show.getMember().getId(),
+                        castingDTO.getKeyName(),
+                        Optional.ofNullable(castingDTO.getImageUrl()),
+                        contentId,
+                        FilePath.casting
+                );
             }
         }
 
@@ -266,6 +313,7 @@ public class AmateurServiceImpl implements AmateurService {
         // 최종 리스트 갱신
         show.getAmateurCastingList().clear();
         show.getAmateurCastingList().addAll(updatedList);
+
     }
 
     private void updateStaff(AmateurShow show, List<AmateurUpdateRequestDTO.UpdateStaff> dtos) {
@@ -362,10 +410,28 @@ public class AmateurServiceImpl implements AmateurService {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
         }
 
-        amateurShowRepository.delete(amateurShow);
+        //포스터 삭제
+        Image posterImg = imageRepository.findByFilePathAndContentId(FilePath.amateurShow, amateurShowId);
+        imageService.deleteImage(posterImg.getId(), memberId);
 
-        List<Image> images = imageRepository.findAllByFilePathAndContentId(FilePath.amateurShow, amateurShowId);
-        images.forEach(image -> imageService.deleteImage(image.getId(), memberId));
+        // 공지 삭제
+        if (amateurShow.getAmateurNotice() != null) {
+            Image noticeImg = imageRepository.findByFilePathAndContentId(FilePath.notice, amateurShow.getAmateurNotice().getId());
+            if (noticeImg != null) {
+                imageService.deleteImage(noticeImg.getId(), memberId);
+            }
+        }
+
+        //캐스팅 삭제
+        List<AmateurCasting> amateurCastings = amateurShow.getAmateurCastingList();
+        List<Image> castingImages = amateurCastings.stream()
+                .map(casting -> imageRepository.findByFilePathAndContentId(FilePath.casting, casting.getId()))
+                .filter(Objects::nonNull)
+                .toList();
+        castingImages.forEach(image -> imageService.deleteImage(image.getId(), memberId));
+
+        //amateurShow 삭제
+        amateurShowRepository.delete(amateurShow);
     }
 
     // 소극장 공연 단건 조회
