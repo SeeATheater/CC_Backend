@@ -132,33 +132,50 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         //다음 커서 설정
         List<PhotoAlbum> albums = albumPage.getContent();
 
-        // 대표 이미지 가져오기
+        // 사진첩 id 추출
         List<Long> albumIds = albums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        Map<Long, Image> albumImageMap = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
-                .stream()
-                .collect(Collectors.toMap(Image::getContentId, Function.identity()));
+        // 대표 이미지 가져오기
+        Map<Long, Image> albumImageMap =
+                imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                Image::getContentId,
+                                Function.identity(),
+                                (a, b) -> a
+                        ));
 
+
+        Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageDtoMap =
+                albumImageMap.isEmpty()
+                        ? Collections.emptyMap()
+                        : imageService.getImages(
+                                albumImageMap.values().stream().toList(),
+                                memberId
+                        )
+                        .stream()
+                        .collect(Collectors.toMap(
+                                ImageResponseDTO.ImageResultWithPresignedUrlDTO::getContentId,
+                                Function.identity(),
+                                (a, b) -> a
+                        ));
 
         // DTO 변환
-        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs = albums.stream()
-                .map(album -> {
-                    Image coverImage = albumImageMap.get(album.getId());
-                    return PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
-                            .photoAlbumId(album.getId())
-                            .amateurShowName(album.getAmateurShow().getName())
-                            .performerName(performer.getName())
-                            .detailAddress(album.getAmateurShow().getDetailAddress())
-                            .imageResultWithPresignedUrlDTO(
-                                    coverImage != null
-                                            ? imageService.getImages(List.of(coverImage), memberId).get(0)
-                                            : null
-                            )
-                            .build();
-                })
-                .toList();
+        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs =
+                albums.stream()
+                        .map(album -> PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
+                                .photoAlbumId(album.getId())
+                                .amateurShowName(album.getAmateurShow().getName())
+                                .performerName(performer.getName())
+                                .detailAddress(album.getAmateurShow().getDetailAddress())
+                                .imageResultWithPresignedUrlDTO(
+                                        imageDtoMap.get(album.getId())
+                                )
+                                .build()
+                        )
+                        .toList();
 
         boolean hasNext = albumPage.hasNext();
         Integer nextPage = hasNext ? page + 1 : null;
