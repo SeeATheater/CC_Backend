@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -36,11 +39,20 @@ public class DashboardService {
 
         RunReportResponse response = betaAnalyticsDataClient.runReport(request);
 
-        return response.getRowsList().stream()
-                .map(row -> new VisitResponseDTO.HourlyVisitorDTO(
-                        row.getDimensionValues(0).getValue(),
-                        Long.parseLong(row.getMetricValues(0).getValue())
-                ))
+
+        Map<Integer, Long> hourMap = IntStream.range(0, 24)
+                .boxed()
+                .collect(Collectors.toMap(h -> h, h -> 0L));
+
+        response.getRowsList().forEach(row -> {
+            int hour = Integer.parseInt(row.getDimensionValues(0).getValue());
+            long count = Long.parseLong(row.getMetricValues(0).getValue());
+            hourMap.put(hour, count);
+        });
+
+        return hourMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new VisitResponseDTO.HourlyVisitorDTO(e.getKey(), e.getValue()))
                 .toList();
     }
 

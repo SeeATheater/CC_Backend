@@ -8,7 +8,7 @@ public class VisitResponseDTO {
     @Getter
     @AllArgsConstructor
     public static class HourlyVisitorDTO {
-        private String hour;
+        private int hour;
         private Long count;
     }
 
