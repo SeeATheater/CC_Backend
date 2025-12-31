@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,7 +102,7 @@ public class NoticeServiceImpl implements NoticeService {
 
         memberNoticeRepository.save(MemberNotice.builder()
                                  .notice(newNotice)
-                                 .member(commentWriter).build());
+                                 .member(boardWriter).build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())

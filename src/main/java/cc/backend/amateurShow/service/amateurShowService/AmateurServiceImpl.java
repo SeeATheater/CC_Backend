@@ -635,7 +635,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .sorted(Comparator
                         .comparing(AmateurShow::getStart)
                         .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator)))
-                .limit(10)
+                .limit(3)
                 .map(show -> {
                     String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
                     return AmateurShowResponseDTO.AmateurShowList.builder()
