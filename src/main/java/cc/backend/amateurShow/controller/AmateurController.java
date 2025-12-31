@@ -65,7 +65,7 @@ public class AmateurController {
     @GetMapping("/ranking")
     @Operation(summary = "소극장 공연 랭킹 조회 API")
     public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getShowRanking(member.getId()));
+        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));
     }
 
     @GetMapping("/today")
