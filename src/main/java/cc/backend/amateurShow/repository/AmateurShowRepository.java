@@ -66,6 +66,16 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
 
     List<AmateurShow> findByEndGreaterThanEqual(LocalDate today);
 
+    @Query("""
+    SELECT a
+    FROM AmateurShow a
+    WHERE a.end >= :today
+    ORDER BY a.totalSoldTicket DESC, a.start ASC
+""")
+    List<AmateurShow> findHotShows(
+            @Param("today") LocalDate today,
+            Pageable pageable
+    );
 
     @Query("select a from AmateurShow a")
     @EntityGraph(attributePaths = {"amateurRounds", "amateurNotice"}, type = EntityGraph.EntityGraphType.FETCH)

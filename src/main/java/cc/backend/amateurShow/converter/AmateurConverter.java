@@ -55,39 +55,60 @@ public class AmateurConverter {
                                                               AmateurShow amateurShow) {
         if (castings == null || castings.isEmpty()) return Collections.emptyList();
 
-        return castings.stream().map(casting -> AmateurCasting.builder()
-                        .amateurShow(amateurShow)
-                        .actorName(casting.getActorName())
-                        .castingName(casting.getCastingName())
-                        .castingImageUrl(casting.getCastingImageRequestDTO().getImageUrl() != null ?
-                                casting.getCastingImageRequestDTO().getImageUrl() : null)
-                        .castingImageKeyName(casting.getCastingImageRequestDTO().getKeyName() != null ?
-                                casting.getCastingImageRequestDTO().getKeyName() : null)
-                        .build())
-                .collect(Collectors.toList());
+        return castings.stream()
+                .map(casting -> {
+                    String imageUrl = null;
+                    String keyName = null;
+
+                    if (casting.getCastingImageRequestDTO() != null) {
+                        imageUrl = casting.getCastingImageRequestDTO().getImageUrl();
+                        keyName = casting.getCastingImageRequestDTO().getKeyName();
+                    }
+
+                    return AmateurCasting.builder()
+                            .amateurShow(amateurShow)
+                            .actorName(casting.getActorName())
+                            .castingName(casting.getCastingName())
+                            .castingImageUrl(imageUrl)
+                            .castingImageKeyName(keyName)
+                            .build();
+                })
+                .toList();
     }
 
     public static AmateurNotice toAmateurNoticeEntity(AmateurEnrollRequestDTO.Notice notice, AmateurShow amateurShow) {
-        if (notice.getContent() == null) return null;
+        if (notice == null || notice.getContent() == null) {
+            return null;
+        }
+
+        String imageUrl = null;
+        if (notice.getNoticeImageRequestDTO() != null) {
+            imageUrl = notice.getNoticeImageRequestDTO().getImageUrl();
+        }
 
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl() != null ?
-                        notice.getNoticeImageRequestDTO().getImageUrl() : null)
+                .noticeImageUrl(imageUrl)
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
 
     // 이건 수정용!!
     public static AmateurNotice toAmateurNoticeEntity(AmateurUpdateRequestDTO.UpdateNotice notice, AmateurShow amateurShow) {
-        if (notice.getContent() == null) return null;
+        if (notice == null || notice.getContent() == null) {
+            return null;
+        }
+
+        String imageUrl = null;
+        if (notice.getNoticeImageRequestDTO() != null) {
+            imageUrl = notice.getNoticeImageRequestDTO().getImageUrl();
+        }
 
         return AmateurNotice.builder()
                 .amateurShow(amateurShow)
                 .content(notice.getContent())
-                .noticeImageUrl(notice.getNoticeImageRequestDTO().getImageUrl() != null ?
-                        notice.getNoticeImageRequestDTO().getImageUrl() : null)
+                .noticeImageUrl(imageUrl)
                 .timeInfo(notice.getTimeInfo())
                 .build();
     }
@@ -135,12 +156,20 @@ public class AmateurConverter {
 
     // -- 소극장 공연 업데이트 --
     public static AmateurCasting toSingleCasting(AmateurUpdateRequestDTO.UpdateCasting dto, AmateurShow show) {
+        String imageUrl = null;
+        String keyName = null;
+
+        if (dto.getCastingImageRequestDTO() != null) {
+            imageUrl = dto.getCastingImageRequestDTO().getImageUrl();
+            keyName = dto.getCastingImageRequestDTO().getKeyName();
+        }
+
         return AmateurCasting.builder()
                 .amateurShow(show)
                 .actorName(dto.getActorName())
                 .castingName(dto.getCastingName())
-                .castingImageUrl(dto.getCastingImageRequestDTO().getImageUrl() != null ?
-                        dto.getCastingImageRequestDTO().getImageUrl() : null)
+                .castingImageUrl(imageUrl)
+                .castingImageKeyName(keyName)
                 .build();
     }
 

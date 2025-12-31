@@ -101,7 +101,7 @@ public class NoticeServiceImpl implements NoticeService {
 
         memberNoticeRepository.save(MemberNotice.builder()
                                  .notice(newNotice)
-                                 .member(commentWriter).build());
+                                 .member(boardWriter).build());
 
         return NoticeResponseDTO.NoticeDTO.builder()
                 .id(newNotice.getId())

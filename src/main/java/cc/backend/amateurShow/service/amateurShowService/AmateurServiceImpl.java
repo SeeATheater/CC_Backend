@@ -24,6 +24,7 @@ import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
@@ -422,12 +423,19 @@ public class AmateurServiceImpl implements AmateurService {
         }
 
         //캐스팅 삭제
-        List<AmateurCasting> amateurCastings = amateurShow.getAmateurCastingList();
-        List<Image> castingImages = amateurCastings.stream()
-                .map(casting -> imageRepository.findByFilePathAndContentId(FilePath.casting, casting.getId()))
-                .filter(Objects::nonNull)
+        List<Long> castingIds = amateurShow.getAmateurCastingList()
+                .stream()
+                .map(AmateurCasting::getId)
                 .toList();
-        castingImages.forEach(image -> imageService.deleteImage(image.getId(), memberId));
+
+        if (!castingIds.isEmpty()) {
+            List<Image> castingImages =
+                    imageRepository.findByFilePathAndContentIdIn(
+                            FilePath.casting, castingIds);
+
+            castingImages.forEach(img ->
+                    imageService.deleteImage(img.getId(), memberId));
+        }
 
         //amateurShow 삭제
         amateurShowRepository.delete(amateurShow);
@@ -621,32 +629,29 @@ public class AmateurServiceImpl implements AmateurService {
     }
 
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getIncomingShow (Long memberId){
+    public List<AmateurShowResponseDTO.AmateurShowList> getRecentlyHotShow (Long memberId){
         memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        Collator collator = Collator.getInstance(Locale.KOREAN); //한글 사전식 정렬
 
-        // 종료일이 오늘 이후인 공연만 DB에서 조회
+        // 종료되지 않은 공연 중, 판매량 기준 상위 3개
         LocalDate today = LocalDate.now();
-        List<AmateurShow> shows = amateurShowRepository.findByEndGreaterThanEqual(today);
+        List<AmateurShow> shows = amateurShowRepository.findHotShows(today, PageRequest.of(0, 3));
 
         return shows.stream()
-                // 시작일 기준 오름차순 → 이름 기준 오름차순(한글 사전식)
-                .sorted(Comparator
-                        .comparing(AmateurShow::getStart)
-                        .thenComparing(AmateurShow::getName, Comparator.nullsLast(collator)))
-                .limit(10)
-                .map(show -> {
-                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
-                    return AmateurShowResponseDTO.AmateurShowList.builder()
-                            .amateurShowId(show.getId())
-                            .name(show.getName())
-                            .detailAddress(show.getDetailAddress())
-                            .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
-                            .build();
-                })
-                .collect(Collectors.toList());
+                .map(show -> AmateurShowResponseDTO.AmateurShowList.builder()
+                        .amateurShowId(show.getId())
+                        .name(show.getName())
+                        .detailAddress(show.getDetailAddress())
+                        .schedule(
+                                AmateurConverter.mergeSchedule(
+                                        show.getStart(),
+                                        show.getEnd()
+                                )
+                        )
+                        .posterImageUrl(show.getPosterImageUrl())
+                        .build()
+                )
+                .toList();
 
     }
 
