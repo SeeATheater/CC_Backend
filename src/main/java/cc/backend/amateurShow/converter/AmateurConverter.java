@@ -156,12 +156,20 @@ public class AmateurConverter {
 
     // -- 소극장 공연 업데이트 --
     public static AmateurCasting toSingleCasting(AmateurUpdateRequestDTO.UpdateCasting dto, AmateurShow show) {
+        String imageUrl = null;
+        String keyName = null;
+
+        if (dto.getCastingImageRequestDTO() != null) {
+            imageUrl = dto.getCastingImageRequestDTO().getImageUrl();
+            keyName = dto.getCastingImageRequestDTO().getKeyName();
+        }
+
         return AmateurCasting.builder()
                 .amateurShow(show)
                 .actorName(dto.getActorName())
                 .castingName(dto.getCastingName())
-                .castingImageUrl(dto.getCastingImageRequestDTO().getImageUrl() != null ?
-                        dto.getCastingImageRequestDTO().getImageUrl() : null)
+                .castingImageUrl(imageUrl)
+                .castingImageKeyName(keyName)
                 .build();
     }
 
