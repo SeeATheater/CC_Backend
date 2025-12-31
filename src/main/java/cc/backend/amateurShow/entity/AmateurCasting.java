@@ -28,7 +28,7 @@ public class AmateurCasting extends BaseEntity {
     private String castingName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "amateur_show_id")
+    @JoinColumn(name = "amateur_show_id", nullable = false)
     private AmateurShow amateurShow;
 
     public void update(AmateurUpdateRequestDTO.UpdateCasting dto) {
