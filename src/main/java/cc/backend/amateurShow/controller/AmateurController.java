@@ -89,9 +89,9 @@ public class AmateurController {
         return ApiResponse.onSuccess(amateurService.getShowClosing(member.getId()));
     }
 
-    @GetMapping("/incoming")
-    @Operation(summary = "공연 임박인 공연 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));
-    }
+//    @GetMapping("/incoming")
+//    @Operation(summary = "공연 임박인 공연 조회 API")
+//    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@AuthenticationPrincipal(expression = "member") Member member) {
+//        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));//
+//        }
 }
