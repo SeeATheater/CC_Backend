@@ -3,9 +3,11 @@ package cc.backend.amateurShow.controller;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
+import cc.backend.amateurShow.dto.AmateurShowResponseDTO.AmateurShowList;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.member.MemberService;
 import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,8 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -74,9 +76,11 @@ public class AmateurController {
 
     @GetMapping("/ongoing")
     @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
-    public ApiResponse<Page<AmateurShowResponseDTO.AmateurShowList>> getShowOngoing(@AuthenticationPrincipal(expression = "member") Member member,
-                                                                                    @ParameterObject Pageable pageable) {
-        return ApiResponse.onSuccess(amateurService.getShowOngoing(member.getId(), pageable));
+    public ApiResponse<SliceResponse<AmateurShowList>> getShowOngoing(
+        @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable
+    ) {
+        Slice<AmateurShowList> sliceResult = amateurService.getShowOngoing(member.getId(), pageable);
+        return ApiResponse.onSuccess(SliceResponse.of(sliceResult));
     }
 
     @GetMapping("/closing")
