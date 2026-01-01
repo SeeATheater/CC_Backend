@@ -94,4 +94,10 @@ public class AmateurController {
     public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getRecentlyHotShow(@AuthenticationPrincipal(expression = "member") Member member) {
         return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));
         }
+
+    @GetMapping("/incoming")
+    @Operation(summary = "임박한 공연 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(amateurService.getShowToday(member.getId()));
+    }
 }
