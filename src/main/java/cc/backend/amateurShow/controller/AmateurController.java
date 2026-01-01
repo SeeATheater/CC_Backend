@@ -65,7 +65,7 @@ public class AmateurController {
     @GetMapping("/ranking")
     @Operation(summary = "소극장 공연 랭킹 조회 API")
     public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));
+        return ApiResponse.onSuccess(amateurService.getShowRanking(member.getId()));
     }
 
     @GetMapping("/today")
@@ -89,9 +89,9 @@ public class AmateurController {
         return ApiResponse.onSuccess(amateurService.getShowClosing(member.getId()));
     }
 
-//    @GetMapping("/incoming")
-//    @Operation(summary = "공연 임박인 공연 조회 API")
-//    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@AuthenticationPrincipal(expression = "member") Member member) {
-//        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));//
-//        }
+    @GetMapping("/incoming")
+    @Operation(summary = "요즘 핫한 소극장 연극 조회 API")
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getRecentlyHotShow(@AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));//
+        }
 }
