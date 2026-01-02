@@ -29,7 +29,7 @@ public class KakaoPayController {
     }
 
     // 결제 승인 요청 (카카오페이 redirect 후 호출)
-    @GetMapping("/approve")
+    @PostMapping("/approve")
     @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "결제 완료 후 카카오 서버에서 approval_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
     public ApiResponse<KakaoPayApproveResponseDTO> approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
                                                     @RequestParam("pg_token") String pgToken) {
