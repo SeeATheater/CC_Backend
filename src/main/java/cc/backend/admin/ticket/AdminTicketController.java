@@ -5,6 +5,7 @@ import cc.backend.admin.ticket.dto.RefundListResponseDTO;
 import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
 import cc.backend.admin.ticket.dto.TicketDetailResponseDTO;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,8 +47,8 @@ public class AdminTicketController {
     }
 
     @GetMapping("/reservation/history")
-    @Operation(summary = "관리자 예매 내역 관리 - 표", description = "예매 내역을 리스트 형태로 조회합니다.")
-    public ApiResponse<Slice<ReservationDetailResponseDTO>> getReservationHistory(
+    @Operation(summary = "관리자 예약 내역 관리 - 표", description = "예매 내역을 리스트 형태로 조회합니다.")
+    public ApiResponse<SliceResponse<ReservationDetailResponseDTO>> getReservationHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -57,11 +58,11 @@ public class AdminTicketController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ) {
-        return ApiResponse.onSuccess(adminTicketService.getReservationList(page, size, keyword));
-    }
+        Slice<ReservationDetailResponseDTO> slice = adminTicketService.getReservationList(page, size, keyword);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
 
     @GetMapping("/reservation/{realTicketId}")
-    @Operation(summary = "관리자 예매 내역 관리 상세조회")
+    @Operation(summary = "관리자 예약 내역 관리 상세조회")
     public ApiResponse<ReservationDetailResponseDTO> getReservationDetail(
             @Parameter(description = "티켓 id", example = "1")
             @PathVariable Long realTicketId
