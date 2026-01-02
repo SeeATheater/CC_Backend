@@ -5,6 +5,7 @@ import cc.backend.admin.dashboard.dto.ReservationSummaryResponseDTO;
 import cc.backend.admin.dashboard.dto.VisitResponseDTO;
 import cc.backend.admin.dashboard.service.DashboardService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,14 +53,14 @@ public class DashboardController {
 
     @GetMapping("/reservation")
     @Operation(summary = "예약 현황 - 간편보기", description = "대쉬보드에서 예약 현황 리스트를 조회합니다.")
-    public ApiResponse<Slice<ReservationSummaryResponseDTO>> getReservationSummary(
+    public ApiResponse<SliceResponse<ReservationSummaryResponseDTO>> getReservationSummary(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
-        return ApiResponse.onSuccess(dashBoardService.getReservationList(page, size));
-    }
+        Slice<ReservationSummaryResponseDTO> slice = dashBoardService.getReservationList(page, size);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
 
 }
