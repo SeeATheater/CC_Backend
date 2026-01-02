@@ -42,13 +42,13 @@ public class AdminPhotoAlbumController {
     }
 
     @GetMapping("/{photoAlbumId}")
-    @Operation(summary = "관리자페이지 사진첩 상세 조회 API", description = "개별 사진첩 상세 조회")
+    @Operation(summary = "관리자 사진첩 상세 조회", description = "개별 사진첩 상세 조회")
     public ApiResponse<AdminPhotoAlbumResponseDTO.DetailPhotoAlbumDTO> getPhotoAlbum(@PathVariable Long photoAlbumId){
         return ApiResponse.onSuccess(adminPhotoAlbumService.getPhotoAlbumDetail(photoAlbumId));
     }
 
     @DeleteMapping("/{photoAlbumId}")
-    @Operation(summary = "관리자페이지 사진첩 내리기 API", description = "개별 사진첩 삭제")
+    @Operation(summary = "관리자 사진첩 내리", description = "개별 사진첩 삭제")
     public ApiResponse<String> deletePhotoAlbum(@PathVariable Long photoAlbumId){
         return ApiResponse.onSuccess(adminPhotoAlbumService.deletePhotoAlbum(photoAlbumId));
     }
