@@ -12,16 +12,10 @@ import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,17 +27,24 @@ public class AdminPhotoAlbumService {
     private final ImageService imageService;
 
     @Transactional(readOnly = true)
-    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(int page, int size){
+    public Slice<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getPhotoAlbumList(int page, int size, String keyword){
         Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
-        Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(pageable);
 
-        return photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-                .id(photoAlbum.getId())
-                .amateurShowName(photoAlbum.getAmateurShow().getName())
-                .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-                .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-                .updatedAt(photoAlbum.getUpdatedAt())
-                .build());
+        Page<PhotoAlbum> result;
+
+        if (keyword == null || keyword.isBlank()) {
+            result = photoAlbumRepository.findAll(pageable);
+        } else {
+            // 기존 searchPhotoAlbumByKeyword에서 list 를 page로 변환
+            result = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
+        }
+
+        List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> content = result.getContent().stream()
+                .map(this::toSimpleDto)
+                .toList();
+
+        return new SliceImpl<>(content, pageable, result.hasNext());
+
     }
 
     @Transactional(readOnly = true)
@@ -89,21 +90,31 @@ public class AdminPhotoAlbumService {
         return "관리자 권한으로 삭제가 완료되었습니다.";
     }
 
-    @Transactional(readOnly = true)
-    public List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword){
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
+//    @Transactional(readOnly = true)
+//    public List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword){
+//        if (keyword == null || keyword.trim().isEmpty()) {
+//            return Collections.emptyList();
+//        }
+//
+//        List<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, Pageable pageable);
+//        return results.stream()
+//                .map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+//                        .id(photoAlbum.getId())
+//                        .amateurShowName(photoAlbum.getAmateurShow().getName())
+//                        .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
+//                        .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
+//                        .updatedAt(photoAlbum.getUpdatedAt())
+//                        .build())
+//                .toList();
+//    }
 
-        List<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword);
-        return results.stream()
-                .map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-                        .id(photoAlbum.getId())
-                        .amateurShowName(photoAlbum.getAmateurShow().getName())
-                        .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-                        .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-                        .updatedAt(photoAlbum.getUpdatedAt())
-                        .build())
-                .toList();
+    private AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO toSimpleDto(PhotoAlbum photoAlbum) {
+        return AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+                .id(photoAlbum.getId())
+                .amateurShowName(photoAlbum.getAmateurShow().getName())
+                .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
+                .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
+                .updatedAt(photoAlbum.getUpdatedAt())
+                .build();
     }
 }

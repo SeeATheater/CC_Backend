@@ -19,7 +19,7 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
            OR p.amateurShow.name LIKE %:keyword%
            OR p.content LIKE %:keyword%
     """)
-    List<PhotoAlbum> searchPhotoAlbumByKeyword(@Param("keyword") String keyword);
+    Page<PhotoAlbum> searchPhotoAlbumByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT pa FROM PhotoAlbum pa " +
             "JOIN pa.amateurShow a " +
