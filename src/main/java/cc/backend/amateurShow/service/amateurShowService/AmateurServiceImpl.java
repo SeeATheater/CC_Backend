@@ -619,11 +619,10 @@ public class AmateurServiceImpl implements AmateurService {
             return AmateurShowResponseDTO.MyShowAmateurShowList.builder()
                     .amateurShowId(show.getId())
                     .name(show.getName())
-                    //.place(show.getPlace())
                     .detailAddress(show.getDetailAddress())
                     .schedule(schedule)
                     .posterImageUrl(show.getPosterImageUrl())
-                    .status(status)
+                    .status(show.getStatus())
                     .build();
         });
     }
