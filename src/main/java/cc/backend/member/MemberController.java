@@ -5,6 +5,7 @@ import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.amateurShow.service.amateurShowService.AmateurService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.board.dto.response.BoardDetailResponse;
 import cc.backend.board.dto.response.BoardListResponse;
@@ -124,12 +125,15 @@ public class MemberController {
 
     @Operation(summary = "내가 업로드한 게시글 목록 조회 API", description = "내가 업로드한 게시글을 무한 스크롤 방식으로 조회합니다.")
     @GetMapping("/myPage/myBoard")
-    public Slice<BoardListResponse> getMyBoards(
+    public ApiResponse<SliceResponse<BoardListResponse>> getMyBoards(
             @Parameter(description = "작성자 회원 ID", required = true) @AuthenticationPrincipal(expression = "member") Member member,
-            @Parameter(description = "페이지 번호(0부터 시작)", required = true) @RequestParam int page,
-            @Parameter(description = "페이지 크기", required = true) @RequestParam int size
+            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", required = true)
+            @RequestParam(defaultValue = "20") int size
     ) {
-        return boardService.getMyBoards(member.getId(), page, size);
+        Slice<BoardListResponse> slice = boardService.getMyBoards(member.getId(), page,size);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
 
