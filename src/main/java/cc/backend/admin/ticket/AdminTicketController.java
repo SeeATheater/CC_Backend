@@ -72,7 +72,7 @@ public class AdminTicketController {
 
     @GetMapping("/refund/history")
     @Operation(summary = "관리자 환불 내역 관리 - 표", description = "환불 내역을 리스트 형태로 조회합니다.")
-    public ApiResponse<Slice<RefundListResponseDTO>> getRefundHistory(
+    public ApiResponse<SliceResponse<RefundListResponseDTO>> getRefundHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -82,8 +82,8 @@ public class AdminTicketController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ) {
-        return ApiResponse.onSuccess(adminTicketService.getRefundList(page, size, keyword));
-    }
+        Slice<RefundListResponseDTO> slice = adminTicketService.getRefundList(page, size, keyword);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
 
     @GetMapping("/refund/{realTicketId}")
     @Operation(summary = "관리자 환불 내역 관리 상세조회")
