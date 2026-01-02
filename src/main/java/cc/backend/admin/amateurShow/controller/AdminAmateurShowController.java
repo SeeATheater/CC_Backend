@@ -7,6 +7,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowReviseRequestDTO;
 import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.admin.amateurShow.service.AdminAmateurShowService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +40,11 @@ public class AdminAmateurShowController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
                             description = "조회 성공",
-                            content = @Content(schema = @Schema(implementation = AdminAmateurShowListResponseDTO.class))
+                            content = @Content(schema = @Schema(implementation = SliceResponse.class))
                     )
             }
     )
-    public ApiResponse<List<AdminAmateurShowListResponseDTO>> showList(
+    public ApiResponse<SliceResponse<AdminAmateurShowListResponseDTO>> showList(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -52,8 +54,8 @@ public class AdminAmateurShowController {
             @Parameter(description = "검색 키워드, 공연면", example = "실종")
             @RequestParam(required = false) String keyword
     ) {
-        return adminAmateurShowService.getShowList(page, size, keyword);
-    }
+        Slice<AdminAmateurShowListResponseDTO> slice = adminAmateurShowService.getShowList(page, size, keyword);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
 
     @GetMapping("/{showId}")
     @Operation(
