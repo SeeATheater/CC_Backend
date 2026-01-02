@@ -5,6 +5,7 @@ import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
+import cc.backend.kakaoPay.dto.responseDTO.KakaoPayResultResponseDTO;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
 import cc.backend.ticket.entity.MemberTicket;
 import cc.backend.ticket.entity.RealTicket;
@@ -73,7 +74,7 @@ public class KakaoPayBusinessService {
     }
 
     // 결제 완료 비즈니스 로직
-    public KakaoPayApproveResponseDTO completePayment(String partnerOrderId, String pgToken) {
+    public KakaoPayResultResponseDTO completePayment(String partnerOrderId, String pgToken) {
 
         Long ticketId = Long.valueOf(partnerOrderId);
 
@@ -120,7 +121,11 @@ public class KakaoPayBusinessService {
         confirmReservation(memberTicket);
         realTicketService.createRealTicketFromMemberTicket(ticketId);
 
-        return responseDTO;
+        Long amateurShowId = memberTicket.getAmateurTicket().getAmateurShow().getId();
+        return new KakaoPayResultResponseDTO(
+                amateurShowId,
+                responseDTO
+        );
     }
 
     private void confirmReservation(MemberTicket memberTicket) {
