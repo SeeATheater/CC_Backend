@@ -24,7 +24,7 @@ public class AdminTicketController {
 
     @GetMapping("/history")
     @Operation(summary = "관리자 소극장 티켓 관리 - 표")
-    public ApiResponse<Slice<TicketDetailResponseDTO>> getTicketHistory(
+    public ApiResponse<SliceResponse<TicketDetailResponseDTO>> getTicketHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -34,8 +34,8 @@ public class AdminTicketController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ){
-        return ApiResponse.onSuccess(adminTicketService.getTicketList(page, size, keyword));
-    }
+        Slice<TicketDetailResponseDTO> slice = adminTicketService.getTicketList(page, size, keyword);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
 
     @GetMapping("/{realTicketId}")
     @Operation(summary = "관리자 소극장 티켓 관리 상세조회")

@@ -27,7 +27,7 @@ public class AdminPhotoAlbumController {
     private final AdminPhotoAlbumService adminPhotoAlbumService;
 
     @GetMapping("")
-    @Operation(summary = "관리자페이지 사진첩 전체 조회 API", description = "전체 사진첩 업로드 날짜 내림차순 정렬")
+    @Operation(summary = "관리자 사진첩 전체 조회 API", description = "전체 사진첩 업로드 날짜 내림차순 정렬")
     public ApiResponse<Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO>> getAllPhotoAlbum(
             @Parameter(description = "페이지 번호(0부터 시작)", required = true) @RequestParam int page,
             @Parameter(description = "페이지 크기", required = true) @RequestParam int size
