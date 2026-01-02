@@ -39,11 +39,14 @@ public class AdminBoardService {
 
     //게시글 목록 조회
     @Transactional(readOnly = true)
-    public Slice<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size) {
+    public Slice<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size, String keyword) {
         // 관리자는 삭제된 게시글도 볼 수 있도록 @SQLDelete 우회
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return boardRepository.findAllBoardsIncludingDeleted(pageable)
-                .map(AdminBoardListResponse::from);
+        Slice<Board> boards = (keyword != null && !keyword.isBlank())
+                ? boardRepository.searchBoardsIncludingDeletedByTitle(keyword, pageable)
+                : boardRepository.findAllBoardsIncludingDeleted(pageable);
+
+        return boards.map(AdminBoardListResponse::from);
     }
 
     //게시글 상세조회
