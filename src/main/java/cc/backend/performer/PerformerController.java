@@ -29,21 +29,22 @@ public class PerformerController {
     private final AmateurService amateurService;
     private final PerformerService performerService;
 
-    @PreAuthorize("hasRole('PERFOMER')")
+    @PreAuthorize("hasRole('PERFORMER')")
     @GetMapping("/myShow")
     @Operation(summary = "공연진 내가 등록한 공연 조회", description = "등록자 계정으로 등록한 공연들을 무한 스크롤 방식으로 조회합니다.")
-    public Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyShows(
+    public ApiResponse<SliceResponse<AmateurShowResponseDTO.MyShowAmateurShowList>> getMyShows(
             @Parameter(description = "작성자 회원 ID", required = true)
             @AuthenticationPrincipal(expression = "member") Member member,
             @Parameter(description = "페이지 번호(0부터 시작)", required = true)
-            @RequestParam int page,
+            @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", required = true)
-            @RequestParam int size,
+            @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "공연 상태 필터 (전체: 생략, 예매 진행 중: ONGOING, 공연 종료: ENDED)", required = false)
             @RequestParam(required = false) AmateurShowStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return amateurService.getMyAmateurShow(member.getId(), status, pageable);
+        Slice<AmateurShowResponseDTO.MyShowAmateurShowList> slice = amateurService.getMyAmateurShow(member.getId(), status, pageable);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @PreAuthorize("hasRole('PERFORMER')")
