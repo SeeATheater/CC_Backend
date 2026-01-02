@@ -41,14 +41,15 @@ public class DashboardController {
 
     @GetMapping("/approval")
     @Operation(summary = "등록 요청 - 간편보기", description = "대쉬보드에서 등록 요청 리스트를 조회합니다.")
-    public ApiResponse<Slice<ApprovalSummaryResponseDTO>> getApprovalSummary(
+    public ApiResponse<SliceResponse<ApprovalSummaryResponseDTO>> getApprovalSummary(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
-        return ApiResponse.onSuccess(dashBoardService.getApprovalList(page, size));
+        Slice<ApprovalSummaryResponseDTO> slice = dashBoardService.getApprovalList(page, size);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @GetMapping("/reservation")
