@@ -1,6 +1,7 @@
 package cc.backend.search;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.member.entity.Member;
 import cc.backend.search.dto.SearchShowResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +33,7 @@ public class SearchController {
             summary = "소극장 공연 검색",
             description = "공연명, 공연진명을 대상으로 키워드 검색하는 기능."
     )
-    public ApiResponse<Slice<SearchShowResponseDTO>> searchShows(
+    public ApiResponse<SliceResponse<SearchShowResponseDTO>> searchShows(
             @Parameter(description = "작성자 회원 ID", required = true)
             @AuthenticationPrincipal(expression = "member") Member member,
 
@@ -46,6 +47,10 @@ public class SearchController {
             @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return ApiResponse.onSuccess(searchService.searchAmateurShows(keyword, pageable));
+
+        Slice<SearchShowResponseDTO> slice =
+                searchService.searchAmateurShows(keyword, pageable);
+
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 }
