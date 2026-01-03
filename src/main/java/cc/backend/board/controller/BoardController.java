@@ -108,8 +108,9 @@ public class BoardController {
     @Operation(summary = "핫게시판 조회 API", description = "핫게시판(좋아요 10개 이상) 목록을 조회합니다.")
     @GetMapping("/hot")
     public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getHotBoards(){
-        List<BoardListResponse> hotboards = boardService.getHotBoards();
-        return ResponseEntity.ok(hotboards);
+        Slice<BoardListResponse> slice = boardService.getHotBoards();
+
+        return cc.backend.apiPayLoad.ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @Operation(summary = "게시글 검색", description = "게시판 타입별로 검색합니다. 일반게시판은 제목+내용, 홍보게시판은 제목+내용+작성자를 검색합니다.")
