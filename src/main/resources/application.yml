@@ -50,7 +50,7 @@ kakaopay:
   cid: TC0ONETIME
   base-url: https://open-api.kakaopay.com
   url:
-    approval: ${KAKAOPAY_APPROVE_URL}s
+    approval: ${KAKAOPAY_APPROVE_URL}
     cancel: ${KAKAOPAY_CANCEL_URL}
     fail: ${KAKAOPAY_FAIL_URL}
 front:
