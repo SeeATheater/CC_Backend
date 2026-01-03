@@ -70,7 +70,7 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     SELECT a
     FROM AmateurShow a
     WHERE a.end >= :today
-    ORDER BY a.totalSoldTicket DESC, a.start ASC
+    ORDER BY a.end ASC, a.totalSoldTicket DESC
 """)
     List<AmateurShow> findHotShows(
             @Param("today") LocalDate today,
