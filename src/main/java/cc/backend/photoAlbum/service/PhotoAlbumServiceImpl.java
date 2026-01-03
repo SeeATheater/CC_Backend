@@ -301,7 +301,9 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         // 다음 커서 설정
         boolean hasNext = albums.size() > size;
-        Long nextCursorId = hasNext ? limitedAlbums.get(limitedAlbums.size() - 1).getId() : null;
+        Long nextCursorId = (hasNext && !limitedAlbums.isEmpty())
+                ? limitedAlbums.get(limitedAlbums.size() - 1).getId()
+                : null;
 
         return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
                 .photoAlbumDTOs(dtoList)
