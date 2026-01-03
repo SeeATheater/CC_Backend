@@ -655,7 +655,7 @@ public class AmateurServiceImpl implements AmateurService {
         memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
 
-        // 종료되지 않은 공연 중, 판매량 기준 상위 3개
+        // 종료되지 않은 공연 중, 마감이 얼마 안남은 3개
         LocalDate today = LocalDate.now();
         List<AmateurShow> shows = amateurShowRepository.findHotShows(today, PageRequest.of(0, 3));
 
