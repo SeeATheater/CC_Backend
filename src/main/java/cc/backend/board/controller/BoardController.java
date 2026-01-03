@@ -65,12 +65,14 @@ public class BoardController {
 
     @Operation(summary = "전체 게시글 조회 API", description = "전체 게시글을 무한 스크롤 방식으로 조회합니다.")
     @GetMapping("/all")
-    public ResponseEntity<Slice<BoardListResponse>> getAllBoards(
-            @Parameter(description = "페이지 번호(0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size
+    public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getAllBoards(
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size
     ) {
         Slice<BoardListResponse> result = boardService.getAllBoards(page, size);
-        return ResponseEntity.ok(result);
+        return cc.backend.apiPayLoad.ApiResponse.onSuccess(SliceResponse.of(result));
     }
 
     @Operation(summary = "타입별 게시글 목록 조회 API", description = "게시글을 무한 스크롤 방식으로 조회합니다.")
@@ -105,7 +107,7 @@ public class BoardController {
 
     @Operation(summary = "핫게시판 조회 API", description = "핫게시판(좋아요 10개 이상) 목록을 조회합니다.")
     @GetMapping("/hot")
-    public ResponseEntity<List<BoardListResponse>> getHotBoards(){
+    public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getHotBoards(){
         List<BoardListResponse> hotboards = boardService.getHotBoards();
         return ResponseEntity.ok(hotboards);
     }
