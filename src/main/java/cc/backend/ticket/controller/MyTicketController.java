@@ -1,6 +1,7 @@
 package cc.backend.ticket.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.kakaoPay.service.KakaoPayBusinessService;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +44,7 @@ public class MyTicketController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200",
                             description = "티켓 리스트 조회 성공",
-                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = RealTicketResponseDTO.class)))
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = SliceResponse.class)))
                     ),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "400",
@@ -56,12 +58,18 @@ public class MyTicketController {
                     )
             }
     )
-    public ApiResponse<List<RealTicketResponseDTO>> getMyTicketList(
+    public ApiResponse<SliceResponse<RealTicketResponseDTO>> getMyTicketList(
             @AuthenticationPrincipal(expression = "member") Member member,
-            @RequestParam(defaultValue = "ALL") String status) {
+            @RequestParam(defaultValue = "ALL") String status,
 
-        List<RealTicketResponseDTO> tickets = realTicketService.getMyTicketList(member.getId(), status);
-        return ApiResponse.onSuccess(tickets);
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+
+        Slice<RealTicketResponseDTO> slice = realTicketService.getMyTicketList(member.getId(), status, page, size);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
 
