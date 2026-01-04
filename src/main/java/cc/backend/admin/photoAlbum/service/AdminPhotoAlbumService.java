@@ -1,6 +1,7 @@
 package cc.backend.admin.photoAlbum.service;
 
 import cc.backend.admin.photoAlbum.dto.AdminPhotoAlbumResponseDTO;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.image.DTO.ImageResponseDTO;
@@ -14,10 +15,7 @@ import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +31,13 @@ public class AdminPhotoAlbumService {
     private final ImageService imageService;
 
     @Transactional(readOnly = true)
-    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(int page, int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
-        Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(pageable);
+    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("updatedAt").descending());
+
+        Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(sortedPageable);
 
         return photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
                 .id(photoAlbum.getId())
@@ -90,20 +92,21 @@ public class AdminPhotoAlbumService {
     }
 
     @Transactional(readOnly = true)
-    public List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword){
+    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
         if (keyword == null || keyword.trim().isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty(pageable);
         }
 
-        List<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword);
-        return results.stream()
-                .map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-                        .id(photoAlbum.getId())
-                        .amateurShowName(photoAlbum.getAmateurShow().getName())
-                        .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-                        .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-                        .updatedAt(photoAlbum.getUpdatedAt())
-                        .build())
-                .toList();
+        Page<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
+
+        return results.map(p ->
+                AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+                        .id(p.getId())
+                        .amateurShowName(p.getAmateurShow().getName())
+                        .uploaderId(p.getAmateurShow().getMember().getId())
+                        .uploaderName(p.getAmateurShow().getMember().getName())
+                        .updatedAt(p.getUpdatedAt())
+                        .build()
+        );
     }
 }

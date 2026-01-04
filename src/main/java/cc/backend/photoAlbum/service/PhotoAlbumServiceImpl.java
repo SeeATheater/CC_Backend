@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -115,78 +114,45 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO getPhotoAlbumList(Long memberId, Long performerId, int page, int pageSize){
+    public Slice<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable){
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
         Member performer = memberRepository.findById(performerId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        // 사진첩 단위 조회 (커서 기반)
-
-        Page<PhotoAlbum> albumPage = photoAlbumRepository.findByPerformer(
-                performerId,
-                pageable
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        //다음 커서 설정
-        List<PhotoAlbum> albums = albumPage.getContent();
+
+        // 사진첩 단위 조회
+        Slice<PhotoAlbum> albumSlice = photoAlbumRepository.findByPerformerId(performerId, sortedPageable);
+        List<PhotoAlbum> albums = albumSlice.getContent();
 
         // 사진첩 id 추출
         List<Long> albumIds = albums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        // 대표 이미지 가져오기
-        Map<Long, Image> albumImageMap =
-                imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum)
-                        .stream()
-                        .collect(Collectors.toMap(
-                                Image::getContentId,
-                                Function.identity(),
-                                (a, b) -> a
-                        ));
-
-
+        // 대표 이미지 DTO 가져오기 (presigned URL 포함)
         Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageDtoMap =
-                albumImageMap.isEmpty()
-                        ? Collections.emptyMap()
-                        : imageService.getImages(
-                                albumImageMap.values().stream().toList(),
-                                memberId
-                        )
-                        .stream()
-                        .collect(Collectors.toMap(
-                                ImageResponseDTO.ImageResultWithPresignedUrlDTO::getContentId,
-                                Function.identity(),
-                                (a, b) -> a
-                        ));
+                getFirstImageDTOForPhotoAlbums(albumIds);
 
         // DTO 변환
-        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> singlePhotoAlbumDTOs =
-                albums.stream()
-                        .map(album -> PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
-                                .photoAlbumId(album.getId())
-                                .amateurShowName(album.getAmateurShow().getName())
-                                .performerName(performer.getName())
-                                .detailAddress(album.getAmateurShow().getDetailAddress())
-                                .imageResultWithPresignedUrlDTO(
-                                        imageDtoMap.get(album.getId())
-                                )
-                                .build()
-                        )
-                        .toList();
+        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> content = albums.stream()
+                .map(album -> PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
+                        .photoAlbumId(album.getId())
+                        .amateurShowName(album.getAmateurShow().getName())
+                        .performerName(performer.getName())
+                        .detailAddress(album.getAmateurShow().getDetailAddress())
+                        .imageResultWithPresignedUrlDTO(imageDtoMap.get(album.getId()))
+                        .build()
+                )
+                .toList();
 
-        boolean hasNext = albumPage.hasNext();
-        Integer nextPage = hasNext ? page + 1 : null;
-
-        return PhotoAlbumResponseDTO.PerformerPhotoAlbumDTO.builder()
-                .singlePhotoAlbumDTOs(singlePhotoAlbumDTOs)
-                .performerName(performer.getName())
-                .number(singlePhotoAlbumDTOs.size())
-                .hasNext(hasNext)
-                .nextPage(nextPage)
-                .build();
+        return new SliceImpl<>(content, sortedPageable, albumSlice.hasNext());
     }
 
     @Override
@@ -298,42 +264,51 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long memberId, int page, int size){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long memberId, Long cursorId, int size){
 
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
-        // 최근 생성한 순서대로 photoAlbum 가져오기
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<PhotoAlbum> albumPage = photoAlbumRepository.findAll(pageable);
-        List<PhotoAlbum> albums = albumPage.getContent(); //Page 벗기기
 
-        // N+1 방지: 대표 이미지 조회
-        List<Long> albumIds = albums.stream()
+        // 다음 사진첩 조회 (cursor 기반, size + 1로 hasNext 판단)
+        Pageable pageable = PageRequest.of(0, size + 1);
+        List<PhotoAlbum> albums = photoAlbumRepository.findNextAlbums(cursorId, pageable);
+
+
+        // 실제 응답할 데이터만 자르기
+        List<PhotoAlbum> limitedAlbums = albums.stream()
+                .limit(size)
+                .toList();
+
+        // 대표 이미지 조회 (N+1 방지)
+        List<Long> albumIds = limitedAlbums.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
-        Map<Long, String> firstImageMap =
-                getFirstImageMapForPhotoAlbums(albumIds);
+        Map<Long, String> firstImageMap = getFirstImageMapForPhotoAlbums(albumIds);
 
-        //DTO 변환
-        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList =
-                albums.stream()
-                        .map(album -> PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
-                                .photoAlbumId(album.getId())
-                                .memberId(album.getAmateurShow().getMember().getId())
-                                .performerName(album.getAmateurShow().getMember().getName())
-                                .amateurShowName(album.getAmateurShow().getName())
-                                .imageUrl(firstImageMap.get(album.getId()))
-                                .build()
-                        )
-                        .toList();
+        // DTO 변환
+        List<PhotoAlbumResponseDTO.MemberPhotoAlbumDTO> dtoList = limitedAlbums.stream()
+                .map(album -> PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
+                        .photoAlbumId(album.getId())
+                        .memberId(album.getAmateurShow().getMember().getId())
+                        .performerName(album.getAmateurShow().getMember().getName())
+                        .amateurShowName(album.getAmateurShow().getName())
+                        .imageUrl(firstImageMap.get(album.getId()))
+                        .build())
+                .toList();
+
+        // 다음 커서 설정
+        boolean hasNext = albums.size() > size;
+        Long nextCursorId = (hasNext && !limitedAlbums.isEmpty())
+                ? limitedAlbums.get(limitedAlbums.size() - 1).getId()
+                : null;
 
         return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
                 .photoAlbumDTOs(dtoList)
-                .nextPage(albumPage.hasNext() ? page + 1 : null)
-                .hasNext(albumPage.hasNext())
+                .nextCursor(nextCursorId)
+                .hasNext(hasNext)
                 .build();
     }
 
@@ -341,7 +316,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     @Override
     public PerformerShowListResponseDTO getPerformerShows(Long memberId, Pageable pageable) {
 
-        Slice<AmateurShow> slice = amateurShowRepository.findByMember_IdOrderByIdDesc(memberId, pageable);
+        Slice<AmateurShow> slice = amateurShowRepository.findByMember_IdOrderByIdDesc(memberId, pageable);  //Page 방식 - 이름 수정 필요
         long total = amateurShowRepository.countByMember_Id(memberId); // 총 개수
 
         List<PerformerShowListResponseDTO.ShowList> showLists =
@@ -358,19 +333,37 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         }
 
         // 배치로 대표 이미지 조회
-        List<Image> firstImages =
-                imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
+        List<Image> firstImages = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
 
+        // presigned URL 발급 후 Map에 담기
         Map<Long, String> result = new HashMap<>();
-
         for (Image img : firstImages) {
-            String presignedUrl = imageService
-                    .getImages(List.of(img), img.getMemberId())
+            String presignedUrl = imageService.getImages(List.of(img), img.getMemberId())
                     .get(0)
                     .getPresignedUrl();
-
             result.put(img.getContentId(), presignedUrl);
         }
+        return result;
+    }
+
+    private Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> getFirstImageDTOForPhotoAlbums(List<Long> albumIds) {
+        if (albumIds == null || albumIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 배치로 대표 이미지 조회
+        List<Image> firstImages = imageRepository.findFirstByContentIds(albumIds, FilePath.photoAlbum);
+
+        Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> result = new HashMap<>();
+
+        for (Image img : firstImages) {
+            // img.getMemberId()를 이용해서 presigned URL 발급
+            ImageResponseDTO.ImageResultWithPresignedUrlDTO dto = imageService.getImages(List.of(img), img.getMemberId())
+                    .get(0); // presigned URL 포함
+
+            result.put(img.getContentId(), dto);
+        }
+
         return result;
     }
 

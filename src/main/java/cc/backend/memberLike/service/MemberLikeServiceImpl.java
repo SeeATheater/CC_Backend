@@ -12,6 +12,9 @@ import cc.backend.memberLike.dto.MemberLikeResponseDTO;
 import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,21 +73,28 @@ public class MemberLikeServiceImpl implements MemberLikeService {
 
     // 내가 좋아요한 모든 공연진 조회
     @Override
-    public List<MemberLikeResponseDTO> getLikedPerformers(Long memberId) {
+    public Slice<MemberLikeResponseDTO> getLikedPerformers(Long memberId, Pageable pageable) {
         Member liker = getMemberById(memberId);
 
-        return liker.getLikesGiven().stream()
-                .sorted(Comparator.comparing(
-                        like -> findSoonestEndingShowDateForPerformer(like.getPerformer()),
-                        // 공연이 없는 경우(LocalDateTime.MAX)는 맨 뒤로, 그 외에는 날짜 오름차순
-                        Comparator.naturalOrder()
-                ))
-                .map(like -> MemberLikeResponseDTO.builder()
-                        .memberLikeId(like.getMemberLikeId())
-                        .performerId(like.getPerformer().getId())
-                        .performerName(like.getPerformer().getName())
-                        .build())
-                .collect(Collectors.toList());
+        Slice<MemberLike> likeSlice =
+                memberLikeRepository.findLikedPerformersSortedBySoonestShow(
+                        liker,
+                        LocalDateTime.now(),
+                        pageable
+                );
+
+        List<MemberLikeResponseDTO> content =
+                likeSlice.getContent().stream()
+                        .map(like -> MemberLikeResponseDTO.builder()
+                                .memberLikeId(like.getMemberLikeId())
+                                .performerId(like.getPerformer().getId())
+                                .performerName(like.getPerformer().getName())
+                                .build()
+                        )
+                        .toList();
+
+        return new SliceImpl<>(content, pageable, likeSlice.hasNext());
+
     }
 
     private LocalDateTime findSoonestEndingShowDateForPerformer(Member performer) {

@@ -48,7 +48,7 @@ public class InquiryService {
 
     public InquiryResponseDTO.InquiryListResponseDTO getInquiryList(Long memberId, Pageable pageable) {
         Member member = memberRepository.findById(memberId).orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
-        Slice<Inquiry> inquiries = inquiryRepository.findByMemberId(member.getId(), pageable);
+        Slice<Inquiry> inquiries = inquiryRepository.findByMemberId(member.getId(), pageable);  //Page 기반으로 수정필요
         return InquiryResponseConverter.toInquirySliceDTO(inquiries);
     }
 

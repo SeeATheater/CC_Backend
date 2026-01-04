@@ -1,6 +1,8 @@
 package cc.backend.memberLike.service;
 
 import cc.backend.memberLike.dto.MemberLikeResponseDTO;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,6 +11,6 @@ import java.util.List;
 public interface MemberLikeService {
     MemberLikeResponseDTO likePerformer(Long likerId, Long performerId);
     void cancelLikePerformer(Long likerId, Long performerId);
-    List<MemberLikeResponseDTO> getLikedPerformers(Long memberId);
+    Slice<MemberLikeResponseDTO> getLikedPerformers(Long memberId, Pageable pageable);
     boolean hasMemberLikedPerformer(Long memberId, Long performerId);
 }

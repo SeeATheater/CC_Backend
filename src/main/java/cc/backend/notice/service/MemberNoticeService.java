@@ -83,14 +83,14 @@ public class MemberNoticeService {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
         }
 
-        MemberNotice updatedMemberNotice = memberNotice.updateIsRead();
+        memberNotice.updateIsRead();
 
         return MemberNoticeResponseDTO.MemberNoticeDTO.builder()
-                .id(updatedMemberNotice.getId())
-                .noticeType(updatedMemberNotice.getNotice().getType())
-                .message(updatedMemberNotice.getNotice().getMessage())
-                .isRead(true)
-                .contentId(updatedMemberNotice.getNotice().getContentId())
+                .id(memberNotice.getId())
+                .noticeType(memberNotice.getNotice().getType())
+                .message(memberNotice.getNotice().getMessage())
+                .isRead(memberNotice.getIsRead())
+                .contentId(memberNotice.getNotice().getContentId())
                 .createdAt(memberNotice.getCreatedAt())
                 .build();
     }

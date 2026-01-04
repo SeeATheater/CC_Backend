@@ -19,7 +19,7 @@ public interface AmateurService {
     AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long memberId, Long amateurId);
     AmateurEnrollResponseDTO.AmateurEnrollResult updateShow(Long memberId, Long showId, AmateurUpdateRequestDTO requestDTO);
     void deleteShow(Long memberId, Long amateurShowId);
-    List<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId);
+    Slice<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId, Pageable pageable);
     Slice<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable);
     List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId);
     List<AmateurShowResponseDTO.AmateurShowList> getRecentlyHotShow(Long memberId);
