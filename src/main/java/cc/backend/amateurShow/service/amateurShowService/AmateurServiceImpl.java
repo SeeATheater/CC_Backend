@@ -3,10 +3,12 @@ package cc.backend.amateurShow.service.amateurShowService;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
 import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
+import cc.backend.amateurShow.repository.specification.AmateurShowSpecification;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.entity.enums.BoardType;
@@ -24,11 +26,9 @@ import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -443,134 +443,96 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 소극장 공연 단건 조회
     @Override
-    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long memberId, Long amateurShowId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
-
+    public AmateurShowResponseDTO.AmateurShowResult getAmateurShow(Long amateurShowId) {
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
-
 
         return AmateurConverter.toResponseDTO(amateurShow);
     }
 
     // 오늘 진행하는 소극장 공연 리스트 조회
     @Override
-    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId, Pageable pageable) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowToday(Pageable pageable) {
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
-        // 오늘 날짜를 가진 회차가 있는 공연만
-        List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
-                .filter(show -> show.getAmateurRounds().stream()
-                        .anyMatch(round ->
-                                round.getPerformanceDateTime()
-                                        .toLocalDate()
-                                        .equals(today)
-                        )
-                )
-                .distinct()
-                .sorted(Comparator.comparing(AmateurShow::getStart)) // 정렬 필요하면 유지
-                .map(show -> {
-                    String schedule = AmateurConverter.mergeSchedule(
-                            show.getStart(),
-                            show.getEnd()
-                    );
-                    return AmateurShowResponseDTO.AmateurShowList.builder()
-                            .amateurShowId(show.getId())
-                            .name(show.getName())
-                            .detailAddress(show.getDetailAddress())
-                            .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        // Specification 조합 : 승인된 공연 + 오늘 공연하는 회차 존재
+        Specification<AmateurShow> spec = Specification
+                .where(AmateurShowSpecification.isApproved())
+                .and(AmateurShowSpecification.hasRoundOn(today));
 
-        // ===== Slice 페이징 처리 =====
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), result.size());
+        // DB 레벨에서 페이징 + 필터링
+        Slice<AmateurShow> showSlice = amateurShowRepository.findAll(spec, pageable);
 
-        List<AmateurShowResponseDTO.AmateurShowList> content = new ArrayList<>();
-        if (start < result.size()) {
-            content = result.subList(start, end);
-        }
-
-        boolean hasNext = end < result.size();
-
-        return new SliceImpl<>(content, pageable, hasNext);
+        // DTO 변환
+        return showSlice.map(show -> {
+            String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+            return AmateurShowResponseDTO.AmateurShowList.builder()
+                    .amateurShowId(show.getId())
+                    .name(show.getName())
+                    .detailAddress(show.getDetailAddress())
+                    .schedule(schedule)
+                    .posterImageUrl(show.getPosterImageUrl())
+                    .build();
+        });
     }
 
     // 현재 진행중인 소극장 공연 리스트 조회
     @Override
-    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Long memberId, Pageable pageable) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowOngoing(Pageable pageable) {
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
-        List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
-                // 오늘 날짜가 schedule 기간 내에 포함된 공연만 필터링
-                .filter(show -> {
-                    LocalDate start = show.getStart();
-                    LocalDate end = show.getEnd();
-                    return start != null && end != null
-                            && !today.isBefore(start)
-                            && !today.isAfter(end);
-                })
-                // 공연 시작일 기준 오름차순 정렬
-                .sorted(Comparator.comparing(AmateurShow::getStart))
-                // DTO로 변환
-                .map(show -> {
-                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
-                    return AmateurShowResponseDTO.AmateurShowList.builder()
-                            .amateurShowId(show.getId())
-                            .name(show.getName())
-                            .detailAddress(show.getDetailAddress())
-                            .schedule(schedule)
-                            .posterImageUrl(show.getPosterImageUrl())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        // Specification 조합: 승인 + 현재 진행 중인 공연
+        Specification<AmateurShow> spec = Specification
+                .where(AmateurShowSpecification.isApproved())
+                .and(AmateurShowSpecification.isOngoing(today));
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), result.size());
+        Pageable sortedPage = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("start").ascending()
+        );
 
-        List<AmateurShowResponseDTO.AmateurShowList> content = new ArrayList<>();
-        if (start < result.size()) {
-            content = result.subList(start, end);
-        }
+        Slice<AmateurShow> showSlice = amateurShowRepository.findAll(spec, sortedPage);
 
-        boolean hasNext = end < result.size();
-
-        return new SliceImpl<>(content, pageable, hasNext); // 시그니처 (List<DTO>, pageable, hasNext)
+        return showSlice.map(show -> {
+            String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+            return AmateurShowResponseDTO.AmateurShowList.builder()
+                    .amateurShowId(show.getId())
+                    .name(show.getName())
+                    .detailAddress(show.getDetailAddress())
+                    .schedule(schedule)
+                    .posterImageUrl(show.getPosterImageUrl())
+                    .build();
+        });
     }
 
     // 소극장 공연 랭킹 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowRanking() {
 
         LocalDate today = LocalDate.now();
-        List<AmateurShow> shows = amateurShowRepository.findAllWithRounds();
 
-        return shows.stream()
-                // 종료일이 오늘 이후인 공연만 필터링
-                .filter(show -> {
-                    LocalDate start = show.getStart();
-                    LocalDate end = show.getEnd();
-                    return start != null && end != null && !today.isAfter(end);
-                })
-                // 정렬: 판매 티켓 수 내림차순 → 시작일 오름차순
-                .sorted(Comparator
-                        .comparing(AmateurShow::getTotalSoldTicket, Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparing(AmateurShow::getStart))
-                .limit(10)
-                // DTO 변환
+        // Specification 조합: 종료일이 오늘 이후 + 승인된 공연
+        Specification<AmateurShow> spec = Specification
+                .where(AmateurShowSpecification.isNotEnded(today))
+                .and(AmateurShowSpecification.isApproved());
+
+        // Pageable로 정렬 + limit 10 적용
+        Pageable sortedPage = PageRequest.of(
+                0,
+                10,
+                Sort.by(
+                        Sort.Order.desc("totalSoldTicket"),  // 판매 티켓 수 내림차순
+                        Sort.Order.asc("start")             // 시작일 오름차순
+                )
+        );
+
+        Slice<AmateurShow> showSlice = amateurShowRepository.findAll(spec, sortedPage);
+
+        // DTO 변환
+        return showSlice.stream()
                 .map(show -> {
                     String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
                     return AmateurShowResponseDTO.AmateurShowList.builder()
@@ -582,40 +544,41 @@ public class AmateurServiceImpl implements AmateurService {
                             .build();
                 })
                 .collect(Collectors.toList());
+
     }
 
     // 오늘 마감인 소극장 공연 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public List<AmateurShowResponseDTO.AmateurShowList> getShowClosing() {
 
-        List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
         LocalDate today = LocalDate.now();
 
-        List<AmateurShowResponseDTO.AmateurShowList> result = new ArrayList<>();
+        // Specification 조합: 승인된 공연 + 마지막 회차가 오늘인 공연
+        Specification<AmateurShow> spec = Specification
+                .where(AmateurShowSpecification.isApproved())
+                .and(AmateurShowSpecification.hasLastRoundOn(today));
 
-        for (AmateurShow show : allShows) {
-            // 각 공연의 회차들 중 젤 마지막 회차 날짜 구하기
-            Optional<LocalDate> lastDate = show.getAmateurRounds().stream()
-                    .map(r -> r.getPerformanceDateTime().toLocalDate()) // 회차 날짜만 추출
-                    .max(Comparator.naturalOrder()); // 젤 늦은 날짜 추출
+        // Pageable로 start 기준 오름차순 정렬, limit 없이 전체 조회
+        Pageable sortedPage = PageRequest.of(
+                0,
+                Integer.MAX_VALUE,
+                Sort.by("start").ascending());
 
-            if (lastDate.isPresent() && lastDate.get().isEqual(today)) { // 마지막 회차 날짜가 오늘인 경우
-                String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+        List<AmateurShow> shows = amateurShowRepository.findAll(spec, sortedPage).getContent();
 
-                result.add(AmateurShowResponseDTO.AmateurShowList.builder()
-                        .amateurShowId(show.getId())
-                        .name(show.getName())
-                        //.place(show.getPlace())
-                        .detailAddress(show.getDetailAddress())
-                        .schedule(schedule)
-                        .posterImageUrl(show.getPosterImageUrl())
-                        .build());
-            }
-        }
-
-        return result;
+        // DTO 변환
+        return shows.stream()
+                .map(show -> {
+                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    return AmateurShowResponseDTO.AmateurShowList.builder()
+                            .amateurShowId(show.getId())
+                            .name(show.getName())
+                            .detailAddress(show.getDetailAddress())
+                            .schedule(schedule)
+                            .posterImageUrl(show.getPosterImageUrl())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -651,11 +614,9 @@ public class AmateurServiceImpl implements AmateurService {
     }
 
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getRecentlyHotShow (Long memberId){
-        memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
+    public List<AmateurShowResponseDTO.AmateurShowList> getRecentlyHotShow (){
 
-
-        // 종료되지 않은 공연 중, 마감이 얼마 안남은 3개
+        // 종료되지 않은 공연 중, 마감이 얼마 안남은 3개 - specification 없이 바로
         LocalDate today = LocalDate.now();
         List<AmateurShow> shows = amateurShowRepository.findHotShows(today, PageRequest.of(0, 3));
 

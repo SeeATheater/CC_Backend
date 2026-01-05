@@ -12,6 +12,7 @@ import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.photoAlbum.dto.PerformerShowListResponseDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,7 +44,6 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     private final ImageRepository imageRepository;
     private final ImageService imageService;
     private final MemberRepository memberRepository;
-    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -264,12 +265,9 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long memberId, Long cursorId, int size){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long cursorId, int size){
 
-        //로그인 검사
-        memberRepository.findById(memberId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
-
+        //로그인 검사 X -> 방문자 첫화면 허용
 
         // 다음 사진첩 조회 (cursor 기반, size + 1로 hasNext 판단)
         Pageable pageable = PageRequest.of(0, size + 1);
@@ -367,4 +365,46 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return result;
     }
 
+    @Override
+    public List<PhotoAlbumResponseDTO.MyShowsForPhotoAlbumDTO> getMyShows(Long memberId) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
+        if(member.getRole() != Role.PERFORMER){
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
+
+        List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberId(memberId);
+
+        return amateurShows.stream()
+                .map(show->{
+                    String schedule = mergeScheduleWithoutDays(show.getStart(), show.getEnd());
+                    return PhotoAlbumResponseDTO.MyShowsForPhotoAlbumDTO.builder()
+                            .amateurShowId(show.getId())
+                            .memberId(memberId)
+                            .schedule(schedule)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static String mergeScheduleWithoutDays(LocalDate start, LocalDate end) {
+        try {
+            if (start == null || end == null) {
+                return "";
+            }
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+            String startStr = start.format(formatter);
+            String endStr   = end.format(formatter);
+
+            // 최종 결과: "2025.10.02~2025.10.05"
+            return startStr + "~" + endStr;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 }
