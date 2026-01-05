@@ -30,7 +30,6 @@ import java.util.List;
 @RequestMapping("/amateurs")
 public class AmateurController {
 
-    private final MemberService memberService;
     private final AmateurService amateurService;
 
     @PreAuthorize("hasRole('PERFORMER')")
@@ -57,50 +56,46 @@ public class AmateurController {
 
     @GetMapping("/{amateurShowId}")
     @Operation(summary = "소극장 공연 조회 - 단건")
-    public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@AuthenticationPrincipal(expression = "member") Member member,
-                                                                                @PathVariable Long amateurShowId){
-        return ApiResponse.onSuccess(amateurService.getAmateurShow(member.getId(), amateurShowId));
+    public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@PathVariable Long amateurShowId){
+        return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
     }
 
     @GetMapping("/ranking")
     @Operation(summary = "소극장 공연 랭킹 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getShowRanking(member.getId()));
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowRanking() {
+        return ApiResponse.onSuccess(amateurService.getShowRanking());
     }
 
     @GetMapping("/today")
     @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")
-    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowToday(
-            @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable) {
-        return ApiResponse.onSuccess(SliceResponse.of(amateurService.getShowToday(member.getId(), pageable)));
+    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowToday( @ParameterObject Pageable pageable) {
+        return ApiResponse.onSuccess(SliceResponse.of(amateurService.getShowToday(pageable)));
     }
 
     @GetMapping("/ongoing")
     @Operation(summary = "현재 진행중인 소극장 공연 조회 API")
-    public ApiResponse<SliceResponse<AmateurShowList>> getShowOngoing(
-        @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable
+    public ApiResponse<SliceResponse<AmateurShowList>> getShowOngoing( @ParameterObject Pageable pageable
     ) {
-        Slice<AmateurShowList> sliceResult = amateurService.getShowOngoing(member.getId(), pageable);
+        Slice<AmateurShowList> sliceResult = amateurService.getShowOngoing(pageable);
         return ApiResponse.onSuccess(SliceResponse.of(sliceResult));
     }
 
     @GetMapping("/closing")
     @Operation(summary = "오늘 마감인 공연 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowClosing(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getShowClosing(member.getId()));
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowClosing() {
+        return ApiResponse.onSuccess(amateurService.getShowClosing());
     }
 
     @GetMapping("/recentlyHot")
     @Operation(summary = "요즘 핫한 소극장 연극 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getRecentlyHotShow(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow(member.getId()));
+    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getRecentlyHotShow() {
+        return ApiResponse.onSuccess(amateurService.getRecentlyHotShow());
         }
 
     @GetMapping("/incoming")
     @Operation(summary = "임박한 공연 조회 API")
-    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(
-            @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable) {
-        Slice<AmateurShowList> sliceResult = amateurService.getShowToday(member.getId(), pageable);
+    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@ParameterObject Pageable pageable) {
+        Slice<AmateurShowList> sliceResult = amateurService.getShowToday(pageable);
         return ApiResponse.onSuccess(SliceResponse.of(sliceResult));
     }
 }

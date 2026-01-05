@@ -17,6 +17,7 @@ public interface PhotoAlbumService {
     public Slice<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable);
     public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId);
     public String deletePhotoAlbum(Long photoAlbumId, Long memberId);
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long memberId, Long cursorId, int size);
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long cursorId, int size);
     public PerformerShowListResponseDTO getPerformerShows(Long memberId, Pageable pageable);
+    public List<PhotoAlbumResponseDTO.MyShowsForPhotoAlbumDTO> getMyShows(Long memberId);
 }

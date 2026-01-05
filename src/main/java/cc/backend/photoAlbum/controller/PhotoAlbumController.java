@@ -29,6 +29,15 @@ import java.util.List;
 public class PhotoAlbumController {
     private final PhotoAlbumService photoAlbumService;
 
+    @PreAuthorize("hasRole('PERFORMER')")
+    @GetMapping("/getMyShows")
+    @Operation(summary = "사진첩 등록/수정 시 연결할 내 공연 조회 API", description = "내가 등록한 공연 조회 API")
+    public ApiResponse<List<PhotoAlbumResponseDTO.MyShowsForPhotoAlbumDTO>> getMyShows(
+            @AuthenticationPrincipal(expression = "member") Member member) {
+        return ApiResponse.onSuccess(photoAlbumService.getMyShows(member.getId()));
+    }
+
+
     @GetMapping("/{photoAlbumId}")
     @Operation(summary = "사진첩 단건 조회 API", description = "공연별 사진첩을 단건 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO> getPhotoAlbum(
@@ -66,6 +75,7 @@ public class PhotoAlbumController {
         return ApiResponse.onSuccess(photoAlbumService.updatePhotoAlbum(photoAlbumId,requestDTO, member.getId()));
     }
 
+    @PreAuthorize("hasRole('PERFORMER')")
     @DeleteMapping("/{photoAlbumId}")
     @Operation(summary = "사진첩 삭제 API", description = "공연별 사진첩을 삭제하는 API 입니다.")
     public ApiResponse<String> deletePhotoAlbum(
@@ -77,10 +87,9 @@ public class PhotoAlbumController {
     @GetMapping("")
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
-            @AuthenticationPrincipal(expression = "member") Member member,
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(member.getId(), cursorId, size));
+        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(cursorId, size));
     }
 
     @GetMapping("/member/{memberId}/shows")

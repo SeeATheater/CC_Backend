@@ -18,7 +18,6 @@ import java.util.Optional;
 
 @Repository
 public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>, JpaSpecificationExecutor<AmateurShow> {
-    List<AmateurShow> findAllByMemberId(Long memberId);
 
     @Query("SELECT a FROM AmateurShow a WHERE a.id = :id")
     Optional<AmateurShow> findByIdWithDetails(@Param("id") Long id);
@@ -33,9 +32,6 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     Slice<AmateurShow> findAllByMemberIdAndStatusOrderByIdDesc(@Param("memberId") Long memberId,
                                                                @Param("status") AmateurShowStatus status,
                                                                Pageable pageable);
-
-    List<AmateurShow> findAllByMemberIdOrderByUpdatedAtDesc(@Param("memberId") Long memberId);
-
 
     @Query("""
        select s
@@ -60,16 +56,15 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
 
     long countByMember_Id(Long memberId);
 
-
     Page<AmateurShow> findByNameContainingIgnoreCase(String showName, Pageable pageable);
 
-
-    List<AmateurShow> findByEndGreaterThanEqual(LocalDate today);
+    List<AmateurShow> findAllByMemberId(Long memberId);
 
     @Query("""
     SELECT s
     FROM AmateurShow s
     WHERE s.end >= :today
+    AND s.approvalStatus = 'APPROVED'
     ORDER BY s.end ASC
 """)
     List<AmateurShow> findHotShows(

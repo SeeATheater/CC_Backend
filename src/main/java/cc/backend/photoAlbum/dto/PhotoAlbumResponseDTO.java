@@ -73,6 +73,15 @@ public class PhotoAlbumResponseDTO {
         private Long nextCursor;
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MyShowsForPhotoAlbumDTO {
+        private Long memberId;
+        private Long amateurShowId;
+        private String schedule;
+    }
 
 
 }
