@@ -558,14 +558,7 @@ public class AmateurServiceImpl implements AmateurService {
                 .where(AmateurShowSpecification.isApproved())
                 .and(AmateurShowSpecification.hasLastRoundOn(today));
 
-        // Pageable로 start 기준 오름차순 정렬, limit 없이 전체 조회
-        Pageable sortedPage = PageRequest.of(
-                0,
-                Integer.MAX_VALUE,
-                Sort.by("start").ascending());
-
-        List<AmateurShow> shows = amateurShowRepository.findAll(spec, sortedPage).getContent();
-
+        List<AmateurShow> shows = amateurShowRepository.findAll(spec, Sort.by("start").ascending());
         // DTO 변환
         return shows.stream()
                 .map(show -> {

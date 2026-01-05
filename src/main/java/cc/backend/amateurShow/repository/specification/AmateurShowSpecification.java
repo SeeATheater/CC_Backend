@@ -1,8 +1,10 @@
 package cc.backend.amateurShow.repository.specification;
 
+import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.member.entity.Member;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import org.springframework.data.jpa.domain.Specification;
@@ -65,23 +67,30 @@ public class AmateurShowSpecification {
      */
     public static Specification<AmateurShow> hasLastRoundOn(LocalDate today) {
         return (root, query, cb) -> {
-            query.distinct(true); // JOIN으로 중복 제거
+            query.distinct(true);
 
-            // 서브쿼리: 각 공연의 마지막 회차 날짜
+            // 서브쿼리: AmateurRounds 기준
             var subquery = query.subquery(LocalDate.class);
-            var subRoot = subquery.from(root.getJavaType()); // AmateurShow
+            var roundRoot = subquery.from(AmateurRounds.class);
 
-            // Join으로 회차 가져오기
-            Join<Object, Object> rounds = subRoot.join("amateurRounds");
+            // MAX(DATE(performanceDateTime))
+            Expression<LocalDate> lastRoundDate =
+                    cb.greatest(
+                            cb.function(
+                                    "DATE",
+                                    LocalDate.class,
+                                    roundRoot.get("performanceDateTime")
+                            )
+                    );
 
-            // 마지막 회차 날짜
-            Path<LocalDate> perfDate = (Path<LocalDate>) rounds.get("performanceDateTime").as(LocalDate.class);
-            subquery.select(cb.greatest(perfDate));
+            subquery.select(lastRoundDate);
 
-            // 서브쿼리 조건: 해당 공연
-            subquery.where(cb.equal(subRoot, root));
+            // 해당 공연의 회차만 대상
+            subquery.where(
+                    cb.equal(roundRoot.get("amateurShow"), root)
+            );
 
-            // 오늘과 비교
+            // 마지막 회차 날짜 == today
             return cb.equal(subquery, today);
         };
     }
