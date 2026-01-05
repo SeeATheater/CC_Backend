@@ -27,10 +27,7 @@ import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -252,7 +249,7 @@ public class BoardService {
 
     //핫게시판 조회
     @Transactional(readOnly = true)
-    public List<BoardListResponse> getHotBoards() {
+    public Slice<BoardListResponse> getHotBoards() {
         List<HotBoard> hotBoards = hotBoardRepository.findTop10ByOrderByBoard_CreatedAtDesc();
         // 등록일 순으로 정렬
         List<Board> boards = hotBoards.stream()
@@ -267,9 +264,16 @@ public class BoardService {
                         .collect(Collectors.toList())
         );
 
-        return boards.stream()
-                .map(board -> BoardListResponse.of(board, firstImageMap.get(board.getId())))
-                .collect(Collectors.toList());
+        List<BoardListResponse> content = boards.stream()
+                .map(board -> BoardListResponse.of(
+                        board,
+                        firstImageMap.get(board.getId())
+                ))
+                .toList();
+
+        Pageable pageable = PageRequest.of(0, content.size());
+
+        return new SliceImpl<>(content, pageable, false);
     }
 
     //게시판 검색

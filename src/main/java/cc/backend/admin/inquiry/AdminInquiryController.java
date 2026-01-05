@@ -3,6 +3,7 @@ package cc.backend.admin.inquiry;
 import cc.backend.admin.inquiry.dto.AdminInquiryRequestDTO;
 import cc.backend.admin.inquiry.dto.AdminInquiryResponseDTO;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +42,7 @@ public class AdminInquiryController {
     @Operation(summary = "관리자 문의 리스트/검색 API",
             description = "관리자가 문의 리스트를 합니다. keyword로 제목/내용 검색을 합니다.")
     @GetMapping("")
-    public ApiResponse<AdminInquiryResponseDTO.AdminInquiryListResponseDTO> getInquiryList(
+    public ApiResponse<SliceResponse<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO>> getInquiryList(
             @Parameter(description = "검색 키워드(제목/내용)")
             @RequestParam(required = false) String keyword,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
@@ -49,9 +51,11 @@ public class AdminInquiryController {
             @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.onSuccess(
-                adminInquiryService.getInquiryList(keyword, pageable)
-        );
+
+        Slice<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> slice =
+                adminInquiryService.getInquiryList(keyword, pageable);
+
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
 }

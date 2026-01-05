@@ -67,9 +67,16 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             @Param("keyword") String keyword,
             Pageable pageable);
 
-    // 내가 쓴 게시말 리스트
+    // 내가 쓴 게시글 리스트
     @Query("SELECT b FROM Board b WHERE b.member.id = :memberId ORDER BY b.id DESC")
     Slice<Board> findAllByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
+
+    @Query("""
+    SELECT b
+    FROM Board b
+    WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+""")
+    Slice<Board> searchBoardsIncludingDeletedByTitle(@Param("keyword") String keyword, Pageable pageable);
 
 }
 

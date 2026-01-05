@@ -1,5 +1,6 @@
 package cc.backend.board.controller;
 
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.board.dto.request.BoardRequest;
 import cc.backend.board.dto.request.BoardSearchRequest;
 import cc.backend.board.dto.response.BoardDetailResponse;
@@ -8,6 +9,7 @@ import cc.backend.board.dto.response.BoardResponse;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.service.BoardService;
 import cc.backend.member.entity.Member;
+import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -63,22 +65,27 @@ public class BoardController {
 
     @Operation(summary = "전체 게시글 조회 API", description = "전체 게시글을 무한 스크롤 방식으로 조회합니다.")
     @GetMapping("/all")
-    public ResponseEntity<Slice<BoardListResponse>> getAllBoards(
-            @Parameter(description = "페이지 번호(0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size
+    public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getAllBoards(
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size
     ) {
         Slice<BoardListResponse> result = boardService.getAllBoards(page, size);
-        return ResponseEntity.ok(result);
+        return cc.backend.apiPayLoad.ApiResponse.onSuccess(SliceResponse.of(result));
     }
 
     @Operation(summary = "타입별 게시글 목록 조회 API", description = "게시글을 무한 스크롤 방식으로 조회합니다.")
     @GetMapping
-    public Slice<BoardListResponse> getBoards(
+    public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getBoards(
             @Parameter(description = "게시판 타입", required = true) @RequestParam BoardType boardType,
-            @Parameter(description = "페이지 번호(0부터 시작)", required = true) @RequestParam int page,
-            @Parameter(description = "페이지 크기", required = true) @RequestParam int size
+            @Parameter(description = "페이지 번호(0부터 시작)", required = true)
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", required = true)
+            @RequestParam(defaultValue = "20") int size
     ) {
-        return boardService.getBoards(boardType, page, size);
+        Slice<BoardListResponse> slice = boardService.getBoards(boardType, page, size);
+        return cc.backend.apiPayLoad.ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @Operation(summary = "게시글 상세 조회 API", description = "게시글 상세 정보를 조회합니다.")
@@ -100,9 +107,10 @@ public class BoardController {
 
     @Operation(summary = "핫게시판 조회 API", description = "핫게시판(좋아요 10개 이상) 목록을 조회합니다.")
     @GetMapping("/hot")
-    public ResponseEntity<List<BoardListResponse>> getHotBoards(){
-        List<BoardListResponse> hotboards = boardService.getHotBoards();
-        return ResponseEntity.ok(hotboards);
+    public cc.backend.apiPayLoad.ApiResponse<SliceResponse<BoardListResponse>> getHotBoards(){
+        Slice<BoardListResponse> slice = boardService.getHotBoards();
+
+        return cc.backend.apiPayLoad.ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @Operation(summary = "게시글 검색", description = "게시판 타입별로 검색합니다. 일반게시판은 제목+내용, 홍보게시판은 제목+내용+작성자를 검색합니다.")

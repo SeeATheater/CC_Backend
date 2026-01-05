@@ -14,6 +14,10 @@ import cc.backend.ticket.repository.MemberTicketRepository;
 import cc.backend.ticket.repository.RealTicketRepository;
 import cc.backend.ticket.util.CancelPolicy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,11 +68,13 @@ public class RealTicketService {
         realTicketRepository.save(realTicket);
     }
 
-    public List<RealTicketResponseDTO> getMyTicketList(Long memberId, String status) {
-        List<RealTicket> realTickets;
+    public Slice<RealTicketResponseDTO> getMyTicketList(Long memberId, String status, int page, int size) {
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+
+        Slice<RealTicket> realTickets;
         if ("ALL".equalsIgnoreCase(status)) {
-            realTickets = realTicketRepository.findAllByMemberId(memberId);
+            realTickets = realTicketRepository.findAllByMemberId(memberId, pageable);
         } else {
             ReservationStatus parsedStatus;
             try {
@@ -76,12 +82,10 @@ public class RealTicketService {
             } catch (IllegalArgumentException e) {
                 throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
             }
-            realTickets = realTicketRepository.findAllByMemberIdAndReservationStatus(memberId, parsedStatus);
+            realTickets = realTicketRepository.findAllByMemberIdAndReservationStatus(memberId, parsedStatus, pageable);
         }
 
-        return realTickets.stream()
-                .map(RealTicketResponseDTO::from)
-                .toList();
+        return realTickets.map(RealTicketResponseDTO::from);
     }
 
     public RealTicketResponseDTO getMyTicket(Long memberId, Long realTicketId) {

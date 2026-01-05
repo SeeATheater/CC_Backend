@@ -4,6 +4,7 @@ import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,9 +22,9 @@ public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
     @Query("SELECT rt FROM RealTicket rt JOIN FETCH rt.amateurRound WHERE rt.id = :id AND rt.member.id = :memberId")
     Optional<RealTicket> findByIdAndMemberId(@Param("id") Long id, @Param("memberId") Long memberId);
 
-    List<RealTicket> findAllByMemberId(Long memberId);
+    Slice<RealTicket> findAllByMemberId(Long memberId, Pageable pageable);
 
-    List<RealTicket> findAllByMemberIdAndReservationStatus(Long memberId, ReservationStatus status);
+    Slice<RealTicket> findAllByMemberIdAndReservationStatus(Long memberId, ReservationStatus reservationStatus, Pageable pageable);
 
     List<RealTicket> findByShowTitleAndReservationStatusInOrderByIdDesc(
             String showTitle,

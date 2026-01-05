@@ -6,6 +6,7 @@ import cc.backend.admin.amateurShow.dto.AdminApprovalListResponseDTO;
 import cc.backend.admin.amateurShow.service.AdminAmateurShowService;
 import cc.backend.admin.amateurShow.service.AdminApprovalService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,7 +31,7 @@ public class AdminApprovalController {
             summary = "소극장 공연 관리 - 등록 요청 관리",
             description = "등록 요청 관리 첫페이지, 리스트 조회입니다."
     )
-    public ApiResponse<Slice<AdminApprovalListResponseDTO>> getApprovalList(
+    public ApiResponse<SliceResponse<AdminApprovalListResponseDTO>> getApprovalList(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -40,7 +41,8 @@ public class AdminApprovalController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ){
-        return ApiResponse.onSuccess(adminApprovalService.getApprovalList(page, size, keyword));
+        Slice<AdminApprovalListResponseDTO> slice = adminApprovalService.getApprovalList(page, size, keyword);
+        return ApiResponse.onSuccess(SliceResponse.of(slice));
     }
 
     @PatchMapping("/{showId}/approve")

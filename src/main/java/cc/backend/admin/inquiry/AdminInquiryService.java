@@ -10,9 +10,13 @@ import cc.backend.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +36,8 @@ public class AdminInquiryService {
         return AdminInquiryResponseConverter.toInquiryDetailDTO(inquiry);
     }
 
-    public AdminInquiryResponseDTO.AdminInquiryListResponseDTO getInquiryList(String keyword,
-                                                                              Pageable pageable) {
+    public Slice<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> getInquiryList(String keyword,
+                                                                                     Pageable pageable) {
         Page<Inquiry> inquiryPage;
         if (StringUtils.hasText(keyword)) {
             // 제목 or 내용
@@ -43,6 +47,9 @@ public class AdminInquiryService {
             // 없으면
             inquiryPage = inquiryRepository.findAll(pageable);
         }
-        return AdminInquiryResponseConverter.toListDTO(inquiryPage);
+        List<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> content = inquiryPage.getContent().stream()
+                .map(AdminInquiryResponseConverter::toSummaryDTO)
+                .toList();
+        return new SliceImpl<>(content, pageable, inquiryPage.hasNext());
     }
 }
