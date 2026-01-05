@@ -70,8 +70,9 @@ public class AmateurController {
 
     @GetMapping("/today")
     @Operation(summary = "오늘 진행하는 소극장 공연 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowToday(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getShowToday(member.getId()));
+    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowToday(
+            @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable) {
+        return ApiResponse.onSuccess(SliceResponse.of(amateurService.getShowToday(member.getId(), pageable)));
     }
 
     @GetMapping("/ongoing")
@@ -97,7 +98,9 @@ public class AmateurController {
 
     @GetMapping("/incoming")
     @Operation(summary = "임박한 공연 조회 API")
-    public ApiResponse<List<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(amateurService.getShowToday(member.getId()));
+    public ApiResponse<SliceResponse<AmateurShowResponseDTO.AmateurShowList>> getShowIncoming(
+            @AuthenticationPrincipal(expression = "member") Member member, @ParameterObject Pageable pageable) {
+        Slice<AmateurShowList> sliceResult = amateurService.getShowToday(member.getId(), pageable);
+        return ApiResponse.onSuccess(SliceResponse.of(sliceResult));
     }
 }

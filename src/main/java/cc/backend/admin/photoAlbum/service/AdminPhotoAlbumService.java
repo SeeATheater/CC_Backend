@@ -1,6 +1,7 @@
 package cc.backend.admin.photoAlbum.service;
 
 import cc.backend.admin.photoAlbum.dto.AdminPhotoAlbumResponseDTO;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.image.DTO.ImageResponseDTO;
@@ -12,10 +13,13 @@ import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.entity.PhotoAlbum;
 import cc.backend.photoAlbum.repository.PhotoAlbumRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,24 +31,21 @@ public class AdminPhotoAlbumService {
     private final ImageService imageService;
 
     @Transactional(readOnly = true)
-    public Slice<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getPhotoAlbumList(int page, int size, String keyword){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("updatedAt").descending());
 
-        Page<PhotoAlbum> result;
+        Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(sortedPageable);
 
-        if (keyword == null || keyword.isBlank()) {
-            result = photoAlbumRepository.findAll(pageable);
-        } else {
-            // 기존 searchPhotoAlbumByKeyword에서 list 를 page로 변환
-            result = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
-        }
-
-        List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> content = result.getContent().stream()
-                .map(this::toSimpleDto)
-                .toList();
-
-        return new SliceImpl<>(content, pageable, result.hasNext());
-
+        return photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+                .id(photoAlbum.getId())
+                .amateurShowName(photoAlbum.getAmateurShow().getName())
+                .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
+                .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
+                .updatedAt(photoAlbum.getUpdatedAt())
+                .build());
     }
 
     @Transactional(readOnly = true)
@@ -90,31 +91,22 @@ public class AdminPhotoAlbumService {
         return "관리자 권한으로 삭제가 완료되었습니다.";
     }
 
-//    @Transactional(readOnly = true)
-//    public List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword){
-//        if (keyword == null || keyword.trim().isEmpty()) {
-//            return Collections.emptyList();
-//        }
-//
-//        List<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, Pageable pageable);
-//        return results.stream()
-//                .map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-//                        .id(photoAlbum.getId())
-//                        .amateurShowName(photoAlbum.getAmateurShow().getName())
-//                        .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-//                        .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-//                        .updatedAt(photoAlbum.getUpdatedAt())
-//                        .build())
-//                .toList();
-//    }
+    @Transactional(readOnly = true)
+    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Page.empty(pageable);
+        }
 
-    private AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO toSimpleDto(PhotoAlbum photoAlbum) {
-        return AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-                .id(photoAlbum.getId())
-                .amateurShowName(photoAlbum.getAmateurShow().getName())
-                .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-                .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-                .updatedAt(photoAlbum.getUpdatedAt())
-                .build();
+        Page<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
+
+        return results.map(p ->
+                AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+                        .id(p.getId())
+                        .amateurShowName(p.getAmateurShow().getName())
+                        .uploaderId(p.getAmateurShow().getMember().getId())
+                        .uploaderName(p.getAmateurShow().getMember().getName())
+                        .updatedAt(p.getUpdatedAt())
+                        .build()
+        );
     }
 }

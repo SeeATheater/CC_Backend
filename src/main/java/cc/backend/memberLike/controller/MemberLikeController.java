@@ -1,6 +1,7 @@
 package cc.backend.memberLike.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.member.entity.Member;
 import cc.backend.memberLike.dto.MemberLikeResponseDTO;
 import cc.backend.memberLike.service.MemberLikeService;
@@ -9,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,8 +43,10 @@ public class MemberLikeController {
     // 좋아요한 공연진 목록 조회
     @GetMapping("/likes")
     @Operation(summary = "좋아요한 공연진 목록 조회", description = "사용자가 좋아요한 공연진 목록을 조회하는 기능입니다.")
-    public ApiResponse<List<MemberLikeResponseDTO>> getLikedPerformers(@AuthenticationPrincipal(expression = "member") Member member) {
-        return ApiResponse.onSuccess(memberLikeService.getLikedPerformers(member.getId()));
+    public ApiResponse<SliceResponse<MemberLikeResponseDTO>> getLikedPerformers(
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @ParameterObject Pageable pageable) {
+        return ApiResponse.onSuccess(SliceResponse.of(memberLikeService.getLikedPerformers(member.getId(), pageable)));
     }
 
     @GetMapping("/like/{performerId}")

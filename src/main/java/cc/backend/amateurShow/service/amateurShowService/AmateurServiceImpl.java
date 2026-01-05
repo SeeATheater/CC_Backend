@@ -456,7 +456,7 @@ public class AmateurServiceImpl implements AmateurService {
 
     // 오늘 진행하는 소극장 공연 리스트 조회
     @Override
-    public List<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId) {
+    public Slice<AmateurShowResponseDTO.AmateurShowList> getShowToday(Long memberId, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
@@ -464,12 +464,21 @@ public class AmateurServiceImpl implements AmateurService {
         List<AmateurShow> allShows = amateurShowRepository.findAllWithRounds();
 
         // 오늘 날짜를 가진 회차가 있는 공연만
-        return allShows.stream()
+        List<AmateurShowResponseDTO.AmateurShowList> result = allShows.stream()
                 .filter(show -> show.getAmateurRounds().stream()
-                        .anyMatch(round -> round.getPerformanceDateTime().toLocalDate().equals(today)))
+                        .anyMatch(round ->
+                                round.getPerformanceDateTime()
+                                        .toLocalDate()
+                                        .equals(today)
+                        )
+                )
                 .distinct()
+                .sorted(Comparator.comparing(AmateurShow::getStart)) // 정렬 필요하면 유지
                 .map(show -> {
-                    String schedule = AmateurConverter.mergeSchedule(show.getStart(), show.getEnd());
+                    String schedule = AmateurConverter.mergeSchedule(
+                            show.getStart(),
+                            show.getEnd()
+                    );
                     return AmateurShowResponseDTO.AmateurShowList.builder()
                             .amateurShowId(show.getId())
                             .name(show.getName())
@@ -479,6 +488,19 @@ public class AmateurServiceImpl implements AmateurService {
                             .build();
                 })
                 .collect(Collectors.toList());
+
+        // ===== Slice 페이징 처리 =====
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), result.size());
+
+        List<AmateurShowResponseDTO.AmateurShowList> content = new ArrayList<>();
+        if (start < result.size()) {
+            content = result.subList(start, end);
+        }
+
+        boolean hasNext = end < result.size();
+
+        return new SliceImpl<>(content, pageable, hasNext);
     }
 
     // 현재 진행중인 소극장 공연 리스트 조회
@@ -524,7 +546,7 @@ public class AmateurServiceImpl implements AmateurService {
 
         boolean hasNext = end < result.size();
 
-        return new SliceImpl<>(content, pageable, hasNext);
+        return new SliceImpl<>(content, pageable, hasNext); // 시그니처 (List<DTO>, pageable, hasNext)
     }
 
     // 소극장 공연 랭킹 리스트 조회
@@ -632,7 +654,7 @@ public class AmateurServiceImpl implements AmateurService {
         memberRepository.findById(memberId).orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
 
 
-        // 종료되지 않은 공연 중, 판매량 기준 상위 3개
+        // 종료되지 않은 공연 중, 마감이 얼마 안남은 3개
         LocalDate today = LocalDate.now();
         List<AmateurShow> shows = amateurShowRepository.findHotShows(today, PageRequest.of(0, 3));
 

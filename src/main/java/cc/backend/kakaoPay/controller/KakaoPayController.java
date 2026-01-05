@@ -3,15 +3,20 @@ package cc.backend.kakaoPay.controller;
 import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
+import cc.backend.kakaoPay.dto.responseDTO.KakaoPayResultResponseDTO;
 import cc.backend.kakaoPay.service.KakaoPayBusinessService;
 import cc.backend.kakaoPay.service.KakaoPayService;
 import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,6 +24,9 @@ import reactor.core.publisher.Mono;
 public class KakaoPayController {
 
     private final KakaoPayBusinessService kakaoPayBusinessService;
+
+    @Value("${front.kakaopay.complete-url}")
+    private String frontKakaoPayCompleteUrl;
 
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
@@ -31,10 +39,15 @@ public class KakaoPayController {
     // 결제 승인 요청 (카카오페이 redirect 후 호출)
     @GetMapping("/approve")
     @Operation(summary = "카카오페이 결제 승인 (자동 호출)", description = "결제 완료 후 카카오 서버에서 approval_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
-    public ApiResponse<KakaoPayApproveResponseDTO> approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
-                                                    @RequestParam("pg_token") String pgToken) {
+    public void approve(@Parameter(description = "ticketId 입니다") @RequestParam("partner_order_id") String partnerOrderId,
+                                                    @RequestParam("pg_token") String pgToken,
+                                                           HttpServletResponse response) throws IOException {
+        KakaoPayResultResponseDTO result =
+                kakaoPayBusinessService.completePayment(partnerOrderId, pgToken);
 
-        return ApiResponse.onSuccess(kakaoPayBusinessService.completePayment(partnerOrderId, pgToken));
+        response.sendRedirect(
+                frontKakaoPayCompleteUrl + "?playId=" + result.getAmateurShowId()
+        );
     }
 
     // 사용자가 X버튼으로 결제 도중 취소 (환불 아님)

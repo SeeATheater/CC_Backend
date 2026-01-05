@@ -50,17 +50,6 @@ public class PhotoAlbumResponseDTO {
         private ImageResponseDTO.ImageResultWithPresignedUrlDTO imageResultWithPresignedUrlDTO;
     }
 
-    @Builder
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PerformerPhotoAlbumDTO {
-        private List<SinglePhotoAlbumDTO> singlePhotoAlbumDTOs;
-        private String performerName;
-        private Integer number;
-        private boolean hasNext;
-        private Integer nextPage;
-    }
 
     @Builder
     @Getter
@@ -78,10 +67,10 @@ public class PhotoAlbumResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ScrollMemberPhotoAlbumDTO { //페이지 번호 기반
+    public static class ScrollMemberPhotoAlbumDTO { //커서 기반
         private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
         private boolean hasNext;
-        private Integer nextPage;
+        private Long nextCursor;
     }
 
 
