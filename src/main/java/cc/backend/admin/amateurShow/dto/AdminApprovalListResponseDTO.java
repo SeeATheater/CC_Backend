@@ -16,5 +16,5 @@ public class AdminApprovalListResponseDTO {
     private String email;
     private String phone;
     private String showName;
-    private String amateurShowStatus;
+    private String approvalStatus;
 }

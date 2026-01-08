@@ -28,7 +28,7 @@ public class MemberTicketController {
 
     private final MemberTicketService memberTicketService;
 
-    @GetMapping("{amateurShowId}/showSimple")
+    @GetMapping("/{amateurShowId}/showSimple")
     @Operation(
             summary = "소극장 공연 티켓 예매 - 공연 정보 간략 보기 API",
             description = "소극장 공연 티켓 예매 동안 보이는 모든 (화면 공연 사진, 공연 제목, 공연 장소)에 대해 나옵니다.",
@@ -42,7 +42,7 @@ public class MemberTicketController {
         return ApiResponse.onSuccess(memberTicketService.getSimpleAmateurShow(amateurShowId));
     }
 
-    @GetMapping("{amateurShowId}/selectRound")
+    @GetMapping("/{amateurShowId}/selectRound")
     @Operation(
             summary = "소극장 공연 티켓 예매 첫화면 - 회차(날짜) 선택 API",
             description = "소극장 공연 티켓 예매 첫화면에서 공연 회차를 선택하기전 조회하는 기능입니다. 등록된 공연의 모든 회차가 조회 됩니다.",
@@ -73,7 +73,7 @@ public class MemberTicketController {
         return ApiResponse.onSuccess(memberTicketService.getRoundsList(member.getId(), amateurShowId));
     }
 
-    @GetMapping("{amateurShowId}/selectTicket")
+    @GetMapping("/{amateurShowId}/selectTicket")
     @Operation(
             summary = "소극장 공연 티켓 예매 두번째 화면 - 티켓 종류 선택 API",
             description = "소극장 공연 티켓 예매 두번째화면에서 티켓 종류를 선택하기 전 조회하는 기능입니다. 등록된 공연의 모든 티켓이 조회됩니다.",
@@ -102,7 +102,7 @@ public class MemberTicketController {
 
     }
 
-    @PostMapping("{amateurShowId}/reserve")
+    @PostMapping("/{amateurShowId}/reserve")
     @Operation(summary = "소극장 공연 티켓 생성 API",
     description = "소극장 공연 티켓을 생성하는 기능입니다. 공연 회차, 인원, 티켓 종류를 선택해 생성합니다.",
             parameters = {
