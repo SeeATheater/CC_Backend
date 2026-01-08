@@ -77,7 +77,7 @@ public class AdminApprovalService {
                 .email(registrant.getEmail())
                 .phone(registrant.getPhone())
                 .showName(show.getName())
-                .amateurShowStatus(show.getStatus().name())
+                .approvalStatus(show.getApprovalStatus().name())
                 .build();
     }
 
