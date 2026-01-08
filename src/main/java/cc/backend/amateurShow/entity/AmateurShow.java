@@ -159,9 +159,11 @@ public class AmateurShow extends BaseEntity {
 
     public void approve(){
         this.approvalStatus = ApprovalStatus.APPROVED;
+        this.status = AmateurShowStatus.YET;
     }
     public void reject(String rejectReason){
         this.approvalStatus = ApprovalStatus.REJECTED;
+        this.status = AmateurShowStatus.REJECT;
         this.rejectReason = rejectReason;
 
     }
