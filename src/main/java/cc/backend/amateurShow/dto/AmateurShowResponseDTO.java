@@ -118,5 +118,6 @@ public class AmateurShowResponseDTO {
         private String schedule;
         private String posterImageUrl;
         private AmateurShowStatus status;
+        private String rejectReason;
     }
 }

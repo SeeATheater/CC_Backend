@@ -601,6 +601,7 @@ public class AmateurServiceImpl implements AmateurService {
                     .schedule(schedule)
                     .posterImageUrl(show.getPosterImageUrl())
                     .status(show.getStatus())
+                    .rejectReason(show.getRejectReason())
                     .build();
         });
     }
