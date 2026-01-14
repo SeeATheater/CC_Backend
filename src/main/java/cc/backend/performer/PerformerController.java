@@ -72,12 +72,14 @@ public class PerformerController {
             description = "등록자 계정으로 특정 공연의 예매 내역을 조회합니다. roundId가 있으면 해당 회차 상세, 없으면 첫 회차 상세를 반환합니다."
     )
     public ApiResponse<ShowReservationResponseDTO> getShowReservation(
+            @Parameter(description = "작성자 회원 ID", required = true)
+            @AuthenticationPrincipal(expression = "member") Member member,
             @PathVariable Long amateurShowId,
             @Parameter(description = "선택 회차 ID", example = "10")
             @RequestParam(required = false) Long roundId
     ) {
         return ApiResponse.onSuccess(
-                performerService.getShowReservationList(amateurShowId, roundId)
+                performerService.getShowReservationList(member.getId(), amateurShowId, roundId)
         );
     }
 

@@ -9,6 +9,7 @@ import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.member.entity.Member;
 import cc.backend.performer.dto.PerformerMyShowResponseDTO;
 import cc.backend.performer.dto.ShowReservationResponseDTO;
 import cc.backend.ticket.entity.RealTicket;
@@ -32,11 +33,16 @@ public class PerformerService {
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final RealTicketRepository realTicketRepository;
 
-    public ShowReservationResponseDTO getShowReservationList(Long amateurShowId, Long roundId) {
+    public ShowReservationResponseDTO getShowReservationList(Long memberId, Long amateurShowId, Long roundId) {
 
         // 1) 공연 로드
         AmateurShow show = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        // 1-1) 로그인한 계정이 공연의 주인인지 확인
+        if (!show.getMember().getId().equals(memberId)) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        }
 
         // 2) 공연의 모든 회차(번호 오름차순)
         List<AmateurRounds> rounds =
