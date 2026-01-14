@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 public interface TempTicketService {
 
-    TempTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO);
+    TempTicketCreateResponseDTO createTempTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO);
     List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId);
     List<AmateurTicketListDTO> getAmateurTicketList(Long memberId, Long amateurShowId);
     AmateurShowSimpleDTO getSimpleAmateurShow(Long amateurShowId);

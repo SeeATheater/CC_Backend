@@ -85,7 +85,7 @@ public class KakaoPayService {
 
     public KakaoPayApproveResponseDTO approve(String tid, String partnerOrderId, String partnerUserId, String pgToken) {
 
-        // partnerOrderId로 MemberTicket 조회
+        // partnerOrderId로 TempTicket 조회
         TempTicket tempTicket = tempTicketRepository.findById(Long.valueOf(partnerOrderId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
