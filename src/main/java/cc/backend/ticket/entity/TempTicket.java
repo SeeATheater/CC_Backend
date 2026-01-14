@@ -4,6 +4,7 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.domain.common.BaseEntity;
 import cc.backend.member.entity.Member;
+import cc.backend.ticket.dto.response.ShowSnapshot;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -68,4 +69,13 @@ public class TempTicket extends BaseEntity {
     }
 
 
+    public ShowSnapshot extractShowSnapshot() {
+        var show = this.amateurTicket.getAmateurShow();
+        return new ShowSnapshot(
+                show.getName(),
+                show.getPosterImageUrl(),
+                show.getDetailAddress()
+        );
+
+    }
 }

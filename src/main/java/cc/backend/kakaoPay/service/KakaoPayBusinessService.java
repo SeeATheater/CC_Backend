@@ -119,7 +119,7 @@ public class KakaoPayBusinessService {
 
         // 예약 확정 및 최종 티켓 생성
         confirmReservation(tempTicket);
-        realTicketService.createRealTicketFromTempTicket(ticketId);
+        realTicketService.createRealTicketFromTempTicket(tempTicket);
 
         Long amateurShowId = tempTicket.getAmateurTicket().getAmateurShow().getId();
         return new KakaoPayResultResponseDTO(

@@ -1,10 +1,13 @@
 package cc.backend.ticket.service;
 
 import cc.backend.amateurShow.entity.AmateurRounds;
+import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
+import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
+import cc.backend.ticket.dto.response.ShowSnapshot;
 import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.CancelFeeType;
@@ -32,35 +35,36 @@ public class RealTicketService {
 
 
     @Transactional
-    public void createRealTicketFromTempTicket(Long  tempTicketId) {
-        TempTicket ticket = tempTicketRepository.findById(tempTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+    public void createRealTicketFromTempTicket(TempTicket tempTicket) {
 
-        AmateurRounds round = ticket.getAmateurRound();
+        AmateurRounds round = tempTicket.getAmateurRound();
 
         // 취소 수수료 정책 적용
         CancelFeeType cancelFeeType = CancelPolicy.determineCancelFeeType(
-            ticket.getReserveDate(),
-            ticket.getPerformanceDateTime(),
+            tempTicket.getReserveDate(),
+            tempTicket.getPerformanceDateTime(),
             LocalDateTime.now()
         );
+
+        ShowSnapshot show = tempTicket.extractShowSnapshot();
+
 
         String cancelPolicyText = CancelPolicy.getCancelFeePolicyText(cancelFeeType);
 
         RealTicket realTicket = RealTicket.builder()
-                .member(ticket.getMember())
+                .member(tempTicket.getMember())
                 .amateurRound(round)
-                .showTitle(ticket.getAmateurTicket().getAmateurShow().getName())
-                .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
-                .detailAddress(ticket.getAmateurTicket().getAmateurShow().getDetailAddress())
-                .performanceDateTime(ticket.getPerformanceDateTime())
-                .reserveDateTime(ticket.getReserveDate())
-                .quantity(ticket.getQuantity())
-                .totalPrice(ticket.getTotalPrice())
-                .reservationStatus(ticket.getReservationStatus())
-                .cancelAvailableUntil(ticket.getCancelAvailableUntil())
+                .showTitle(show.title())
+                .posterImageUrl(show.posterImageUrl())
+                .detailAddress(show.detailAddress())
+                .performanceDateTime(tempTicket.getPerformanceDateTime())
+                .reserveDateTime(tempTicket.getReserveDate())
+                .quantity(tempTicket.getQuantity())
+                .totalPrice(tempTicket.getTotalPrice())
+                .reservationStatus(tempTicket.getReservationStatus())
+                .cancelAvailableUntil(tempTicket.getCancelAvailableUntil())
                 .cancelFeePolicyText(cancelPolicyText)
-                .kakaoTid(ticket.getKakaoTid())
+                .kakaoTid(tempTicket.getKakaoTid())
                 .build();
 
         realTicketRepository.save(realTicket);
