@@ -20,9 +20,8 @@ import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.TempTicketRepository;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -72,7 +71,7 @@ public class TempTicketServiceImpl implements TempTicketService {
 
         // 현재 예약하려는 티켓의 수량이 해당 회차의 재고수량을 초과하지 않는지
         if(requestDTO.getQuantity() > round.getTotalTicket()) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STOCK);
         }
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();

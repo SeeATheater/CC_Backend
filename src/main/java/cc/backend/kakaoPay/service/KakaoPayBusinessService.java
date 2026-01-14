@@ -38,11 +38,11 @@ public class KakaoPayBusinessService {
 
         // DB에서 결제할 티켓 정보를 미리 조회
         TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(tempTicketId)
-                                                          .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                                                          .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
         // 현재 로그인한 사용자(partnerUserId)와 티켓의 소유주가 같은지 확인
         if (!tempTicket.getMember().getId().toString().equals(partnerUserId)) {
-            throw new GeneralException(ErrorStatus.NOT_MEMBER_TICKET_OWNER);
+            throw new GeneralException(ErrorStatus.NOT_TEMP_TICKET_OWNER);
         }
 
         // 재고 선점
@@ -69,7 +69,7 @@ public class KakaoPayBusinessService {
         int updated = amateurRoundsRepository.decreaseStock(tempTicket.getAmateurRound().getId(), tempTicket.getQuantity());
 
         if (updated == 0) { // 재고 부족하면 예외
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STOCK);
         }
     }
 
@@ -79,16 +79,16 @@ public class KakaoPayBusinessService {
         Long ticketId = Long.valueOf(partnerOrderId);
 
         TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(ticketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
         if (tempTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_EXPIRED);
         }
 
         // 저장된 tid 가져오기
         String tid = tempTicket.getKakaoTid();
         if (tid == null) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_TID_NOT_FOUND);
         }
 
         // 멤버를 DB에서 추적하기
@@ -135,7 +135,7 @@ public class KakaoPayBusinessService {
 
         // 상태가 PENDING이 아니면 예외 (잘못된 요청)
         if (!tempTicket.getReservationStatus().equals(ReservationStatus.PENDING)) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STATUS_INVALID);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STATUS_INVALID);
         }
 
         // 예약 확정
@@ -192,7 +192,7 @@ public class KakaoPayBusinessService {
         Long ticketId = Long.valueOf(partnerOrderId);
 
         TempTicket tempTicket = tempTicketRepository.findById(ticketId)
-                                                          .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                                                          .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
         // 이미 처리된 건이면 패스
         if (tempTicket.getReservationStatus() != ReservationStatus.PENDING) {

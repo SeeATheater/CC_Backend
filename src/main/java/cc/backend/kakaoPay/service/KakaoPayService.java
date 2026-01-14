@@ -44,11 +44,11 @@ public class KakaoPayService {
     public KakaoPayReadyResponseDTO ready(Long tempTicketId, String partnerUserId) {
 
         TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(tempTicketId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
         // 재고 상태 검증
         if (tempTicket.getReservationStatus() != ReservationStatus.PENDING) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STATUS_INVALID);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STATUS_INVALID);
         }
 
         // itemName (할인명 - 공연이름)
@@ -87,11 +87,11 @@ public class KakaoPayService {
 
         // partnerOrderId로 TempTicket 조회
         TempTicket tempTicket = tempTicketRepository.findById(Long.valueOf(partnerOrderId))
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
         // 티켓 상태가 EXPIRED 이면 승인 불가
         if (tempTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_EXPIRED);
         }
 
         KakaoPayApproveRequestDTO requestDTO = KakaoPayApproveRequestDTO.builder()
