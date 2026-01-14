@@ -52,7 +52,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
         GeneralException exception = assertThrows(GeneralException.class,
                 () -> kakaoPayService.ready(targetTicketId, "test-user-1"));
 
-        assertEquals(ErrorStatus.MEMBER_TICKET_STOCK, exception.getCode());
+        assertEquals(ErrorStatus.TEMP_TICKET_STOCK, exception.getCode());
     }
 
     @Test
@@ -86,7 +86,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
                     kakaoPayService.ready(ticketId, "concurrent-user");
                     successCount.incrementAndGet(); // 성공한 사용자 카운트
                 } catch (GeneralException e) {
-                    if (e.getCode().equals(ErrorStatus.MEMBER_TICKET_STOCK)) {
+                    if (e.getCode().equals(ErrorStatus.TEMP_TICKET_STOCK)) {
                         failCount.incrementAndGet(); // 실패한 사용자 카운트
                     }
                 } catch (Exception e) {
@@ -143,7 +143,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
                     kakaoPayService.ready(ticketId, "concurrent-user-2");
                     successCount.incrementAndGet();
                 } catch (GeneralException e) {
-                    if (e.getCode().equals(ErrorStatus.MEMBER_TICKET_STOCK)) {
+                    if (e.getCode().equals(ErrorStatus.TEMP_TICKET_STOCK)) {
                         failCount.incrementAndGet();
                     }
                 } catch (Exception e) {

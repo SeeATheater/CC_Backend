@@ -20,9 +20,8 @@ import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import cc.backend.ticket.repository.TempTicketRepository;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,7 @@ public class TempTicketServiceImpl implements TempTicketService {
 
     @Override
     @Transactional
-    public TempTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO) {
+    public TempTicketCreateResponseDTO createTempTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO) {
 
         Member memberRef = memberRepository.getReferenceById(member.getId());
         AmateurShow show = amateurShowRepository.findById(amateurShowId)
@@ -56,6 +55,15 @@ public class TempTicketServiceImpl implements TempTicketService {
         AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
 
+        // 해당 회차의 예약 가능한 시간인지
+        // 예매 가능 기한(공연 시작 3시간 전) 체크
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime bookingDeadline = round.getPerformanceDateTime().minusHours(3);
+
+        if (now.isAfter(bookingDeadline)) {
+            throw new GeneralException(ErrorStatus.ROUND_BOOKING_DEADLINE_PASSED);
+        }
+
         // 해당 회차와 티켓에 해당하는 공연이 일치 하는지
         if (!amateurTicket.getAmateurShow().getId().equals(amateurShowId) || !round.getAmateurShow().getId().equals(amateurShowId)) {
             throw new GeneralException(ErrorStatus.AMATEUR_SHOW_MISMATCH);
@@ -63,11 +71,10 @@ public class TempTicketServiceImpl implements TempTicketService {
 
         // 현재 예약하려는 티켓의 수량이 해당 회차의 재고수량을 초과하지 않는지
         if(requestDTO.getQuantity() > round.getTotalTicket()) {
-            throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STOCK);
         }
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
-        String bookingNumber = generateBookingNumber();
 
         TempTicket ticket = TempTicket.builder()
                 .member(memberRef)
@@ -75,7 +82,6 @@ public class TempTicketServiceImpl implements TempTicketService {
                 .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
                 .reserveDate(LocalDateTime.now())
-                .bookingNumber(bookingNumber)
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
@@ -91,7 +97,6 @@ public class TempTicketServiceImpl implements TempTicketService {
 
         return TempTicketCreateResponseDTO.builder()
                 .tempTicketId(saved.getId())
-                .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .detailAddress(amateurTicket.getAmateurShow().getDetailAddress())
                 .quantity(saved.getQuantity())
@@ -139,10 +144,4 @@ public class TempTicketServiceImpl implements TempTicketService {
     }
 
 
-    private String generateBookingNumber() {
-        String prefix = "TICKET";
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        int randomNum = new Random().nextInt(9000) + 1000; // 1000~9999
-        return  prefix + timestamp + randomNum;
-    }
 }

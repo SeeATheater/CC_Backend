@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 public class TempTicketCreateResponseDTO {
     private Long tempTicketId;
-    private String bookingNumber;
     private String showTitle;               // 공연 이름
     private String detailAddress;           // 상세 주소
     private int quantity;                   // 예매 수량

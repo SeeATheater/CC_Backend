@@ -146,7 +146,7 @@ public class TempTicketController {
             @AuthenticationPrincipal(expression = "member") Member member,
             @RequestBody TempTicketCreateRequestDTO requestDTO) {
         return ApiResponse.onSuccess(
-                tempTicketService.createTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
+                tempTicketService.createTempTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
         );
     }
 

@@ -48,17 +48,18 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "KAKAO4004", "이미 다른 역할로 가입된 계정입니다."),
 
 
-    // MEMBER TICKET ERROR
-    MEMBER_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
-    MEMBER_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "TICKET4001", "주문 수량이 적절하지 않습니다"),
-    MEMBER_TICKET_STOCK(HttpStatus.BAD_REQUEST, "TICKET4002", "주문 수량이 재고를 초과했습니다"),
-    MEMBER_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "TICKET4003", "이미 취소하신 티켓입니다."),
-    MEMBER_TICKET_WRONG_STATUS(HttpStatus.BAD_REQUEST, "TICKET4004", "티켓의 상태가 적절하지 않습니다."),
-    MEMBER_TICKET_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "TICKET4005", "이미 예매된 티켓입니다."),
-    MEMBER_TICKET_TID_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4006", "존재하지 않는 결제 고유 번호(TID) 입니다."),
-    MEMBER_TICKET_STATUS_INVALID(HttpStatus.BAD_REQUEST, "TICKET4007", "유효하지 않은 티켓 상태입니다."),
-    MEMBER_TICKET_EXPIRED(HttpStatus.BAD_REQUEST, "TICKET4008", "티켓이 만료되었습니다."),
-    NOT_MEMBER_TICKET_OWNER(HttpStatus.FORBIDDEN, "TICKET4009", "해당 티켓의 소유자가 아닙니다."),
+    // TEMP TICKET ERROR
+    TEMP_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4000", "존재하지 않는 예약 티켓입니다."),
+    TEMP_TICKET_QUANTITY(HttpStatus.BAD_REQUEST, "TICKET4001", "주문 수량이 적절하지 않습니다"),
+    TEMP_TICKET_STOCK(HttpStatus.BAD_REQUEST, "TICKET4002", "주문 수량이 재고를 초과했습니다"),
+    TEMP_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "TICKET4003", "이미 취소하신 티켓입니다."),
+    TEMP_TICKET_WRONG_STATUS(HttpStatus.BAD_REQUEST, "TICKET4004", "티켓의 상태가 적절하지 않습니다."),
+    TEMP_TICKET_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "TICKET4005", "이미 예매된 티켓입니다."),
+    TEMP_TICKET_TID_NOT_FOUND(HttpStatus.NOT_FOUND, "TICKET4006", "존재하지 않는 결제 고유 번호(TID) 입니다."),
+    TEMP_TICKET_STATUS_INVALID(HttpStatus.BAD_REQUEST, "TICKET4007", "유효하지 않은 티켓 상태입니다."),
+    TEMP_TICKET_EXPIRED(HttpStatus.BAD_REQUEST, "TICKET4008", "티켓이 만료되었습니다."),
+    NOT_TEMP_TICKET_OWNER(HttpStatus.FORBIDDEN, "TICKET4009", "해당 티켓의 소유자가 아닙니다."),
+
 
     // REAL TICKET ERROR
     REAL_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "REALTICKET4000", "존재하지 않는 실제 티켓입니다."),
@@ -89,6 +90,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // ROUND ERROR
     ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "ROUND4000", "존재하지 않는 회차입니다."),
+    ROUND_BOOKING_DEADLINE_PASSED(HttpStatus.FORBIDDEN, "ROUND4001", "예약 가능한 회차가 아닙니다."),
 
     //BOARD ERROR
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "BOARD4001", "게시글이 존재하지 않습니다."),
