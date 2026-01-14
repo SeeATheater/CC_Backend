@@ -371,8 +371,8 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        if(member.getRole() != Role.PERFORMER){
-            throw new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED);
+        if (member.getRole() == Role.AUDIENCE) {
+            throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
 
         List<AmateurShow> amateurShows = amateurShowRepository.findAllByMemberId(memberId);
