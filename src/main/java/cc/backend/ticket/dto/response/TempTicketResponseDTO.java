@@ -1,7 +1,7 @@
 package cc.backend.ticket.dto.response;
 
 
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class MemberTicketResponseDTO {
+public class TempTicketResponseDTO {
 
     private String posterImageUrl;
     private Long memberTicketId;
@@ -24,8 +24,8 @@ public class MemberTicketResponseDTO {
     private LocalDateTime cancelAvailableUntil;
     private ReservationStatus reservationStatus;
 
-    public static MemberTicketResponseDTO from(MemberTicket ticket) {
-        return MemberTicketResponseDTO.builder()
+    public static TempTicketResponseDTO from(TempTicket ticket) {
+        return TempTicketResponseDTO.builder()
                 .posterImageUrl(ticket.getAmateurTicket().getAmateurShow().getPosterImageUrl())
                 .memberTicketId(ticket.getId())
                 .bookingNumber(ticket.getBookingNumber())

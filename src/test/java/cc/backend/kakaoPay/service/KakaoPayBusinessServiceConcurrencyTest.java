@@ -44,7 +44,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
         transactionTemplate.executeWithoutResult(status -> {
             em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 1 WHERE a.id = :id")
                     .setParameter("id", roundId).executeUpdate();
-            em.createQuery("UPDATE MemberTicket m SET m.quantity = 2 WHERE m.id = :id")
+            em.createQuery("UPDATE TempTicket m SET m.quantity = 2 WHERE m.id = :id")
                     .setParameter("id", targetTicketId).executeUpdate();
         });
 
@@ -66,7 +66,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
         transactionTemplate.executeWithoutResult(status -> {
             em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 1 WHERE a.id = :id")
                     .setParameter("id", roundId).executeUpdate();
-            em.createQuery("UPDATE MemberTicket m SET m.quantity = 1 WHERE m.id IN :ids")
+            em.createQuery("UPDATE TempTicket m SET m.quantity = 1 WHERE m.id IN :ids")
                     .setParameter("ids", ticketIds).executeUpdate();
         });
 
@@ -124,7 +124,7 @@ class KakaoPayBusinessServiceConcurrencyTest {
         transactionTemplate.executeWithoutResult(status -> {
             em.createQuery("UPDATE AmateurRounds a SET a.totalTicket = 4 WHERE a.id = :id")
                     .setParameter("id", roundId).executeUpdate();
-            em.createQuery("UPDATE MemberTicket m SET m.quantity = 2 WHERE m.id IN :ids")
+            em.createQuery("UPDATE TempTicket m SET m.quantity = 2 WHERE m.id IN :ids")
                     .setParameter("ids", ticketIds).executeUpdate();
         });
 

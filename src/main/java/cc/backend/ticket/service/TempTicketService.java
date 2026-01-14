@@ -1,17 +1,16 @@
 package cc.backend.ticket.service;
 
-import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.dto.response.*;
-import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
+import cc.backend.ticket.dto.request.TempTicketCreateRequestDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public interface MemberTicketService {
+public interface TempTicketService {
 
-    MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO);
+    TempTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO);
     List<RoundsListDTO> getRoundsList(Long memberId, Long amateurShowId);
     List<AmateurTicketListDTO> getAmateurTicketList(Long memberId, Long amateurShowId);
     AmateurShowSimpleDTO getSimpleAmateurShow(Long amateurShowId);

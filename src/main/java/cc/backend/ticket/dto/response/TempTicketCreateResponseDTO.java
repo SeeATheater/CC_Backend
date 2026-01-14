@@ -12,11 +12,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class MemberTicketCreateResponseDTO {
-    private Long memberTicketId;
+public class TempTicketCreateResponseDTO {
+    private Long tempTicketId;
     private String bookingNumber;
     private String showTitle;               // 공연 이름
-    //private String place;                   // 공연 장소
     private String detailAddress;           // 상세 주소
     private int quantity;                   // 예매 수량
     private LocalDateTime reserveDate;      // 예매일

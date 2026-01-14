@@ -8,9 +8,9 @@ import cc.backend.kakaoPay.dto.requestDTO.KakaoPayReadyRequestDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayCancelResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
+import cc.backend.ticket.repository.TempTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 public class KakaoPayService {
 
     private final WebClient kakaoWebClient;
-    private final MemberTicketRepository memberTicketRepository;
+    private final TempTicketRepository tempTicketRepository;
 
     @Value("${kakaopay.cid}")
     private String cid;
@@ -41,31 +41,31 @@ public class KakaoPayService {
     @Value("${kakaopay.url.fail}")
     private String failUrl;
 
-    public KakaoPayReadyResponseDTO ready(Long memberTicketId, String partnerUserId) {
+    public KakaoPayReadyResponseDTO ready(Long tempTicketId, String partnerUserId) {
 
-        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(memberTicketId)
+        TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(tempTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 재고 상태 검증
-        if (memberTicket.getReservationStatus() != ReservationStatus.PENDING) {
+        if (tempTicket.getReservationStatus() != ReservationStatus.PENDING) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STATUS_INVALID);
         }
 
         // itemName (할인명 - 공연이름)
-        String itemName = memberTicket.getAmateurTicket().getDiscountName() + " - " +
-                memberTicket.getAmateurTicket().getAmateurShow().getName();
+        String itemName = tempTicket.getAmateurTicket().getDiscountName() + " - " +
+                tempTicket.getAmateurTicket().getAmateurShow().getName();
 
         KakaoPayReadyRequestDTO requestDTO = KakaoPayReadyRequestDTO.builder()
                 .cid(cid)
-                .partnerOrderId(String.valueOf(memberTicketId))
+                .partnerOrderId(String.valueOf(tempTicketId))
                 .partnerUserId(partnerUserId)
                 .itemName(itemName)
-                .quantity(memberTicket.getQuantity())
-                .totalAmount(memberTicket.getTotalPrice())
+                .quantity(tempTicket.getQuantity())
+                .totalAmount(tempTicket.getTotalPrice())
                 .taxFreeAmount(0)
-                .approvalUrl(approvalUrl + "?partner_order_id=" + memberTicketId)
-                .cancelUrl(cancelUrl + "?partner_order_id=" + memberTicketId)
-                .failUrl(failUrl + "?partner_order_id=" + memberTicketId)
+                .approvalUrl(approvalUrl + "?partner_order_id=" + tempTicketId)
+                .cancelUrl(cancelUrl + "?partner_order_id=" + tempTicketId)
+                .failUrl(failUrl + "?partner_order_id=" + tempTicketId)
                 .build();
 
         // post 요청 (ready)
@@ -86,11 +86,11 @@ public class KakaoPayService {
     public KakaoPayApproveResponseDTO approve(String tid, String partnerOrderId, String partnerUserId, String pgToken) {
 
         // partnerOrderId로 MemberTicket 조회
-        MemberTicket memberTicket = memberTicketRepository.findById(Long.valueOf(partnerOrderId))
+        TempTicket tempTicket = tempTicketRepository.findById(Long.valueOf(partnerOrderId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 티켓 상태가 EXPIRED 이면 승인 불가
-        if (memberTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
+        if (tempTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
         }
 
