@@ -3,25 +3,22 @@ package cc.backend.ticket.service;
 import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurTicket;
-import cc.backend.amateurShow.repository.AmateurCastingRepository;
-import cc.backend.amateurShow.repository.AmateurNoticeRepository;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
-import cc.backend.amateurShow.repository.AmateurStaffRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
+import cc.backend.ticket.dto.request.TempTicketCreateRequestDTO;
 import cc.backend.ticket.dto.response.AmateurShowSimpleDTO;
 import cc.backend.ticket.dto.response.AmateurTicketListDTO;
-import cc.backend.ticket.dto.response.MemberTicketCreateResponseDTO;
+import cc.backend.ticket.dto.response.TempTicketCreateResponseDTO;
 import cc.backend.ticket.dto.response.RoundsListDTO;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
+import cc.backend.ticket.repository.TempTicketRepository;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -34,9 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MemberTicketServiceImpl implements MemberTicketService {
+public class TempTicketServiceImpl implements TempTicketService {
 
-    private final MemberTicketRepository memberTicketRepository;
+    private final TempTicketRepository tempTicketRepository;
     private final AmateurShowRepository amateurShowRepository;
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
@@ -47,7 +44,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
 
     @Override
     @Transactional
-    public MemberTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, MemberTicketCreateRequestDTO requestDTO) {
+    public TempTicketCreateResponseDTO createTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO) {
 
         Member memberRef = memberRepository.getReferenceById(member.getId());
         AmateurShow show = amateurShowRepository.findById(amateurShowId)
@@ -72,7 +69,7 @@ public class MemberTicketServiceImpl implements MemberTicketService {
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
         String bookingNumber = generateBookingNumber();
 
-        MemberTicket ticket = MemberTicket.builder()
+        TempTicket ticket = TempTicket.builder()
                 .member(memberRef)
                 .amateurTicket(amateurTicket)
                 .amateurRound(round)
@@ -85,15 +82,15 @@ public class MemberTicketServiceImpl implements MemberTicketService {
                 .reservationStatus(ReservationStatus.PENDING)
                 .build();
 
-        MemberTicket saved = memberTicketRepository.save(ticket);
+        TempTicket saved = tempTicketRepository.save(ticket);
 
         //티켓 예매 알림 이벤트 생성
         eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
 
         // realTicket은 API를 사용해 호출
-        //realTicketService.createRealTicketFromMemberTicket(saved.getId());
-        return MemberTicketCreateResponseDTO.builder()
-                .memberTicketId(saved.getId())
+
+        return TempTicketCreateResponseDTO.builder()
+                .tempTicketId(saved.getId())
                 .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .detailAddress(amateurTicket.getAmateurShow().getDetailAddress())

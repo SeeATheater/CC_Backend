@@ -4,11 +4,8 @@ import cc.backend.apiPayLoad.ApiResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.kakaoPay.service.KakaoPayBusinessService;
 import cc.backend.member.entity.Member;
-import cc.backend.ticket.dto.response.MemberTicketListResponseDTO;
-import cc.backend.ticket.dto.response.MemberTicketResponseDTO;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
-import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.service.MemberTicketService;
+import cc.backend.ticket.service.TempTicketService;
 import cc.backend.ticket.service.RealTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,14 +19,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Tag(name = "내 공연 티켓")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/myTickets")
 public class MyTicketController {
-    private final MemberTicketService memberTicketService;
+    private final TempTicketService tempTicketService;
     private final RealTicketService realTicketService;
     private final KakaoPayBusinessService kakaoPayBusinessService;
 

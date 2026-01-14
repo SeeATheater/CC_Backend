@@ -8,8 +8,7 @@ import cc.backend.member.enumerate.ActiveStatus;
 import cc.backend.member.enumerate.Role;
 import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.notice.entity.MemberNotice;
-import cc.backend.notice.entity.Notice;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -66,7 +65,7 @@ public class Member extends BaseEntity {
     private List<MemberNotice> memberNotices = new ArrayList<>();
 
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
-    private List<MemberTicket> memberTickets = new ArrayList<>();
+    private List<TempTicket> tempTickets = new ArrayList<>();
 
     @Builder
     public Member(String username, String name, Role role, String address, String email, String phone,

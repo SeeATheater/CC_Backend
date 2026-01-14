@@ -4,13 +4,12 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.kakaoPay.service.KakaoPayService;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.CancelFeeType;
 import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
+import cc.backend.ticket.repository.TempTicketRepository;
 import cc.backend.ticket.repository.RealTicketRepository;
 import cc.backend.ticket.util.CancelPolicy;
 import lombok.RequiredArgsConstructor;
@@ -22,20 +21,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RealTicketService {
     private final RealTicketRepository realTicketRepository;
-    private final MemberTicketRepository memberTicketRepository;
+    private final TempTicketRepository tempTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
 
 
     @Transactional
-    public void createRealTicketFromMemberTicket(Long  memberTicketId) {
-        MemberTicket ticket = memberTicketRepository.findById(memberTicketId)
+    public void createRealTicketFromTempTicket(Long  tempTicketId) {
+        TempTicket ticket = tempTicketRepository.findById(tempTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         AmateurRounds round = ticket.getAmateurRound();

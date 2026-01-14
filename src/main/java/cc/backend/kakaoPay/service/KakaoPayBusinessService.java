@@ -7,11 +7,11 @@ import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayReadyResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayResultResponseDTO;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import cc.backend.ticket.entity.RealTicket;
 import cc.backend.ticket.entity.enums.CancelFeeType;
 import cc.backend.ticket.entity.enums.ReservationStatus;
-import cc.backend.ticket.repository.MemberTicketRepository;
+import cc.backend.ticket.repository.TempTicketRepository;
 import cc.backend.ticket.repository.RealTicketRepository;
 import cc.backend.ticket.service.RealTicketService;
 import cc.backend.ticket.util.CancelPolicy;
@@ -27,29 +27,29 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class KakaoPayBusinessService {
 
-    private final MemberTicketRepository memberTicketRepository;
+    private final TempTicketRepository tempTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
     private final RealTicketService realTicketService;
     private final RealTicketRepository realTicketRepository;
     private final KakaoPayService kakaoPayService;
 
     // 결제 준비 비즈니스 로직
-    public KakaoPayReadyResponseDTO preparePayment(Long memberTicketId, String partnerUserId) {
+    public KakaoPayReadyResponseDTO preparePayment(Long tempTicketId, String partnerUserId) {
 
         // DB에서 결제할 티켓 정보를 미리 조회
-        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(memberTicketId)
+        TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(tempTicketId)
                                                           .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 현재 로그인한 사용자(partnerUserId)와 티켓의 소유주가 같은지 확인
-        if (!memberTicket.getMember().getId().toString().equals(partnerUserId)) {
+        if (!tempTicket.getMember().getId().toString().equals(partnerUserId)) {
             throw new GeneralException(ErrorStatus.NOT_MEMBER_TICKET_OWNER);
         }
 
         // 재고 선점
-        preemptStock(memberTicket);
+        preemptStock(tempTicket);
 
         // 카카오페이 결제 준비 API 호출
-        KakaoPayReadyResponseDTO responseDTO = kakaoPayService.ready(memberTicketId, partnerUserId);
+        KakaoPayReadyResponseDTO responseDTO = kakaoPayService.ready(tempTicketId, partnerUserId);
 
         if (responseDTO == null) {
             // 재고 복구
@@ -57,16 +57,16 @@ public class KakaoPayBusinessService {
         }
 
         // 응답받은 tid를 DB에 저장
-        memberTicket.updateTid(responseDTO.getTid());
-        memberTicketRepository.save(memberTicket);
+        tempTicket.updateTid(responseDTO.getTid());
+        tempTicketRepository.save(tempTicket);
 
         return responseDTO;
     }
 
-    private void preemptStock(MemberTicket memberTicket) {
+    private void preemptStock(TempTicket tempTicket) {
 
         // 재고 감소
-        int updated = amateurRoundsRepository.decreaseStock(memberTicket.getAmateurRound().getId(), memberTicket.getQuantity());
+        int updated = amateurRoundsRepository.decreaseStock(tempTicket.getAmateurRound().getId(), tempTicket.getQuantity());
 
         if (updated == 0) { // 재고 부족하면 예외
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STOCK);
@@ -78,21 +78,21 @@ public class KakaoPayBusinessService {
 
         Long ticketId = Long.valueOf(partnerOrderId);
 
-        MemberTicket memberTicket = memberTicketRepository.findWithTicketAndShowById(ticketId)
+        TempTicket tempTicket = tempTicketRepository.findWithTicketAndShowById(ticketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
-        if (memberTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
+        if (tempTicket.getReservationStatus().equals(ReservationStatus.EXPIRED)) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_EXPIRED);
         }
 
         // 저장된 tid 가져오기
-        String tid = memberTicket.getKakaoTid();
+        String tid = tempTicket.getKakaoTid();
         if (tid == null) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_TID_NOT_FOUND);
         }
 
         // 멤버를 DB에서 추적하기
-        String partnerUserId = memberTicket.getMember().getId().toString();
+        String partnerUserId = tempTicket.getMember().getId().toString();
         KakaoPayApproveResponseDTO responseDTO;
 
         try {
@@ -107,41 +107,41 @@ public class KakaoPayBusinessService {
 
             // 결제 승인 실패 시 재고 복구
             amateurRoundsRepository.increaseStock(
-                memberTicket.getAmateurRound().getId(),
-                memberTicket.getQuantity()
+                tempTicket.getAmateurRound().getId(),
+                tempTicket.getQuantity()
             );
 
-            memberTicket.updateReservationStatus(ReservationStatus.EXPIRED);
-            memberTicketRepository.save(memberTicket);
+            tempTicket.updateReservationStatus(ReservationStatus.EXPIRED);
+            tempTicketRepository.save(tempTicket);
 
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
 
         // 예약 확정 및 최종 티켓 생성
-        confirmReservation(memberTicket);
-        realTicketService.createRealTicketFromMemberTicket(ticketId);
+        confirmReservation(tempTicket);
+        realTicketService.createRealTicketFromTempTicket(ticketId);
 
-        Long amateurShowId = memberTicket.getAmateurTicket().getAmateurShow().getId();
+        Long amateurShowId = tempTicket.getAmateurTicket().getAmateurShow().getId();
         return new KakaoPayResultResponseDTO(
                 amateurShowId,
                 responseDTO
         );
     }
 
-    private void confirmReservation(MemberTicket memberTicket) {
+    private void confirmReservation(TempTicket tempTicket) {
 
         // 중복 예약 방지
-        if (memberTicket.getReservationStatus().equals(ReservationStatus.RESERVED)) return;
+        if (tempTicket.getReservationStatus().equals(ReservationStatus.RESERVED)) return;
 
         // 상태가 PENDING이 아니면 예외 (잘못된 요청)
-        if (!memberTicket.getReservationStatus().equals(ReservationStatus.PENDING)) {
+        if (!tempTicket.getReservationStatus().equals(ReservationStatus.PENDING)) {
             throw new GeneralException(ErrorStatus.MEMBER_TICKET_STATUS_INVALID);
         }
 
         // 예약 확정
-        memberTicket.updateReservationStatus(ReservationStatus.RESERVED);
+        tempTicket.updateReservationStatus(ReservationStatus.RESERVED);
         // 누적 티켓 판매 수 증가
-        memberTicket.getAmateurTicket().getAmateurShow().increaseSoldTicket(memberTicket.getQuantity());
+        tempTicket.getAmateurTicket().getAmateurShow().increaseSoldTicket(tempTicket.getQuantity());
     }
 
     // cancel
@@ -191,21 +191,21 @@ public class KakaoPayBusinessService {
 
         Long ticketId = Long.valueOf(partnerOrderId);
 
-        MemberTicket memberTicket = memberTicketRepository.findById(ticketId)
+        TempTicket tempTicket = tempTicketRepository.findById(ticketId)
                                                           .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_TICKET_NOT_FOUND));
 
         // 이미 처리된 건이면 패스
-        if (memberTicket.getReservationStatus() != ReservationStatus.PENDING) {
+        if (tempTicket.getReservationStatus() != ReservationStatus.PENDING) {
             return;
         }
 
         // 1. 재고 복구 (증가)
         amateurRoundsRepository.increaseStock(
-            memberTicket.getAmateurRound().getId(),
-            memberTicket.getQuantity()
+            tempTicket.getAmateurRound().getId(),
+            tempTicket.getQuantity()
         );
 
         // 2. 티켓 상태 변경
-        memberTicket.updateReservationStatus(ReservationStatus.EXPIRED);
+        tempTicket.updateReservationStatus(ReservationStatus.EXPIRED);
     }
 }

@@ -1,17 +1,15 @@
 package cc.backend.ticket.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
-import cc.backend.member.MemberService;
 import cc.backend.member.entity.Member;
 import cc.backend.ticket.dto.response.*;
-import cc.backend.ticket.dto.request.MemberTicketCreateRequestDTO;
-import cc.backend.ticket.service.MemberTicketService;
+import cc.backend.ticket.dto.request.TempTicketCreateRequestDTO;
+import cc.backend.ticket.service.TempTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,9 +22,9 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/tickets")
-public class MemberTicketController {
+public class TempTicketController {
 
-    private final MemberTicketService memberTicketService;
+    private final TempTicketService tempTicketService;
 
     @GetMapping("/{amateurShowId}/showSimple")
     @Operation(
@@ -39,7 +37,7 @@ public class MemberTicketController {
             }
     )
     public ApiResponse<AmateurShowSimpleDTO> getSimpleAmateurShow(@Parameter(name = "amateurShowId", description = "공연 ID", required = true) @PathVariable Long amateurShowId) {
-        return ApiResponse.onSuccess(memberTicketService.getSimpleAmateurShow(amateurShowId));
+        return ApiResponse.onSuccess(tempTicketService.getSimpleAmateurShow(amateurShowId));
     }
 
     @GetMapping("/{amateurShowId}/selectRound")
@@ -70,7 +68,7 @@ public class MemberTicketController {
     })
     public ApiResponse<List<RoundsListDTO>> getAmateurRounds(@PathVariable Long amateurShowId,
                                                              @AuthenticationPrincipal(expression = "member") Member member){
-        return ApiResponse.onSuccess(memberTicketService.getRoundsList(member.getId(), amateurShowId));
+        return ApiResponse.onSuccess(tempTicketService.getRoundsList(member.getId(), amateurShowId));
     }
 
     @GetMapping("/{amateurShowId}/selectTicket")
@@ -98,7 +96,7 @@ public class MemberTicketController {
     public ApiResponse<List<AmateurTicketListDTO>> getAmateurTicketList(@PathVariable Long amateurShowId,
                                                                     @AuthenticationPrincipal(expression = "member") Member member){
 
-        return ApiResponse.onSuccess(memberTicketService.getAmateurTicketList(member.getId(), amateurShowId));
+        return ApiResponse.onSuccess(tempTicketService.getAmateurTicketList(member.getId(), amateurShowId));
 
     }
 
@@ -115,7 +113,7 @@ public class MemberTicketController {
                             responseCode = "200",
                             description = "티켓 예매 성공",
                             content = @Content(
-                                    schema = @Schema(implementation = MemberTicketCreateResponseDTO.class)
+                                    schema = @Schema(implementation = TempTicketCreateResponseDTO.class)
                             )
                     ),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -141,14 +139,14 @@ public class MemberTicketController {
                     )
             }
     )
-    public ApiResponse<MemberTicketCreateResponseDTO> createMemberTicket(
+    public ApiResponse<TempTicketCreateResponseDTO> createTempTicket(
             @PathVariable Long amateurShowId,
             @RequestParam Long amateurRoundId,
             @RequestParam Long amateurTicketId,
             @AuthenticationPrincipal(expression = "member") Member member,
-            @RequestBody MemberTicketCreateRequestDTO requestDTO) {
+            @RequestBody TempTicketCreateRequestDTO requestDTO) {
         return ApiResponse.onSuccess(
-                memberTicketService.createTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
+                tempTicketService.createTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
         );
     }
 

@@ -2,7 +2,7 @@ package cc.backend.amateurShow.entity;
 
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.domain.common.BaseEntity;
-import cc.backend.ticket.entity.MemberTicket;
+import cc.backend.ticket.entity.TempTicket;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +32,7 @@ public class AmateurTicket extends BaseEntity {
 
     @OneToMany(mappedBy = "amateurTicket", cascade = CascadeType.ALL)
     @Builder.Default
-    private List<MemberTicket> memberTicketList = new ArrayList<>();
+    private List<TempTicket> tempTicketList = new ArrayList<>();
 
     public void update(AmateurUpdateRequestDTO.UpdateTickets dto) {
         if (dto.getDiscountName() != null) this.discountName = dto.getDiscountName();
