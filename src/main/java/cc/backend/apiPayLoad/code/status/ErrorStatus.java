@@ -60,6 +60,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_TICKET_EXPIRED(HttpStatus.BAD_REQUEST, "TICKET4008", "티켓이 만료되었습니다."),
     NOT_MEMBER_TICKET_OWNER(HttpStatus.FORBIDDEN, "TICKET4009", "해당 티켓의 소유자가 아닙니다."),
 
+
     // REAL TICKET ERROR
     REAL_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "REALTICKET4000", "존재하지 않는 실제 티켓입니다."),
     REAL_TICKET_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "REALTICKET4001", "이미 취소하신 티켓입니다."),
@@ -89,6 +90,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // ROUND ERROR
     ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "ROUND4000", "존재하지 않는 회차입니다."),
+    ROUND_BOOKING_DEADLINE_PASSED(HttpStatus.FORBIDDEN, "ROUND4001", "예약 가능한 회차가 아닙니다."),
 
     //BOARD ERROR
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "BOARD4001", "게시글이 존재하지 않습니다."),

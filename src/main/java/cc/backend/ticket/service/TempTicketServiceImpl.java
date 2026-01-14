@@ -56,6 +56,15 @@ public class TempTicketServiceImpl implements TempTicketService {
         AmateurTicket amateurTicket = amateurTicketRepository.findById(amateurTicketId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEUR_TICKET_NOT_FOUND));
 
+        // 해당 회차의 예약 가능한 시간인지
+        // 예매 가능 기한(공연 시작 3시간 전) 체크
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime bookingDeadline = round.getPerformanceDateTime().minusHours(3);
+
+        if (now.isAfter(bookingDeadline)) {
+            throw new GeneralException(ErrorStatus.ROUND_BOOKING_DEADLINE_PASSED);
+        }
+
         // 해당 회차와 티켓에 해당하는 공연이 일치 하는지
         if (!amateurTicket.getAmateurShow().getId().equals(amateurShowId) || !round.getAmateurShow().getId().equals(amateurShowId)) {
             throw new GeneralException(ErrorStatus.AMATEUR_SHOW_MISMATCH);
