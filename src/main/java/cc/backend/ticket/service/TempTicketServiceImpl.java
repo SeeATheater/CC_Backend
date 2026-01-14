@@ -67,7 +67,6 @@ public class TempTicketServiceImpl implements TempTicketService {
         }
 
         int totalPrice = requestDTO.getQuantity() * amateurTicket.getPrice();
-        String bookingNumber = generateBookingNumber();
 
         TempTicket ticket = TempTicket.builder()
                 .member(memberRef)
@@ -75,7 +74,6 @@ public class TempTicketServiceImpl implements TempTicketService {
                 .amateurRound(round)
                 .quantity(requestDTO.getQuantity())
                 .reserveDate(LocalDateTime.now())
-                .bookingNumber(bookingNumber)
                 .performanceDateTime(round.getPerformanceDateTime())
                 .cancelAvailableUntil(round.getPerformanceDateTime().minusDays(1).withHour(17))
                 .totalPrice(totalPrice)
@@ -91,7 +89,6 @@ public class TempTicketServiceImpl implements TempTicketService {
 
         return TempTicketCreateResponseDTO.builder()
                 .tempTicketId(saved.getId())
-                .bookingNumber(bookingNumber)
                 .showTitle(amateurTicket.getAmateurShow().getName())
                 .detailAddress(amateurTicket.getAmateurShow().getDetailAddress())
                 .quantity(saved.getQuantity())
@@ -139,10 +136,4 @@ public class TempTicketServiceImpl implements TempTicketService {
     }
 
 
-    private String generateBookingNumber() {
-        String prefix = "TICKET";
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        int randomNum = new Random().nextInt(9000) + 1000; // 1000~9999
-        return  prefix + timestamp + randomNum;
-    }
 }

@@ -41,8 +41,6 @@ public class TempTicket extends BaseEntity {
     @Column(nullable = false)
     private int totalPrice;
 
-    @Column(nullable = false, unique = true)
-    private String bookingNumber;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
