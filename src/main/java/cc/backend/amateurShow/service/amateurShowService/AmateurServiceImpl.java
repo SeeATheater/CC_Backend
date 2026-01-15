@@ -65,7 +65,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        if (member.getRole() != Role.PERFORMER) {
+        if (member.getRole() == Role.AUDIENCE) {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
 
@@ -186,7 +186,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()->new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        if (member.getRole() != Role.PERFORMER) {
+        if (member.getRole() == Role.AUDIENCE) {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
 
@@ -399,7 +399,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        if (member.getRole() != Role.PERFORMER) {
+        if (member.getRole() == Role.AUDIENCE) {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
 
@@ -579,7 +579,7 @@ public class AmateurServiceImpl implements AmateurService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        if (member.getRole() != Role.PERFORMER) {
+        if (member.getRole() == Role.AUDIENCE) {
             throw new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER);
         }
 
