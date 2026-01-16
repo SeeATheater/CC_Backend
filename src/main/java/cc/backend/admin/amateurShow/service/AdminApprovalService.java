@@ -29,8 +29,6 @@ public class AdminApprovalService {
 
     private final AmateurShowRepository amateurShowRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final ApprovalShowProducer approvalShowProducer;
-    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {

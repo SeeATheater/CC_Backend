@@ -92,11 +92,6 @@ public class TempTicketServiceImpl implements TempTicketService {
 
         TempTicket saved = tempTicketRepository.save(ticket);
 
-        // -> 먼저 ApplicationEvent를 완충 이벤트로 커밋 이후를 보장받고 나서 카프카 이벤트 발행
-        eventPublisher.publishEvent(
-                new TicketReservationCommitEvent(ticket.getAmateurTicket().getAmateurShow().getId(), ticket.getAmateurTicket().getId(), memberRef.getId())
-        );
-
         // realTicket은 API를 사용해 호출
 
         return TempTicketCreateResponseDTO.builder()
