@@ -266,7 +266,17 @@ public class NoticeServiceImpl implements NoticeService {
         AmateurShow show = amateurShowRepository.findById(event.amateurShowId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
-        // 2. Notice 생성
+
+        // 2. 새 공연 해시태그 계산
+        Set<String> newTagsSet = Arrays.stream(Optional.ofNullable(show.getHashtag()).orElse("").split("[#,\\s]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+
+        if (newTagsSet.isEmpty()) return null; // 태그 없으면 추천 불가
+
+
+        // 3. Notice 생성
         Notice notice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.RECOMMEND)
@@ -275,13 +285,6 @@ public class NoticeServiceImpl implements NoticeService {
                         .build()
         );
 
-        // 3. 새 공연 해시태그 계산
-        Set<String> newTagsSet = Arrays.stream(Optional.ofNullable(show.getHashtag()).orElse("").split("[#,\\s]+"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toSet());
-
-        if (newTagsSet.isEmpty()) return null; // 태그 없으면 추천 불가
 
         // 4. 추천 대상 회원 조회 (좋아요한 회원 기준)
         List<Member> allMembers = memberLikeRepository.findAllDistinctMembers();

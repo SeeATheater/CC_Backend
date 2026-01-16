@@ -11,6 +11,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Service
 @RequiredArgsConstructor
 public class ReservationCommitEventListener {
+
     private final ReservationCompletedProducer reservationCompletedProducer;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

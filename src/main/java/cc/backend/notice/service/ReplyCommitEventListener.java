@@ -10,7 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 @RequiredArgsConstructor
-public class ReplyCommmitEventListener {
+public class ReplyCommitEventListener {
 
     private final ReplyProducer replyProducer;
 

@@ -37,8 +37,6 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
-    private final CommentProducer commentProducer;
-    private final ReplyProducer replyProducer;
     private final ApplicationEventPublisher eventPublisher;
 
     //댓글 작성

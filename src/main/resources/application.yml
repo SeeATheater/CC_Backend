@@ -45,7 +45,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-        auto-offset-reset: earliest
+      auto-offset-reset: earliest
 
 url:
   access-token: https://oauth2.googleapis.com/token
