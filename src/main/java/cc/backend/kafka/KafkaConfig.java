@@ -1,6 +1,6 @@
-package cc.backend.notice.kafka;
+package cc.backend.kafka;
 
-import cc.backend.notice.kafka.NewShowEvent.MemberRecommendationEvent;
+import cc.backend.kafka.event.common.DomainEvent;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Value;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaRecommendConfig {
+public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -29,36 +29,42 @@ public class KafkaRecommendConfig {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    // Producer: Object 직렬화(모든 이벤트 공용)
     @Bean
-    public ProducerFactory<String, MemberRecommendationEvent> producerFactory() {
+    public ProducerFactory<String, DomainEvent> producerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+
+        props.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
+
         return new DefaultKafkaProducerFactory<>(props);
     }
 
-    @Bean public KafkaTemplate<String, MemberRecommendationEvent> kafkaTemplate() {
+    @Bean
+    public KafkaTemplate<String, DomainEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
-    // Consumer: Object 역직렬화(모든 이벤트 공용)
     @Bean
-    public ConsumerFactory<String, MemberRecommendationEvent> consumerFactory() {
-        JsonDeserializer<MemberRecommendationEvent> deserializer = new JsonDeserializer<>(MemberRecommendationEvent.class);
-        deserializer.addTrustedPackages("*"); // 패키지 제한 없앰
+    public ConsumerFactory<String, DomainEvent> consumerFactory() {
+        JsonDeserializer<DomainEvent> deserializer = new JsonDeserializer<>(DomainEvent.class);
+        deserializer.addTrustedPackages("*");
+        deserializer.setUseTypeMapperForKey(false);
 
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
     }
 
     // 재시도 + DLQ 설정
     @Bean
-    public DefaultErrorHandler errorHandler(KafkaTemplate<String, MemberRecommendationEvent> kafkaTemplate) {
+    public DefaultErrorHandler errorHandler(KafkaTemplate<String, DomainEvent> kafkaTemplate) {
         DeadLetterPublishingRecoverer recoverer =
                 new DeadLetterPublishingRecoverer(kafkaTemplate,
                         (record, ex) -> new TopicPartition(record.topic() + "-dlq", record.partition()));
@@ -70,8 +76,8 @@ public class KafkaRecommendConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, MemberRecommendationEvent> kafkaListenerContainerFactory(KafkaTemplate<String, MemberRecommendationEvent> kafkaTemplate) {
-        ConcurrentKafkaListenerContainerFactory<String, MemberRecommendationEvent> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, DomainEvent> kafkaListenerContainerFactory(KafkaTemplate<String, DomainEvent> kafkaTemplate) {
+        ConcurrentKafkaListenerContainerFactory<String, DomainEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3); // 컨슈머 병렬 처리 스레드 수

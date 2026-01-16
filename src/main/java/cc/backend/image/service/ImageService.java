@@ -15,11 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 @Slf4j
 @Service
@@ -40,6 +37,10 @@ public class ImageService {
      */
     @Transactional
     public ImageResponseDTO.ImageResultWithPresignedUrlDTO saveImage(Long memberId, ImageRequestDTO.FullImageRequestDTO requestDTO) {
+
+        if (requestDTO.getKeyName() == null || requestDTO.getKeyName().isEmpty()) {
+            return null; // 빈 DTO 무시
+        }
 
         return saveImageWithImageUrl(memberId, requestDTO, Optional.empty());
     }
@@ -74,9 +75,22 @@ public class ImageService {
     //다중 이미지 저장
     @Transactional
     public List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> saveImages(Long memberId, List<ImageRequestDTO.FullImageRequestDTO> requestDTOs){
-        return requestDTOs.stream()
-                .map(requestDTO-> saveImage(memberId, requestDTO))
-                .collect(Collectors.toList());
+        List<ImageResponseDTO.ImageResultWithPresignedUrlDTO> results = new ArrayList<>();
+
+        for (ImageRequestDTO.FullImageRequestDTO dto : requestDTOs) {
+            try {
+                ImageResponseDTO.ImageResultWithPresignedUrlDTO saved = saveImage(memberId, dto);
+                if (saved != null) {
+                    results.add(saved);
+                }
+            } catch (GeneralException ex) {
+                // 실패한 이미지는 로깅, 알림, DLQ 등 처리 가능
+                log.warn("이미지 저장 실패: keyName={}, memberId={}, reason={}",
+                        dto.getKeyName(), memberId, ex.getMessage());
+            }
+        }
+
+        return results;
     }
 
     // 이미지 단건 조회

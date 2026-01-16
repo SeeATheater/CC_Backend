@@ -7,9 +7,12 @@ import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.notice.event.entity.ApproveShowEvent;
-import cc.backend.notice.event.entity.RejectShowEvent;
+import cc.backend.kafka.event.rejectShowEvent.RejectShowEvent;
 import cc.backend.member.entity.Member;
+import cc.backend.kafka.event.approvalShowEvent.ApprovalShowEvent;
+import cc.backend.kafka.event.approvalShowEvent.ApprovalShowProducer;
+import cc.backend.notice.event.ApproveCommitEvent;
+import cc.backend.notice.event.RejectCommitEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
@@ -25,6 +28,8 @@ public class AdminApprovalService {
 
     private final AmateurShowRepository amateurShowRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final ApprovalShowProducer approvalShowProducer;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {
@@ -33,8 +38,13 @@ public class AdminApprovalService {
 
         show.approve();
 
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(new ApproveShowEvent(show, member));   //공연등록 승인 이벤트 생성
+        Member performer  = show.getMember();
+
+        // 등록 승인 커밋 트랜잭션 이벤트 발행
+        eventPublisher.publishEvent(
+                new ApproveCommitEvent(show.getId(), performer.getId()
+                )
+        );
 
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
@@ -47,7 +57,12 @@ public class AdminApprovalService {
         show.reject(dto.getRejectReason());
 
         Member member  = show.getMember();
-        eventPublisher.publishEvent(new RejectShowEvent(show, member));   //공연등록 반려 이벤트 생성
+
+        // 등록 거부 커밋 트랜잭션 이벤트 발행
+        eventPublisher.publishEvent(
+                new RejectCommitEvent(show.getId(), member.getId(), show.getRejectReason()
+                )
+        );
 
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }

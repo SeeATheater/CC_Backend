@@ -13,13 +13,16 @@ import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
-import cc.backend.notice.event.entity.PromoteHotEvent;
+import cc.backend.kafka.event.commentEvent.CommentProducer;
+import cc.backend.kafka.event.hotBoardEvent.HotBoardEvent;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import cc.backend.image.service.ImageService;
+import cc.backend.kafka.event.hotBoardEvent.HotBoardProducer;
+import cc.backend.kafka.event.replyEvent.ReplyProducer;
 import cc.backend.member.entity.Member;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.member.enumerate.Role;
@@ -48,7 +51,7 @@ public class BoardService {
     private final ImageService imageService;
     private final ImageRepository imageRepository;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final HotBoardProducer hotBoardProducer;
 
     // 게시글 작성
     @Transactional
@@ -361,7 +364,8 @@ public class BoardService {
                     .build();
             hotBoardRepository.save(hotBoard);
 
-            eventPublisher.publishEvent(new PromoteHotEvent(board.getId(), board.getMember().getId())); //핫게 이벤트 생성
+            //핫게 알림용 카프카 이벤트 생성
+            hotBoardProducer.publish(new HotBoardEvent(board.getId(), board.getMember().getId()));
         }
     }
 
