@@ -11,10 +11,15 @@ import cc.backend.board.entity.CommentLike;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentLikeRepository;
 import cc.backend.board.repository.CommentRepository;
-import cc.backend.notice.event.entity.CommentEvent;
-import cc.backend.notice.event.entity.ReplyEvent;
+import cc.backend.kafka.event.commentEvent.CommentEvent;
+import cc.backend.kafka.event.commentEvent.CommentProducer;
+import cc.backend.kafka.event.replyEvent.ReplyEvent;
+import cc.backend.kafka.event.replyEvent.ReplyProducer;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.notice.event.CommentCommitEvent;
+import cc.backend.notice.event.ReplyCommitEvent;
+import cc.backend.notice.event.TicketReservationCommitEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -32,7 +37,10 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 생성자
+    private final CommentProducer commentProducer;
+    private final ReplyProducer replyProducer;
+    private final ApplicationEventPublisher eventPublisher;
+
     //댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long boardId, Long memberId, CommentRequest req) {
@@ -47,7 +55,11 @@ public class CommentService {
             comment = Comment.createComment(req.getContent(), member, board);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId()));   //댓글 이벤트 생성
+            //댓글 커밋 이벤트 생성
+            eventPublisher.publishEvent(
+                    new CommentCommitEvent(boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId())
+            );
+
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
@@ -62,7 +74,12 @@ public class CommentService {
             comment = Comment.createReply(req.getContent(), member, board, parent);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new ReplyEvent(parent.getId(), parent.getMember().getId(), comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
+            //대댓글 커밋 이벤트 생성
+            eventPublisher.publishEvent(
+                    new ReplyCommitEvent(parent.getId(), parent.getMember().getId(), comment.getId(), comment.getMember().getId())
+            );
+
+
         }
 
 

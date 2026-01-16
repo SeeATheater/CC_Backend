@@ -18,10 +18,6 @@ import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.memberLike.repository.MemberLikeRepository;
-import cc.backend.notice.event.entity.NewShowEvent;
-import cc.backend.notice.kafka.NewShowEvent.MemberRecommendationProducer;
-import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -44,11 +40,8 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
-    private final MemberLikeRepository memberLikeRepository;
     private final ImageService imageService;
     private final ImageRepository imageRepository;
-    private final NoticeService noticeService;
-    private final MemberRecommendationProducer memberRecommendationProducer;
 
     // 소극장 공연 등록
     @Transactional
@@ -85,24 +78,6 @@ public class AmateurServiceImpl implements AmateurService {
                 .build();
 
         imageService.saveImageWithImageUrl(memberId, fullImageRequestDTO, Optional.ofNullable(dto.getImageUrl()));
-
-
-        //좋아요한 멤버 추출
-        List<Long> likerIds = memberLikeRepository.findByPerformerId(memberId)
-                .stream()
-                .map(l -> l.getLiker().getId())
-                .toList();
-
-        // 좋아요 알림: 좋아요한 멤버들만
-        if (!likerIds.isEmpty()) {
-            noticeService.notifyNewShow(
-                    new NewShowEvent(newAmateurShow.getId(), memberId, likerIds)
-            );
-        }
-        // 추천: 해시태그 기반 추천 → 모든 회원 대상
-        memberRecommendationProducer.recommendByHashtag(
-                new NewShowEvent(newAmateurShow.getId(), memberId, null)
-        );
 
         // response
         return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
