@@ -17,6 +17,7 @@ import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Component
@@ -30,6 +31,7 @@ public class CommentConsumer {
             groupId = "comment-notice-group",
             containerFactory = "kafkaListenerContainerFactory"
     )
+    @Transactional
     public void consume(CommentEvent event) {
 
         if (event == null) return;
