@@ -1,4 +1,4 @@
-package cc.backend.event.entity;
+package cc.backend.notice.event.entity;
 
 import lombok.Getter;
 

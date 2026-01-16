@@ -1,6 +1,6 @@
-package cc.backend.event.service;
+package cc.backend.notice.event.service;
 
-import cc.backend.event.entity.NewShowEvent;
+import cc.backend.notice.event.entity.ReplyEvent;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +9,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class NewShowEventListener {
+public class ReplyEventListener {
     private final NoticeService noticeService;
-
     @EventListener
-    public NoticeResponseDTO.NoticeDTO handleAmateurShowCreate(NewShowEvent event) {
+    public NoticeResponseDTO.NoticeDTO handleReplyCreate(ReplyEvent event) {
 
-        return noticeService.notifyNewShow(event);
+        return noticeService.notifyNewReply(event);
     }
 }

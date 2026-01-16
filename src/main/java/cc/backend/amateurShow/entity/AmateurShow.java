@@ -167,4 +167,5 @@ public class AmateurShow extends BaseEntity {
         this.rejectReason = rejectReason;
 
     }
+
 }

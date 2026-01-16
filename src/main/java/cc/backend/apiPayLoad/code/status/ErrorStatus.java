@@ -85,6 +85,7 @@ public enum ErrorStatus implements BaseErrorCode {
     AMATEUR_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "AMATEURTICKET4000", "존재하지 않는 소극장 공연 티켓입니다."),
     AMATEUR_TICKET_STOCK(HttpStatus.BAD_REQUEST, "AMATEURTICKET4001", "주문 수량은 최소 1개 이상이어야 합니다."),
     AMATEUR_SHOW_MISMATCH(HttpStatus.NOT_FOUND, "AMATEURTICKET4002", "회차와 티켓에 해당하는 공연이 일치하지 않습니다."),
+
     // PHOTOALBUM ERROR
     PHOTOALBUM_NOT_FOUND(HttpStatus.NOT_FOUND, "PHOTOALBUM4000", "존재하지 않는 사진첩입니다."),
 
@@ -108,6 +109,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //NOTICE ERROR
     MEMBERNOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBERNOTICE4001", "존재하지 않는 알림입니다."),
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE4001", "존재하지 않는 알림입니다."),
     // INQUIRY ERROR
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY4000", "존재하지 않는 문의글입니다."),
     FORBIDDEN_INQUIRY_ACCESS(HttpStatus.NOT_FOUND, "INQUIRY4001", "로그인한 멤버가 작성하지 않는 문의글입니다."),

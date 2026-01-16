@@ -48,7 +48,7 @@ public class MemberNoticeService {
                         .id(notice.getId())
                         .noticeType(notice.getNotice().getType())
                         .message(notice.getNotice().getMessage())
-                        .isRead(notice.getIsRead())
+                        .isRead(notice.isRead())
                         .contentId(notice.getNotice().getContentId())
                         .createdAt(notice.getCreatedAt())
                         .build())
@@ -89,7 +89,7 @@ public class MemberNoticeService {
                 .id(memberNotice.getId())
                 .noticeType(memberNotice.getNotice().getType())
                 .message(memberNotice.getNotice().getMessage())
-                .isRead(memberNotice.getIsRead())
+                .isRead(memberNotice.isRead())
                 .contentId(memberNotice.getNotice().getContentId())
                 .createdAt(memberNotice.getCreatedAt())
                 .build();

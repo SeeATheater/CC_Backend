@@ -91,4 +91,7 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     @Query("UPDATE AmateurShow s SET s.status = 'ENDED' " +
             "WHERE s.status = 'ONGOING' AND s.end < :today")
     int updateShowsToEnded(@Param("today") LocalDate today);
+
+    @Query("SELECT s.hashtag FROM AmateurShow s WHERE s.member.id = :memberId")
+    List<String> findHashtagsByMemberId(@Param("memberId") Long memberId);
 }

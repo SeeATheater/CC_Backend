@@ -18,25 +18,29 @@ public class MemberNotice extends BaseEntity {
     @Column(nullable = false, columnDefinition = "bigint")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "notice_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notice_id", nullable = false)
     private Notice notice;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "member_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    private Boolean isRead = false;
+    private String personalMsg;
+
+    private boolean isRead = false;
 
     @Builder
-    public MemberNotice( Notice notice, Member member) {
-        this.isRead = false ;
+    public MemberNotice(Notice notice, Member member, String personalMsg, boolean isRead) {
         this.notice = notice;
         this.member = member;
+        this.personalMsg = personalMsg;
+        this.isRead = isRead;
     }
 
-    public MemberNotice updateIsRead(){
+    public void updateIsRead(){
         this.isRead = true ;
-        return this;
     }
+
+
 }

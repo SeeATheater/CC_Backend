@@ -37,4 +37,12 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
             @Param("now") LocalDateTime now,
             Pageable pageable
     );
+
+    // memberId 기준으로 해당 멤버가 좋아요한 모든 공연자 조회
+    @Query("SELECT ml FROM MemberLike ml WHERE ml.liker.id = :memberId")
+    List<MemberLike> findByLikerId(@Param("memberId") Long memberId);
+
+    // 모든 회원을 대상으로, 추천 검사를 위해 distinct Member만 가져오기
+    @Query("SELECT DISTINCT ml.liker FROM MemberLike ml")
+    List<Member> findAllDistinctMembers();
 }

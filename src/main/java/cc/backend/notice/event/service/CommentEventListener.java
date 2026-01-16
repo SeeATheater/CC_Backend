@@ -1,7 +1,6 @@
-package cc.backend.event.service;
+package cc.backend.notice.event.service;
 
-import cc.backend.event.entity.ReplyEvent;
-import cc.backend.event.entity.TicketReservationEvent;
+import cc.backend.notice.event.entity.CommentEvent;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
@@ -10,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class TicketReservationEventListener {
+public class CommentEventListener {
     private final NoticeService noticeService;
 
     @EventListener
-    public NoticeResponseDTO.NoticeDTO handleReservation(TicketReservationEvent event) {
+    public NoticeResponseDTO.NoticeDTO handleCommentCreate(CommentEvent event) {
 
-        return noticeService.notifyTicketReservation(event);
+        return noticeService.notifyNewComment(event);
     }
 }

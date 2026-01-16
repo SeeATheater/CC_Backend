@@ -13,7 +13,7 @@ import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
-import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.notice.event.entity.PromoteHotEvent;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;

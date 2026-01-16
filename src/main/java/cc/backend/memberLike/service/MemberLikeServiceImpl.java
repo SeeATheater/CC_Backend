@@ -97,15 +97,6 @@ public class MemberLikeServiceImpl implements MemberLikeService {
 
     }
 
-    private LocalDateTime findSoonestEndingShowDateForPerformer(Member performer) {
-        return amateurShowRepository.findAllByMemberWithRounds(performer).stream()
-                .flatMap(show -> show.getAmateurRounds().stream())
-                .map(AmateurRounds::getPerformanceDateTime)
-                .filter(date -> date.isAfter(LocalDateTime.now()))
-                .min(Comparator.naturalOrder())
-                .orElse(LocalDateTime.MAX);
-    }
-
     private Member getMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
