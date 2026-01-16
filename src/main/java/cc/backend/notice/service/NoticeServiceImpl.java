@@ -1,7 +1,6 @@
 package cc.backend.notice.service;
 
 import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
@@ -10,25 +9,22 @@ import cc.backend.board.entity.Board;
 import cc.backend.board.entity.Comment;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentRepository;
-import cc.backend.event.entity.*;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.notice.dto.MemberNoticeResponseDTO;
+import cc.backend.memberLike.entity.MemberLike;
+import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.entity.MemberNotice;
 import cc.backend.notice.entity.Notice;
 import cc.backend.notice.entity.enums.NoticeType;
+import cc.backend.notice.event.entity.*;
 import cc.backend.notice.repository.MemberNoticeRepository;
 import cc.backend.notice.repository.NoticeRepository;
-import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
-import cc.backend.photoAlbum.entity.PhotoAlbum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +37,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final AmateurShowRepository amateurShowRepository;
     private final CommentRepository commentRepository;
     private final AmateurTicketRepository amateurTicketRepository;
+    private final MemberLikeRepository memberLikeRepository;
 
     @Transactional
     @Override
@@ -115,13 +112,15 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     @Transactional
-    public NoticeResponseDTO.NoticeDTO notifyNewShow(NewShowEvent event){
+    public void notifyNewShow(NewShowEvent event){
         Long amateurShowId = event.getAmateurShowId();
 
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
-        List<Member> receivers = event.getMembers();
+        // 공연자 좋아요한 유저 조회
+        List<MemberLike> likers = memberLikeRepository.findByPerformerId(event.getPerformerId());
+        if (likers.isEmpty()) return;
 
         Notice newNotice = noticeRepository.save(
                 Notice.builder()
@@ -131,21 +130,15 @@ public class NoticeServiceImpl implements NoticeService {
                         .build()
         );
 
-        memberNoticeRepository.saveAll(
-                receivers.stream()
-                        .map(member -> MemberNotice.builder()
-                                .notice(newNotice)
-                                .member(member)
-                                .build())
-                        .collect(Collectors.toList()));
+        // MemberNotice bulk 생성
+        List<MemberNotice> memberNotices = likers.stream()
+                .map(liker -> MemberNotice.builder()
+                        .notice(newNotice)
+                        .member(liker.getLiker())
+                        .build())
+                .toList();
 
-        return NoticeResponseDTO.NoticeDTO.builder()
-                .id(newNotice.getId())
-                .message(newNotice.getMessage())
-                .noticeType(newNotice.getType())
-                .contentId(newNotice.getContentId())
-                .createdAt(newNotice.getCreatedAt())
-                .build();
+        memberNoticeRepository.saveAll(memberNotices);
 
     }
 

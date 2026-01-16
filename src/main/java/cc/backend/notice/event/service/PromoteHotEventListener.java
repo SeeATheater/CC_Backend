@@ -1,10 +1,9 @@
-package cc.backend.event.service;
+package cc.backend.notice.event.service;
 
-import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.notice.event.entity.PromoteHotEvent;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.procedure.ProcedureOutputs;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
