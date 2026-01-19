@@ -14,9 +14,9 @@ public class ApproveCommitEventListener {
     private final ApprovalShowProducer approvalShowProducer;
 
     @TransactionalEventListener (phase = TransactionPhase.AFTER_COMMIT)
-    public void handleCommentCreate(ApproveCommitEvent event) {
+    public void onApproveCommit(ApproveCommitEvent event) {
 
-        //APPROVED 수정 트랜잭션 커밋 완료 후 kafka 이벤트 발송
+        //APPROVED 수정 트랜잭션 커밋 이벤트 감지 후 kafka 이벤트 발송
         approvalShowProducer.publish(
                 new ApprovalShowEvent(event.amateurShowId(), event.performerId())
         );

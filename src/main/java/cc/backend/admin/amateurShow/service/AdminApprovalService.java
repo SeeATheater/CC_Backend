@@ -8,10 +8,7 @@ import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.kafka.event.rejectShowEvent.RejectShowEvent;
 import cc.backend.member.entity.Member;
-import cc.backend.kafka.event.approvalShowEvent.ApprovalShowEvent;
-import cc.backend.kafka.event.approvalShowEvent.ApprovalShowProducer;
 import cc.backend.notice.event.ApproveCommitEvent;
 import cc.backend.notice.event.RejectCommitEvent;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +36,7 @@ public class AdminApprovalService {
 
         Member performer  = show.getMember();
 
-        // 등록 승인 커밋 트랜잭션 이벤트 발행
+        // 등록 승인 트랜잭션 커밋에 대해 이벤트 발행
         eventPublisher.publishEvent(
                 new ApproveCommitEvent(show.getId(), performer.getId()
                 )
