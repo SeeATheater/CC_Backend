@@ -81,7 +81,7 @@ public class KafkaConfig {
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3); // 컨슈머 병렬 처리 스레드 수
-        factory.setCommonErrorHandler(errorHandler(kafkaTemplate)); //에러발생시 처리 로직
+        factory.setCommonErrorHandler(errorHandler(kafkaTemplate)); //에러 발생시 처리 로직
         return factory;
     }
 

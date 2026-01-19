@@ -1,6 +1,5 @@
 package cc.backend.notice.service;
 
-import cc.backend.kafka.event.approvalShowEvent.ApprovalShowProducer;
 import cc.backend.kafka.event.rejectShowEvent.RejectShowEvent;
 import cc.backend.kafka.event.rejectShowEvent.RejectShowProducer;
 import cc.backend.notice.event.RejectCommitEvent;
