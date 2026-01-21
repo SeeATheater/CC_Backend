@@ -6,6 +6,7 @@ import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.notice.event.TicketReservationCommitEvent;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
 import cc.backend.ticket.dto.response.ShowSnapshot;
 import cc.backend.ticket.entity.TempTicket;
@@ -16,6 +17,7 @@ import cc.backend.ticket.repository.TempTicketRepository;
 import cc.backend.ticket.repository.RealTicketRepository;
 import cc.backend.ticket.util.CancelPolicy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -32,6 +34,7 @@ public class RealTicketService {
     private final RealTicketRepository realTicketRepository;
     private final TempTicketRepository tempTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Transactional
@@ -67,7 +70,15 @@ public class RealTicketService {
                 .kakaoTid(tempTicket.getKakaoTid())
                 .build();
 
-        realTicketRepository.save(realTicket);
+        RealTicket ticket = realTicketRepository.save(realTicket);
+
+        // -> 먼저 ApplicationEvent를 완충 이벤트로 커밋 이후를 보장받고 나서 카프카 이벤트 발행
+        eventPublisher.publishEvent(
+                new TicketReservationCommitEvent(
+                        ticket.getAmateurRound().getAmateurShow().getId(),
+                        ticket.getId(),
+                        ticket.getMember().getId())
+        );
     }
 
     public Slice<RealTicketResponseDTO> getMyTicketList(Long memberId, String status, int page, int size) {

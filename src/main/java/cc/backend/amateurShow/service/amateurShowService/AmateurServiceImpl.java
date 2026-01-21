@@ -3,7 +3,6 @@ package cc.backend.amateurShow.service.amateurShowService;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
-import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
@@ -11,10 +10,7 @@ import cc.backend.amateurShow.dto.AmateurEnrollResponseDTO;
 import cc.backend.amateurShow.repository.specification.AmateurShowSpecification;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.board.entity.enums.BoardType;
-import cc.backend.event.entity.NewShowEvent;
 import cc.backend.image.DTO.ImageRequestDTO;
-import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
@@ -22,20 +18,13 @@ import cc.backend.image.service.ImageService;
 import cc.backend.member.entity.Member;
 import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.memberLike.entity.MemberLike;
-import cc.backend.memberLike.repository.MemberLikeRepository;
-import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Collator;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,10 +40,8 @@ public class AmateurServiceImpl implements AmateurService {
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurStaffRepository amateurStaffRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
-    private final MemberLikeRepository memberLikeRepository;
     private final ImageService imageService;
     private final ImageRepository imageRepository;
-    private final ApplicationEventPublisher eventPublisher; //이벤트 생성
 
     // 소극장 공연 등록
     @Transactional
@@ -91,18 +78,6 @@ public class AmateurServiceImpl implements AmateurService {
                 .build();
 
         imageService.saveImageWithImageUrl(memberId, fullImageRequestDTO, Optional.ofNullable(dto.getImageUrl()));
-
-
-        // 좋아요한 멤버리스트
-        List<MemberLike> memberLikers = memberLikeRepository.findByPerformerId(memberId);
-        // 좋아요한 멤버가 한 명 이상일 때만
-        if(!memberLikers.isEmpty()) {
-            List<Member> likers = memberLikers.stream()
-                    .map(MemberLike::getLiker)
-                    .collect(Collectors.toList());
-
-            eventPublisher.publishEvent(new NewShowEvent(newAmateurShow.getId(), memberId, likers));   //공연등록 이벤트 생성
-        }
 
         // response
         return AmateurConverter.toAmateurEnrollDTO(newAmateurShow);
