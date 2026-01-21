@@ -80,8 +80,17 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, DomainEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.setConcurrency(3); // 컨슈머 병렬 처리 스레드 수
+        factory.setConcurrency(1); // 컨슈머 병렬 처리 스레드 수 = 1
         factory.setCommonErrorHandler(errorHandler(kafkaTemplate)); //에러 발생시 처리 로직
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, DomainEvent> highThroughputFactory(KafkaTemplate<String, DomainEvent> kafkaTemplate) {
+        ConcurrentKafkaListenerContainerFactory<String, DomainEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setConcurrency(3); // 파티션 여러 개인 토픽은 워커 스레드 3개로 처리
+        factory.setCommonErrorHandler(errorHandler(kafkaTemplate));
         return factory;
     }
 
