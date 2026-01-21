@@ -262,6 +262,10 @@ public class NoticeServiceImpl implements NoticeService {
 
     public NoticeResponseDTO.NoticeDTO notifyRecommendation(ApprovalShowEvent event) {
 
+        if (noticeRepository.existsByContentIdAndType(
+                event.amateurShowId(), NoticeType.RECOMMEND)) {
+            return null;
+        }
         // 1. 공연 조회
         AmateurShow show = amateurShowRepository.findById(event.amateurShowId())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
