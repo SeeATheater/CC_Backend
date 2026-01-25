@@ -24,7 +24,7 @@ public class MemberNoticeService {
     private final NoticeRepository noticeRepository;
     private final MemberRepository memberRepository;
 
-    public MemberNoticeResponseDTO.MemberNoticeListDTO getAllMemberNotice(
+    public MemberNoticeResponseDTO.MemberNoticeScrollDTO getAllMemberNotice(
             Long memberId, Long cursorId, LocalDateTime cursorCreatedAt, int pageSize) {
 
         memberRepository.findById(memberId)
@@ -59,17 +59,13 @@ public class MemberNoticeService {
         LocalDateTime nextCursorCreatedAt = hasNext ? limited.get(limited.size() - 1).getCreatedAt() : null;
 
 
-        return MemberNoticeResponseDTO.MemberNoticeListDTO.builder()
-                .items(items)
-                .meta(MemberNoticeResponseDTO.MemberNoticeListDTO.Meta.builder()
-                        .count(items.size())
-                        .hasNext(hasNext)
-                        .empty(items.isEmpty())
-                        .nextCursorId(nextCursorId)
-                        .nextCursorCreatedAt(nextCursorCreatedAt)
-                        .build())
-                .build();
-    }
+        return MemberNoticeResponseDTO.MemberNoticeScrollDTO.builder()
+                .memberNotices(items)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .nextCursorCreatedAt(nextCursorCreatedAt)
+                .build()
+                ;}
 
     @Transactional
     public MemberNoticeResponseDTO.MemberNoticeDTO readNotice(Long noticeId, Long memberId){
