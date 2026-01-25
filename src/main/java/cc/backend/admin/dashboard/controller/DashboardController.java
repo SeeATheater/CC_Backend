@@ -5,6 +5,7 @@ import cc.backend.admin.dashboard.dto.ReservationSummaryResponseDTO;
 import cc.backend.admin.dashboard.dto.VisitResponseDTO;
 import cc.backend.admin.dashboard.service.DashboardService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,27 +42,27 @@ public class DashboardController {
 
     @GetMapping("/approval")
     @Operation(summary = "등록 요청 - 간편보기", description = "대쉬보드에서 등록 요청 리스트를 조회합니다.")
-    public ApiResponse<SliceResponse<ApprovalSummaryResponseDTO>> getApprovalSummary(
+    public ApiResponse<PageResponse<ApprovalSummaryResponseDTO>> getApprovalSummary(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
-        Slice<ApprovalSummaryResponseDTO> slice = dashBoardService.getApprovalList(page, size);
-        return ApiResponse.onSuccess(SliceResponse.of(slice));
+
+        return ApiResponse.onSuccess(dashBoardService.getApprovalList(page, size));
     }
 
     @GetMapping("/reservation")
     @Operation(summary = "예약 현황 - 간편보기", description = "대쉬보드에서 예약 현황 리스트를 조회합니다.")
-    public ApiResponse<SliceResponse<ReservationSummaryResponseDTO>> getReservationSummary(
+    public ApiResponse<PageResponse<ReservationSummaryResponseDTO>> getReservationSummary(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
-        Slice<ReservationSummaryResponseDTO> slice = dashBoardService.getReservationList(page, size);
-        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
+        return ApiResponse.onSuccess(dashBoardService.getReservationList(page, size)
+        );    }
 
 }

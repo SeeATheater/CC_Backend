@@ -3,6 +3,7 @@ package cc.backend.admin.board.service;
 import cc.backend.admin.board.dto.response.AdminBoardDetailResponse;
 import cc.backend.admin.board.dto.response.AdminBoardDetailWithCommentsResponse;
 import cc.backend.admin.board.dto.response.AdminBoardListResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.dto.response.CommentResponse;
@@ -36,7 +37,7 @@ public class AdminBoardService {
 
     //게시글 목록 조회
     @Transactional(readOnly = true)
-    public Page<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size, String keyword) {
+    public PageResponse<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size, String keyword) {
         // 관리자는 삭제된 게시글도 볼 수 있도록 @SQLDelete 우회
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
@@ -47,7 +48,7 @@ public class AdminBoardService {
         List<AdminBoardListResponse> content = boards.getContent().stream()
                 .map(AdminBoardListResponse::from)
                 .toList();
-        return new PageImpl<>(content, pageable, boards.getTotalElements());
+        return new PageResponse<>(content, boards.getNumber(), boards.getSize(), boards.getTotalElements(), boards.getTotalPages());
     }
 
     //게시글 상세조회

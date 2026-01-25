@@ -7,6 +7,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowReviseRequestDTO;
 import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.admin.amateurShow.service.AdminAmateurShowService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class AdminAmateurShowController {
                     )
             }
     )
-    public ApiResponse<Page<AdminAmateurShowListResponseDTO>> showList(
+    public ApiResponse<PageResponse<AdminAmateurShowListResponseDTO>> showList(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 

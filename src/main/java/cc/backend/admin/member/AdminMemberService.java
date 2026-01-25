@@ -4,6 +4,7 @@ import cc.backend.admin.member.dto.AdminMemberDetailResponseDTO;
 import cc.backend.admin.member.dto.AdminMemberListResponseDTO;
 import cc.backend.admin.member.dto.UpdateMemberDetailRequestDTO;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.member.entity.Member;
@@ -22,7 +23,7 @@ public class AdminMemberService {
 
     private final MemberRepository memberRepository;
 
-    public Page<AdminMemberListResponseDTO> getMemberList(int page, int size, String keyword) {
+    public PageResponse<AdminMemberListResponseDTO> getMemberList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<Member> pageResult;
@@ -33,11 +34,9 @@ public class AdminMemberService {
             pageResult = memberRepository.findAll(pageable);
         }
 
-        List<AdminMemberListResponseDTO> content = pageResult.getContent().stream()
-                .map(this::toDto)
-                .toList();
+        Page<AdminMemberListResponseDTO> dtoPage = pageResult.map(this::toDto);
 
-        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
+        return PageResponse.of(dtoPage);
     }
 
     private AdminMemberListResponseDTO toDto(Member m) {

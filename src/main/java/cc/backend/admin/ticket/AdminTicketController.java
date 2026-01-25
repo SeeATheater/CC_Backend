@@ -6,6 +6,7 @@ import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
 import cc.backend.admin.ticket.dto.TicketDetailResponseDTO;
 import cc.backend.apiPayLoad.ApiResponse;
 
+import cc.backend.apiPayLoad.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +24,7 @@ public class AdminTicketController {
 
     @GetMapping("/history")
     @Operation(summary = "관리자 소극장 티켓 관리 - 표")
-    public ApiResponse<Page<TicketDetailResponseDTO>> getTicketHistory(
+    public ApiResponse<PageResponse<TicketDetailResponseDTO>> getTicketHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -47,7 +48,7 @@ public class AdminTicketController {
 
     @GetMapping("/reservation/history")
     @Operation(summary = "관리자 예약 내역 관리 - 표", description = "예매 내역을 리스트 형태로 조회합니다.")
-    public ApiResponse<Page<ReservationDetailResponseDTO>> getReservationHistory(
+    public ApiResponse<PageResponse<ReservationDetailResponseDTO>> getReservationHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -71,7 +72,7 @@ public class AdminTicketController {
 
     @GetMapping("/refund/history")
     @Operation(summary = "관리자 환불 내역 관리 - 표", description = "환불 내역을 리스트 형태로 조회합니다.")
-    public ApiResponse<Page<RefundListResponseDTO>> getRefundHistory(
+    public ApiResponse<PageResponse<RefundListResponseDTO.RefundListDTO>> getRefundHistory(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 

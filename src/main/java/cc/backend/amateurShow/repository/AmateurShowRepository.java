@@ -45,6 +45,14 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
             Pageable pageable
     );
 
+    @Query("""
+    select count(s)
+      from AmateurShow s
+     where lower(s.name) like lower(concat('%', :kw, '%'))
+        or lower(s.performerName) like lower(concat('%', :kw, '%'))
+    """)
+    long countByNameOrPerformer(@Param("kw") String keyword);
+
 
     Slice<AmateurShow> findByMember_IdAndStatusInOrderByIdDesc(
             Long memberId,

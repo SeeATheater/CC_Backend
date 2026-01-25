@@ -5,6 +5,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.admin.amateurShow.dto.AdminApprovalListResponseDTO;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.event.entity.ApproveShowEvent;
@@ -52,7 +53,7 @@ public class AdminApprovalService {
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
 
-    public Page<AdminApprovalListResponseDTO> getApprovalList(int page, int size, String keyword) {
+    public PageResponse<AdminApprovalListResponseDTO> getApprovalList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<AmateurShow> pageResult =
@@ -60,11 +61,9 @@ public class AdminApprovalService {
                         ? amateurShowRepository.findByNameContainingIgnoreCase(keyword, pageable)
                         : amateurShowRepository.findAll(pageable);
 
-        List<AdminApprovalListResponseDTO> content = pageResult.getContent().stream()
-                .map(this::toApprovalDto)
-                .toList();
+        Page<AdminApprovalListResponseDTO> dtoPage = pageResult.map(this::toApprovalDto);
 
-        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
+        return PageResponse.of(dtoPage);
     }
 
     private AdminApprovalListResponseDTO toApprovalDto(AmateurShow show) {

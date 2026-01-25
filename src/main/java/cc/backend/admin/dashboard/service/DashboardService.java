@@ -7,6 +7,7 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
+import cc.backend.apiPayLoad.PageResponse;
 import com.google.analytics.data.v1beta.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -81,21 +82,20 @@ public class DashboardService {
     private static final DateTimeFormatter DT_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd / HH:mm");
 
-    public Slice<ApprovalSummaryResponseDTO> getApprovalList(int page, int size) {
+    public PageResponse<ApprovalSummaryResponseDTO> getApprovalList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<AmateurShow> result = amateurShowRepository.findAll(pageable);
 
-        List<ApprovalSummaryResponseDTO> content = result.getContent().stream()
-                .map(this::toSummaryDto)
-                .toList();
+        Page<ApprovalSummaryResponseDTO> dtoPage = result.map(this::toSummaryDto);
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return PageResponse.of(dtoPage);
     }
 
     private ApprovalSummaryResponseDTO toSummaryDto(AmateurShow s) {
         String dateTime = s.getCreatedAt().format(DT_FMT);
-        int capacity    = s.getTotalSoldTicket();
+        int capacity = s.getTotalSoldTicket() != null ? s.getTotalSoldTicket() : 0; // null이면 0으로 처리
+
 
         return ApprovalSummaryResponseDTO.builder()
                 .showId(s.getId())
@@ -105,7 +105,7 @@ public class DashboardService {
                 .build();
     }
 
-    public Slice<ReservationSummaryResponseDTO> getReservationList(int page, int size) {
+    public PageResponse<ReservationSummaryResponseDTO> getReservationList(int page, int size) {
         Sort sort = Sort.by(
                 Sort.Order.asc("performanceDateTime"),
                 Sort.Order.asc("id")
@@ -114,11 +114,8 @@ public class DashboardService {
 
         Page<AmateurRounds> result = amateurRoundsRepository.findAll(pageable);
 
-        List<ReservationSummaryResponseDTO> content = result.getContent().stream()
-                .map(this::toDto)
-                .toList();
-
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        Page<ReservationSummaryResponseDTO> dtoPage = result.map(this::toDto);
+        return PageResponse.of(dtoPage);
     }
 
     private ReservationSummaryResponseDTO toDto(AmateurRounds r) {

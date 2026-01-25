@@ -6,6 +6,7 @@ import cc.backend.admin.amateurShow.dto.AdminApprovalListResponseDTO;
 import cc.backend.admin.amateurShow.service.AdminAmateurShowService;
 import cc.backend.admin.amateurShow.service.AdminApprovalService;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,7 +33,7 @@ public class AdminApprovalController {
             summary = "소극장 공연 관리 - 등록 요청 관리",
             description = "등록 요청 관리 첫페이지, 리스트 조회입니다."
     )
-    public ApiResponse<Page<AdminApprovalListResponseDTO>> getApprovalList(
+    public ApiResponse<PageResponse<AdminApprovalListResponseDTO>> getApprovalList(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
