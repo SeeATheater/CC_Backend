@@ -40,25 +40,12 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
            or lower(s.performerName) like lower(concat('%', :kw, '%'))
         order by s.createdAt desc
        """)
-    Slice<AmateurShow> findByNameOrPerformer(
+    Page<AmateurShow> findByNameOrPerformer(
             @Param("kw") String keyword,
             Pageable pageable
     );
 
-    @Query("""
-    select count(s)
-      from AmateurShow s
-     where lower(s.name) like lower(concat('%', :kw, '%'))
-        or lower(s.performerName) like lower(concat('%', :kw, '%'))
-    """)
-    long countByNameOrPerformer(@Param("kw") String keyword);
 
-
-    Slice<AmateurShow> findByMember_IdAndStatusInOrderByIdDesc(
-            Long memberId,
-            Collection<AmateurShowStatus> statuses,
-            Pageable pageable
-    );
 
     Slice<AmateurShow> findByMember_IdOrderByIdDesc(Long memberId, Pageable pageable);
 
@@ -83,8 +70,6 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     @Query("select a from AmateurShow a")
     @EntityGraph(attributePaths = {"amateurRounds", "amateurNotice"}, type = EntityGraph.EntityGraphType.FETCH)
     List<AmateurShow> findAllWithRounds();
-
-    List<AmateurShow> findByStatusIn(Collection<AmateurShowStatus> statuses);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE AmateurShow s SET s.status = :newStatus WHERE s.id IN :ids")

@@ -6,6 +6,7 @@ import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.search.dto.SearchShowResponseDTO;
 import io.micrometer.core.instrument.search.Search;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -23,19 +24,18 @@ public class SearchService {
     public SearchShowResponseDTO.SearchShowDTO.SearchShowResultDTO searchAmateurShows(String keyword, Pageable pageable) {
         String kw = keyword == null ? "" : keyword.trim();
 
-        //Slice로 조회
-        Slice<AmateurShow> slice = amateurShowRepository.findByNameOrPerformer(kw, pageable);
+        // Page로 조회
+        Page<AmateurShow> pageResult = amateurShowRepository.findByNameOrPerformer(kw, pageable);
+
         // DTO 변환
-        List<SearchShowResponseDTO.SearchShowDTO> content = slice.getContent().stream()
+        List<SearchShowResponseDTO.SearchShowDTO> content = pageResult.getContent().stream()
                 .map(SearchShowResponseDTO.SearchShowDTO::from)
                 .toList();
 
-        // 전체 건수 조회 (Slice로는 content조회, 결과 개수는 별도 count 쿼리)
-        long total = amateurShowRepository.countByNameOrPerformer(kw);
-
+        // 결과 반환
         return SearchShowResponseDTO.SearchShowDTO.SearchShowResultDTO.builder()
                 .searchShowDTOs(content)
-                .total(total)
+                .total(pageResult.getTotalElements()) // total count 포함
                 .build();
     }
 }

@@ -52,10 +52,10 @@ public class AdminPhotoAlbumController {
 
     @GetMapping("/search")
     @Operation(summary = "관리자페이지 사진첩 검색 API", description = "사진첩 id, 공연 id, 공연제목, 사진첩 내용에 키워드를 포함하면 반환")
-    public ApiResponse<SliceResponse<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO>> searchPhotoAlbum(
+    public ApiResponse<PageResponse<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO>> searchPhotoAlbum(
             @RequestParam String keyword,
             @ParameterObject Pageable pageable){
-        return ApiResponse.onSuccess(SliceResponse.of(adminPhotoAlbumService.searchPhotoAlbum(keyword, pageable)));
+        return ApiResponse.onSuccess(adminPhotoAlbumService.searchPhotoAlbum(keyword, pageable));
     }
 
 

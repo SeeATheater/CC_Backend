@@ -45,10 +45,9 @@ public class AdminBoardService {
                 ? boardRepository.searchBoardsIncludingDeletedByTitle(keyword, pageable)
                 : boardRepository.findAllBoardsIncludingDeleted(pageable);
 
-        List<AdminBoardListResponse> content = boards.getContent().stream()
-                .map(AdminBoardListResponse::from)
-                .toList();
-        return new PageResponse<>(content, boards.getNumber(), boards.getSize(), boards.getTotalElements(), boards.getTotalPages());
+        return PageResponse.of(
+                boards.map(AdminBoardListResponse::from)
+        );
     }
 
     //게시글 상세조회

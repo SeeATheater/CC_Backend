@@ -40,22 +40,15 @@ public class AdminPhotoAlbumService {
 
         Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(sortedPageable);
 
-        List<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> content = photoAlbums.getContent().stream()
-                .map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+        return PageResponse.of(
+                photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
                         .id(photoAlbum.getId())
                         .amateurShowName(photoAlbum.getAmateurShow().getName())
                         .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
                         .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
                         .updatedAt(photoAlbum.getUpdatedAt())
-                        .build())
-                .toList();
-
-        return new PageResponse<>(
-                content,
-                photoAlbums.getNumber(),
-                photoAlbums.getSize(),
-                photoAlbums.getTotalElements(),
-                photoAlbums.getTotalPages()
+                        .build()
+                )
         );
     }
 
@@ -103,21 +96,19 @@ public class AdminPhotoAlbumService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return new SliceImpl<>(List.of(), pageable, false);
-        }
+    public PageResponse<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
+        String kw = (keyword == null) ? "" : keyword.trim();
 
-        Slice<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
+        Page<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(kw, pageable);
 
-        return results.map(p ->
-                AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+        return PageResponse.of(
+                results.map(p -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
                         .id(p.getId())
                         .amateurShowName(p.getAmateurShow().getName())
                         .uploaderId(p.getAmateurShow().getMember().getId())
                         .uploaderName(p.getAmateurShow().getMember().getName())
                         .updatedAt(p.getUpdatedAt())
-                        .build()
+                        .build())
         );
     }
 }
