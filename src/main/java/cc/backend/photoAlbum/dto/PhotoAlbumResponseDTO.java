@@ -18,6 +18,7 @@ public class PhotoAlbumResponseDTO {
     public static class PhotoAlbumResultDTO {
         private String performerName;
         private Long photoAlbumId;
+        private Long amateurShowId;
         private String amateurShowName;
         private String schedule;
         private String detailAddress;
@@ -30,8 +31,9 @@ public class PhotoAlbumResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PhotoAlbumResultWithPresignedUrlDTO {
-        private String performerName;
         private Long photoAlbumId;
+        private String performerName;
+        private Long amateurShowId;
         private String amateurShowName;
         private String schedule;
         private String detailAddress;
@@ -45,6 +47,7 @@ public class PhotoAlbumResponseDTO {
     @AllArgsConstructor
     public static class SinglePhotoAlbumDTO {
         private Long photoAlbumId;
+        private Long amateurShowId;
         private String amateurShowName;
         private String performerName;
         private String detailAddress;
@@ -59,6 +62,7 @@ public class PhotoAlbumResponseDTO {
     public static class MemberPhotoAlbumDTO {
         private Long photoAlbumId;
         private Long memberId;
+        private Long amateurShowId;
         private String performerName;
         private String amateurShowName;
         private String imageUrl;
