@@ -92,7 +92,6 @@ public class AdminBoardController {
             @Parameter(description = "검색 키워드, 게시글 제목", example = "예매 방법 꿀팁")
             @RequestParam(required = false) String keyword) {
 
-;
         return cc.backend.apiPayLoad.ApiResponse.onSuccess(adminBoardService.getAllBoardsForAdmin(page, size, keyword));
     }
 

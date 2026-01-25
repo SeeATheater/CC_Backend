@@ -33,7 +33,6 @@ public class AdminTicketController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ){
- ;
         return ApiResponse.onSuccess(adminTicketService.getTicketList(page, size, keyword));
     }
 
