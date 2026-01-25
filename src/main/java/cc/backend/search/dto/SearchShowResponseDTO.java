@@ -41,15 +41,14 @@ public class SearchShowResponseDTO {
         private String status;
 
         public static SearchShowDTO from(AmateurShow s){
-//        String statusLabel = switch (s.getStatus()) {
-//            case APPROVED_ONGOING -> "예매 진행 중";
-//            case APPROVED_ENDED   -> "공연 종료";
-//            case APPROVED_YET     -> "예정";
-//            case WAITING_APPROVAL -> "승인 대기";
-//            case REJECTED         -> "반려";
-//        };
-            String statusLabel = s.getStatus().toString();
-
+            String statusLabel =
+                    switch (s.getStatus()) {
+                        case ONGOING -> "판매 중";   // 지금 날짜가 공연 날짜 안에 있을 때 (예매 진행 중)
+                        case ENDED   -> "공연 종료";  // 지금 날짜가 공연 날짜보다 지났을 때 (공연 종료됨)
+                        case YET     -> "공연 예정";   // 지금 날짜가 공연 날짜 안에 없을 때 (아직 공연 예정)
+                        case REJECT -> "X";
+            };
+//            String statusLabel = s.getStatus().toString();
             String schedule = AmateurConverter.mergeSchedule(s.getStart(), s.getEnd());
             return SearchShowDTO.builder()
                     .showId(s.getId())

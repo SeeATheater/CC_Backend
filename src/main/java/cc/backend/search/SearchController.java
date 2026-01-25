@@ -47,8 +47,7 @@ public class SearchController {
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
-        return ApiResponse.onSuccess(searchService.searchAmateurShows(keyword, pageable));
+        return ApiResponse.onSuccess(searchService.searchAmateurShows(keyword, page, size));
     }
 }
