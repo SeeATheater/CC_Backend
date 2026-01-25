@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class AdminApprovalController {
             summary = "소극장 공연 관리 - 등록 요청 관리",
             description = "등록 요청 관리 첫페이지, 리스트 조회입니다."
     )
-    public ApiResponse<SliceResponse<AdminApprovalListResponseDTO>> getApprovalList(
+    public ApiResponse<Page<AdminApprovalListResponseDTO>> getApprovalList(
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -41,8 +42,8 @@ public class AdminApprovalController {
             @Parameter(description = "검색 키워드, 공연 명으로 검색", example = "실종")
             @RequestParam(required = false) String keyword
     ){
-        Slice<AdminApprovalListResponseDTO> slice = adminApprovalService.getApprovalList(page, size, keyword);
-        return ApiResponse.onSuccess(SliceResponse.of(slice));
+
+        return ApiResponse.onSuccess(adminApprovalService.getApprovalList(page, size, keyword));
     }
 
     @PatchMapping("/{showId}/approve")

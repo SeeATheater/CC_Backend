@@ -8,10 +8,7 @@ import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.inquiry.entity.Inquiry;
 import cc.backend.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -36,7 +33,7 @@ public class AdminInquiryService {
         return AdminInquiryResponseConverter.toInquiryDetailDTO(inquiry);
     }
 
-    public Slice<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> getInquiryList(String keyword,
+    public Page<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> getInquiryList(String keyword,
                                                                                      Pageable pageable) {
         Page<Inquiry> inquiryPage;
         if (StringUtils.hasText(keyword)) {
@@ -50,6 +47,6 @@ public class AdminInquiryService {
         List<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> content = inquiryPage.getContent().stream()
                 .map(AdminInquiryResponseConverter::toSummaryDTO)
                 .toList();
-        return new SliceImpl<>(content, pageable, inquiryPage.hasNext());
+        return new PageImpl<>(content, pageable, inquiryPage.getTotalElements());
     }
 }

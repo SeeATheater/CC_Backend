@@ -22,7 +22,7 @@ public class AdminMemberService {
 
     private final MemberRepository memberRepository;
 
-    public Slice<AdminMemberListResponseDTO> getMemberList(int page, int size, String keyword) {
+    public Page<AdminMemberListResponseDTO> getMemberList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<Member> pageResult;
@@ -37,7 +37,7 @@ public class AdminMemberService {
                 .map(this::toDto)
                 .toList();
 
-        return new SliceImpl<>(content, pageable, pageResult.hasNext());
+        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
     }
 
     private AdminMemberListResponseDTO toDto(Member m) {

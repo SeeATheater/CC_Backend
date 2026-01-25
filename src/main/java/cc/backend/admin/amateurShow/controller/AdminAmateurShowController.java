@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,7 @@ public class AdminAmateurShowController {
                     )
             }
     )
-    public ApiResponse<SliceResponse<AdminAmateurShowListResponseDTO>> showList(
+    public ApiResponse<Page<AdminAmateurShowListResponseDTO>> showList(
             @Parameter(description = "페이지 번호(0부터)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -54,8 +55,8 @@ public class AdminAmateurShowController {
             @Parameter(description = "검색 키워드, 공연면", example = "실종")
             @RequestParam(required = false) String keyword
     ) {
-        Slice<AdminAmateurShowListResponseDTO> slice = adminAmateurShowService.getShowList(page, size, keyword);
-        return ApiResponse.onSuccess(SliceResponse.of(slice));    }
+
+        return ApiResponse.onSuccess(adminAmateurShowService.getShowList(page, size, keyword));    }
 
     @GetMapping("/{showId}")
     @Operation(

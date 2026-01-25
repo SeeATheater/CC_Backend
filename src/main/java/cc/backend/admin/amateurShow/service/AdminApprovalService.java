@@ -52,7 +52,7 @@ public class AdminApprovalService {
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
 
-    public Slice<AdminApprovalListResponseDTO> getApprovalList(int page, int size, String keyword) {
+    public Page<AdminApprovalListResponseDTO> getApprovalList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<AmateurShow> pageResult =
@@ -64,7 +64,7 @@ public class AdminApprovalService {
                 .map(this::toApprovalDto)
                 .toList();
 
-        return new SliceImpl<>(content, pageable, pageResult.hasNext());
+        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
     }
 
     private AdminApprovalListResponseDTO toApprovalDto(AmateurShow show) {

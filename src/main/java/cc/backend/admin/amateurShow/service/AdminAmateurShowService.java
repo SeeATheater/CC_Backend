@@ -32,7 +32,7 @@ public class AdminAmateurShowService {
      private final AmateurShowRepository amateurShowRepository;
      private final ApplicationEventPublisher eventPublisher;
 
-    public Slice<AdminAmateurShowListResponseDTO> getShowList(int page, int size, String keyword){
+    public Page<AdminAmateurShowListResponseDTO> getShowList(int page, int size, String keyword){
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<AmateurShow> pageResult;
@@ -42,11 +42,7 @@ public class AdminAmateurShowService {
             pageResult = amateurShowRepository.findAll(pageable);
         }
 
-        List<AdminAmateurShowListResponseDTO> rows = pageResult.getContent().stream()
-                .map(this::toListDto)
-                .toList();
-
-        return new SliceImpl<>(rows, pageable, pageResult.hasNext());
+        return pageResult.map(this::toListDto);
     }
 
     private AdminAmateurShowListResponseDTO toListDto(AmateurShow show){

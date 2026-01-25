@@ -16,10 +16,7 @@ import cc.backend.image.FilePath;
 import cc.backend.image.entity.Image;
 import cc.backend.image.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,14 +36,18 @@ public class AdminBoardService {
 
     //게시글 목록 조회
     @Transactional(readOnly = true)
-    public Slice<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size, String keyword) {
+    public Page<AdminBoardListResponse> getAllBoardsForAdmin(int page, int size, String keyword) {
         // 관리자는 삭제된 게시글도 볼 수 있도록 @SQLDelete 우회
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Slice<Board> boards = (keyword != null && !keyword.isBlank())
+
+        Page<Board> boards = (keyword != null && !keyword.isBlank())
                 ? boardRepository.searchBoardsIncludingDeletedByTitle(keyword, pageable)
                 : boardRepository.findAllBoardsIncludingDeleted(pageable);
 
-        return boards.map(AdminBoardListResponse::from);
+        List<AdminBoardListResponse> content = boards.getContent().stream()
+                .map(AdminBoardListResponse::from)
+                .toList();
+        return new PageImpl<>(content, pageable, boards.getTotalElements());
     }
 
     //게시글 상세조회

@@ -24,7 +24,7 @@ public class AdminTicketService {
     private final RealTicketRepository realTicketRepository;
 
     // == 소극장 티켓 관리 == //
-    public Slice<TicketDetailResponseDTO> getTicketList(int page, int size, String keyword) {
+    public Page<TicketDetailResponseDTO> getTicketList(int page, int size, String keyword) {
         Sort sort = Sort.by(
                 Sort.Order.desc("id")
         );
@@ -39,7 +39,7 @@ public class AdminTicketService {
                 .map(this::toTicketDTO)
                 .toList();
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return new PageImpl<>(content, pageable, result.getTotalElements());
     }
 
     private TicketDetailResponseDTO toTicketDTO(RealTicket t) {
@@ -64,7 +64,7 @@ public class AdminTicketService {
     }
 
     // == 예약 내역 관리 == //
-    public Slice<ReservationDetailResponseDTO> getReservationList(
+    public Page<ReservationDetailResponseDTO> getReservationList(
             int page, int size, String keyword
     ) {
         Sort sort = Sort.by(
@@ -82,7 +82,7 @@ public class AdminTicketService {
                 .map(this::toReservationDTO)
                 .toList();
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return new PageImpl<>(content, pageable, result.getTotalElements());
     }
 
     private ReservationDetailResponseDTO toReservationDTO(RealTicket t) {
@@ -114,7 +114,7 @@ public class AdminTicketService {
                 .build();
     }
 
-    public Slice<RefundListResponseDTO> getRefundList(int page, int size, String keyword) {
+    public Page<RefundListResponseDTO> getRefundList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
@@ -132,7 +132,7 @@ public class AdminTicketService {
                 .map(this::toRefundDTO)
                 .toList();
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return new PageImpl<>(content, pageable, result.getTotalElements());
     }
 
     private RefundListResponseDTO toRefundDTO(RealTicket t) {

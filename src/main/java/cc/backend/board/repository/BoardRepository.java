@@ -2,6 +2,7 @@ package cc.backend.board.repository;
 
 import cc.backend.board.entity.Board;
 import cc.backend.board.entity.enums.BoardType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,7 +23,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     Optional<Board> findByIdIncludingDeleted(@Param("id") Long id);
 
     @Query(value = "SELECT * FROM board ORDER BY id DESC", nativeQuery = true)
-    Slice<Board> findAllBoardsIncludingDeleted(Pageable pageable);
+    Page<Board> findAllBoardsIncludingDeleted(Pageable pageable);
 
     //Full-context Search
     // 일반게시판: 제목 + 내용
@@ -76,7 +77,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     FROM Board b
     WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
 """)
-    Slice<Board> searchBoardsIncludingDeletedByTitle(@Param("keyword") String keyword, Pageable pageable);
+    Page<Board> searchBoardsIncludingDeletedByTitle(@Param("keyword") String keyword, Pageable pageable);
 
 }
 
