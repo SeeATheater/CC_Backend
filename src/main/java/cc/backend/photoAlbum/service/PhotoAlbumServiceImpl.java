@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -265,13 +266,13 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long cursorId, int size){
+    public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long cursorId, LocalDateTime cursorUpdatedAt, int size){
 
         //로그인 검사 X -> 방문자 첫화면 허용
 
         // 다음 사진첩 조회 (cursor 기반, size + 1로 hasNext 판단)
         Pageable pageable = PageRequest.of(0, size + 1);
-        List<PhotoAlbum> albums = photoAlbumRepository.findNextAlbums(cursorId, pageable);
+        List<PhotoAlbum> albums = photoAlbumRepository.findNextAlbums(cursorId, cursorUpdatedAt, pageable);
 
 
         // 실제 응답할 데이터만 자르기
@@ -299,13 +300,13 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         // 다음 커서 설정
         boolean hasNext = albums.size() > size;
-        Long nextCursorId = (hasNext && !limitedAlbums.isEmpty())
-                ? limitedAlbums.get(limitedAlbums.size() - 1).getId()
-                : null;
+        Long nextCursorId = (hasNext && !limitedAlbums.isEmpty()) ? limitedAlbums.get(limitedAlbums.size() - 1).getId() : null;
+        LocalDateTime nextCursorUpdatedAt = (hasNext && !limitedAlbums.isEmpty()) ? limitedAlbums.get(limitedAlbums.size() - 1).getUpdatedAt() : null;
 
         return PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO.builder()
                 .photoAlbumDTOs(dtoList)
-                .nextCursor(nextCursorId)
+                .nextCursorId(nextCursorId)
+                .nextCursorUpdatedAt(nextCursorUpdatedAt)
                 .hasNext(hasNext)
                 .build();
     }
