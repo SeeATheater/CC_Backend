@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 
@@ -92,6 +93,21 @@ public class AmateurShowSpecification {
 
             // 마지막 회차 날짜 == today
             return cb.equal(subquery, today);
+        };
+    }
+
+    public static Specification<AmateurShow> nameOrPerformerContains(String kw) {
+        return (root, query, cb) -> {
+            if (!StringUtils.hasText(kw)) {
+                return null; // 조건 없음 (where 생략)
+            }
+
+            String like = "%" + kw.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("name")), like),
+                    cb.like(cb.lower(root.get("performerName")), like)
+            );
         };
     }
 }

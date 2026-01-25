@@ -7,6 +7,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
@@ -30,23 +31,17 @@ import static io.micrometer.common.util.StringUtils.isNotBlank;
 @Transactional(readOnly = true)
 public class AdminAmateurShowService {
      private final AmateurShowRepository amateurShowRepository;
-     private final ApplicationEventPublisher eventPublisher;
 
-    public Slice<AdminAmateurShowListResponseDTO> getShowList(int page, int size, String keyword){
+    public PageResponse<AdminAmateurShowListResponseDTO> getShowList(int page, int size, String keyword){
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        Page<AmateurShow> pageResult;
-        if (keyword != null && !keyword.isBlank()) {
-            pageResult = amateurShowRepository.findByNameContainingIgnoreCase(keyword, pageable);
-        } else {
-            pageResult = amateurShowRepository.findAll(pageable);
-        }
+        keyword = (keyword == null) ? "" : keyword.trim();
+        Page<AmateurShow> pageResult = amateurShowRepository.findByNameContainingIgnoreCase(keyword, pageable);
 
-        List<AdminAmateurShowListResponseDTO> rows = pageResult.getContent().stream()
-                .map(this::toListDto)
-                .toList();
 
-        return new SliceImpl<>(rows, pageable, pageResult.hasNext());
+        Page<AdminAmateurShowListResponseDTO> dtoPage = pageResult.map(this::toListDto);
+
+        return PageResponse.of(dtoPage);
     }
 
     private AdminAmateurShowListResponseDTO toListDto(AmateurShow show){

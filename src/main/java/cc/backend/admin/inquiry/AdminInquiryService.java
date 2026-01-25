@@ -3,15 +3,13 @@ package cc.backend.admin.inquiry;
 import cc.backend.admin.inquiry.converter.AdminInquiryResponseConverter;
 import cc.backend.admin.inquiry.dto.AdminInquiryRequestDTO;
 import cc.backend.admin.inquiry.dto.AdminInquiryResponseDTO;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.inquiry.entity.Inquiry;
 import cc.backend.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -36,8 +34,8 @@ public class AdminInquiryService {
         return AdminInquiryResponseConverter.toInquiryDetailDTO(inquiry);
     }
 
-    public Slice<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> getInquiryList(String keyword,
-                                                                                     Pageable pageable) {
+    public PageResponse<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> getInquiryList(String keyword,
+                                                                                               Pageable pageable) {
         Page<Inquiry> inquiryPage;
         if (StringUtils.hasText(keyword)) {
             // 제목 or 내용
@@ -47,9 +45,10 @@ public class AdminInquiryService {
             // 없으면
             inquiryPage = inquiryRepository.findAll(pageable);
         }
-        List<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> content = inquiryPage.getContent().stream()
-                .map(AdminInquiryResponseConverter::toSummaryDTO)
-                .toList();
-        return new SliceImpl<>(content, pageable, inquiryPage.hasNext());
+        Page<AdminInquiryResponseDTO.AdminInquirySummaryResponseDTO> dtoPage =
+                inquiryPage.map(AdminInquiryResponseConverter::toSummaryDTO);
+
+        // PageResponse.of 사용
+        return PageResponse.of(dtoPage);
     }
 }

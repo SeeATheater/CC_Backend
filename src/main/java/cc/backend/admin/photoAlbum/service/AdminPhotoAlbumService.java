@@ -1,6 +1,7 @@
 package cc.backend.admin.photoAlbum.service;
 
 import cc.backend.admin.photoAlbum.dto.AdminPhotoAlbumResponseDTO;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
@@ -31,7 +32,7 @@ public class AdminPhotoAlbumService {
     private final ImageService imageService;
 
     @Transactional(readOnly = true)
-    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(Pageable pageable) {
+    public PageResponse<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> getAllPhotoAlbum(Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -39,13 +40,16 @@ public class AdminPhotoAlbumService {
 
         Page<PhotoAlbum> photoAlbums = photoAlbumRepository.findAll(sortedPageable);
 
-        return photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
-                .id(photoAlbum.getId())
-                .amateurShowName(photoAlbum.getAmateurShow().getName())
-                .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
-                .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
-                .updatedAt(photoAlbum.getUpdatedAt())
-                .build());
+        return PageResponse.of(
+                photoAlbums.map(photoAlbum -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+                        .id(photoAlbum.getId())
+                        .amateurShowName(photoAlbum.getAmateurShow().getName())
+                        .uploaderId(photoAlbum.getAmateurShow().getMember().getId())
+                        .uploaderName(photoAlbum.getAmateurShow().getMember().getName())
+                        .updatedAt(photoAlbum.getUpdatedAt())
+                        .build()
+                )
+        );
     }
 
     @Transactional(readOnly = true)
@@ -92,21 +96,19 @@ public class AdminPhotoAlbumService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return Page.empty(pageable);
-        }
+    public PageResponse<AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO> searchPhotoAlbum(String keyword, Pageable pageable) {
+        String kw = (keyword == null) ? "" : keyword.trim();
 
-        Page<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(keyword, pageable);
+        Page<PhotoAlbum> results = photoAlbumRepository.searchPhotoAlbumByKeyword(kw, pageable);
 
-        return results.map(p ->
-                AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
+        return PageResponse.of(
+                results.map(p -> AdminPhotoAlbumResponseDTO.SimplePhotoAlbumDTO.builder()
                         .id(p.getId())
                         .amateurShowName(p.getAmateurShow().getName())
                         .uploaderId(p.getAmateurShow().getMember().getId())
                         .uploaderName(p.getAmateurShow().getMember().getName())
                         .updatedAt(p.getUpdatedAt())
-                        .build()
+                        .build())
         );
     }
 }

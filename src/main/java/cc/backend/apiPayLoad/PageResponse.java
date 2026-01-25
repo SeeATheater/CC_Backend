@@ -1,0 +1,24 @@
+package cc.backend.apiPayLoad;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
+
+import java.util.List;
+
+public record PageResponse<T>(
+        List<T> content,
+        int pageNumber,
+        int pageSize,
+        long totalElements,
+        int totalPages
+) {
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),  // 전체 요소 수
+                page.getTotalPages()      // 전체 페이지 수
+        );
+    }
+}

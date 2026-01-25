@@ -103,15 +103,6 @@ public class AmateurShow extends BaseEntity {
     @Builder.Default
     private List<AmateurRounds> amateurRounds = new ArrayList<>();
 
-    @Builder
-    public AmateurShow(String name, String detailAddress, LocalDate start, LocalDate end, List<PhotoAlbum> photoAlbums) {
-        this.name = name;
-        this.detailAddress = detailAddress;
-        this.start = start;
-        this.end = end;
-        this.photoAlbums = photoAlbums;
-    }
-
     public void updateInfo(AmateurUpdateRequestDTO dto) {
         if (dto.getName() != null) this.name = dto.getName();
         //if (dto.getPlace() != null) this.place = dto.getPlace();
@@ -159,12 +150,11 @@ public class AmateurShow extends BaseEntity {
 
     public void approve(){
         this.approvalStatus = ApprovalStatus.APPROVED;
-        this.status = AmateurShowStatus.YET;
+        this.status = AmateurShowStatus.YET;    //이것도 나중에 수정 필요 (스케쥴러로 만들면 승인할때 따로 설정 필요 X)
     }
     public void reject(String rejectReason){
         this.approvalStatus = ApprovalStatus.REJECTED;
-        this.status = AmateurShowStatus.REJECT;
+        this.status = AmateurShowStatus.REJECT;     //이거 수정 필요
         this.rejectReason = rejectReason;
-
     }
 }

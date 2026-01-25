@@ -4,6 +4,7 @@ import cc.backend.admin.ticket.dto.RefundDetailResponseDTO;
 import cc.backend.admin.ticket.dto.RefundListResponseDTO;
 import cc.backend.admin.ticket.dto.ReservationDetailResponseDTO;
 import cc.backend.admin.ticket.dto.TicketDetailResponseDTO;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.ticket.entity.RealTicket;
@@ -24,7 +25,7 @@ public class AdminTicketService {
     private final RealTicketRepository realTicketRepository;
 
     // == 소극장 티켓 관리 == //
-    public Slice<TicketDetailResponseDTO> getTicketList(int page, int size, String keyword) {
+    public PageResponse<TicketDetailResponseDTO> getTicketList(int page, int size, String keyword) {
         Sort sort = Sort.by(
                 Sort.Order.desc("id")
         );
@@ -35,11 +36,9 @@ public class AdminTicketService {
                         ? realTicketRepository.findByShowTitleContainingIgnoreCase(keyword, pageable)
                         : realTicketRepository.findAll(pageable);
 
-        List<TicketDetailResponseDTO> content = result.getContent().stream()
-                .map(this::toTicketDTO)
-                .toList();
+        Page<TicketDetailResponseDTO> dtoPage = result.map(this::toTicketDTO);
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return PageResponse.of(dtoPage);
     }
 
     private TicketDetailResponseDTO toTicketDTO(RealTicket t) {
@@ -64,7 +63,7 @@ public class AdminTicketService {
     }
 
     // == 예약 내역 관리 == //
-    public Slice<ReservationDetailResponseDTO> getReservationList(
+    public PageResponse<ReservationDetailResponseDTO> getReservationList(
             int page, int size, String keyword
     ) {
         Sort sort = Sort.by(
@@ -78,11 +77,9 @@ public class AdminTicketService {
                         ? realTicketRepository.findByShowTitleContainingIgnoreCase(keyword, pageable)
                         : realTicketRepository.findAll(pageable);
 
-        List<ReservationDetailResponseDTO> content = result.getContent().stream()
-                .map(this::toReservationDTO)
-                .toList();
+        Page<ReservationDetailResponseDTO> dtoPage = result.map(this::toReservationDTO);
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return PageResponse.of(dtoPage);
     }
 
     private ReservationDetailResponseDTO toReservationDTO(RealTicket t) {
@@ -114,7 +111,7 @@ public class AdminTicketService {
                 .build();
     }
 
-    public Slice<RefundListResponseDTO> getRefundList(int page, int size, String keyword) {
+    public PageResponse<RefundListResponseDTO.RefundListDTO> getRefundList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
@@ -128,15 +125,13 @@ public class AdminTicketService {
                         ? realTicketRepository.findByReservationStatusAndShowTitleContainingIgnoreCase(refundStatus, keyword, pageable)
                         : realTicketRepository.findByReservationStatus(refundStatus, pageable);
 
-        List<RefundListResponseDTO> content = result.getContent().stream()
-                .map(this::toRefundDTO)
-                .toList();
+        Page<RefundListResponseDTO.RefundListDTO> dtoPage = result.map(this::toRefundDTO);
 
-        return new SliceImpl<>(content, pageable, result.hasNext());
+        return PageResponse.of(dtoPage);
     }
 
-    private RefundListResponseDTO toRefundDTO(RealTicket t) {
-        return RefundListResponseDTO.builder()
+    private RefundListResponseDTO.RefundListDTO toRefundDTO(RealTicket t) {
+        return RefundListResponseDTO.RefundListDTO.builder()
                 .realTicketId(t.getId())
                 .username(t.getMember() != null ? t.getMember().getUsername() : null)
                 .memberName(t.getMember() != null ? t.getMember().getName() : null)
