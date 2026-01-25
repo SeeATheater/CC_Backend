@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -32,15 +34,15 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
             Pageable pageable
     );
 
+
     @Query("""
     SELECT p
     FROM PhotoAlbum p
     LEFT JOIN p.amateurShow a
-    WHERE (:cursorId IS NULL 
-           OR p.updatedAt < (SELECT pa.updatedAt FROM PhotoAlbum pa WHERE pa.id = :cursorId)
-           OR (p.updatedAt = (SELECT pa.updatedAt FROM PhotoAlbum pa WHERE pa.id = :cursorId)
-               AND p.id < :cursorId))
+    WHERE ((:cursorId IS NULL OR :cursorUpdatedAt IS NULL)
+           OR p.updatedAt < :cursorUpdatedAt
+           OR (p.updatedAt = :cursorUpdatedAt AND p.id < :cursorId))
     ORDER BY p.updatedAt DESC, p.id DESC
-""")
-    List<PhotoAlbum> findNextAlbums(@Param("cursorId") Long cursorId, Pageable pageable);
+    """)
+    List<PhotoAlbum> findNextAlbums(@Param("cursorId") Long cursorId, @Param("cursorUpdatedAt") LocalDateTime cursorUpdatedAt, Pageable pageable);
 }

@@ -16,10 +16,12 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -88,8 +90,9 @@ public class PhotoAlbumController {
     @Operation(summary = "메뉴에서 전체 사진첩 조회 API", description = "최근 올라온 사진첩을 전체 조회하는 API 입니다.")
     public ApiResponse<PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO> getAllPhotoAlbum(
             @RequestParam(required = false) Long cursorId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursorUpdatedAt,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(cursorId, size));
+        return ApiResponse.onSuccess(photoAlbumService.getAllRecentPhotoAlbumList(cursorId, cursorUpdatedAt, size));
     }
 
     @GetMapping("/member/{memberId}/shows")

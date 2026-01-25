@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class PhotoAlbumResponseDTO {
@@ -70,7 +71,8 @@ public class PhotoAlbumResponseDTO {
     public static class ScrollMemberPhotoAlbumDTO { //커서 기반
         private List<MemberPhotoAlbumDTO> photoAlbumDTOs;
         private boolean hasNext;
-        private Long nextCursor;
+        private Long nextCursorId;
+        private LocalDateTime nextCursorUpdatedAt;
     }
 
     @Builder
