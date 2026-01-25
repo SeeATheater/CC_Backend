@@ -77,6 +77,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         String schedule = mergeSchedule(start, end);
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO.builder()
+                .amateurShowId(amateurShow.getId())
                 .performerName(amateurShow.getPerformerName())
                 .photoAlbumId(newPhotoAlbum.getId())
                 .amateurShowName(newPhotoAlbum.getAmateurShow().getName())
@@ -106,6 +107,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO.builder()
                 .photoAlbumId(photoAlbum.getId())
+                .amateurShowId(photoAlbum.getAmateurShow().getId())
                 .amateurShowName(photoAlbum.getAmateurShow().getName())
                 .performerName(photoAlbum.getAmateurShow().getPerformerName())
                 .content(photoAlbum.getContent())
@@ -145,6 +147,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         // DTO 변환
         List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> content = albums.stream()
                 .map(album -> PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
+                        .amateurShowId(album.getAmateurShow().getId())
                         .photoAlbumId(album.getId())
                         .amateurShowName(album.getAmateurShow().getName())
                         .performerName(performer.getName())
@@ -231,6 +234,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
 
         return PhotoAlbumResponseDTO.PhotoAlbumResultDTO.builder()
                 .photoAlbumId(updatedPhotoAlbum.getId())
+                .amateurShowId(updatedPhotoAlbum.getAmateurShow().getId())
                 .amateurShowName(updatedPhotoAlbum.getAmateurShow().getName())
                 .performerName(updatedPhotoAlbum.getAmateurShow().getPerformerName())
                 .content(updatedPhotoAlbum.getContent())
@@ -292,6 +296,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                 .map(album -> PhotoAlbumResponseDTO.MemberPhotoAlbumDTO.builder()
                         .photoAlbumId(album.getId())
                         .memberId(album.getAmateurShow().getMember().getId())
+                        .amateurShowId(album.getAmateurShow().getId())
                         .performerName(album.getAmateurShow().getMember().getName())
                         .amateurShowName(album.getAmateurShow().getName())
                         .imageUrl(firstImageMap.get(album.getId()))
@@ -315,6 +320,9 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     @Override
     public PerformerShowListResponseDTO getPerformerShows(Long memberId, Pageable pageable) {
 
+        Member performer = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER));
+
         Slice<AmateurShow> slice = amateurShowRepository.findByMember_IdOrderByIdDesc(memberId, pageable);  //Page 방식 - 이름 수정 필요
         long total = amateurShowRepository.countByMember_Id(memberId); // 총 개수
 
@@ -324,8 +332,10 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         return PerformerShowListResponseDTO.builder()
                 .totalCount(total)
                 .shows(showLists)
+                .performerName(performer.getName())
                 .build();
     }
+
     private Map<Long, String> getFirstImageMapForPhotoAlbums(List<Long> albumIds) {
         if (albumIds == null || albumIds.isEmpty()) {
             return Collections.emptyMap();

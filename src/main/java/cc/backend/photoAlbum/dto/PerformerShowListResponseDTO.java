@@ -19,6 +19,9 @@ public class PerformerShowListResponseDTO {
     @Schema(description = "총 등록된 공연 수", example = "4")
     private long totalCount;
 
+    @Schema(description = "공연진 이름")
+    private String performerName;
+
     @Schema(description = "공연 카드 목록")
     private List<ShowList> shows;
 
