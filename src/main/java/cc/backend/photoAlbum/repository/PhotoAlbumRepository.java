@@ -39,7 +39,7 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
     SELECT p
     FROM PhotoAlbum p
     LEFT JOIN p.amateurShow a
-    WHERE (:cursorId IS NULL
+    WHERE ((:cursorId IS NULL OR :cursorUpdatedAt IS NULL)
            OR p.updatedAt < :cursorUpdatedAt
            OR (p.updatedAt = :cursorUpdatedAt AND p.id < :cursorId))
     ORDER BY p.updatedAt DESC, p.id DESC
