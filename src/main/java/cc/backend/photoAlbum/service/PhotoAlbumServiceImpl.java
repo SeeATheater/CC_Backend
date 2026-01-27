@@ -393,6 +393,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                     String schedule = mergeScheduleWithoutDays(show.getStart(), show.getEnd());
                     return PhotoAlbumResponseDTO.MyShowsForPhotoAlbumDTO.builder()
                             .amateurShowId(show.getId())
+                            .amateurShowName(show.getName())
                             .memberId(memberId)
                             .schedule(schedule)
                             .build();

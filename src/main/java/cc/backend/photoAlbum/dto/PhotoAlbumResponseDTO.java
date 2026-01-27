@@ -86,6 +86,7 @@ public class PhotoAlbumResponseDTO {
     public static class MyShowsForPhotoAlbumDTO {
         private Long memberId;
         private Long amateurShowId;
+        private String amateurShowName;
         private String schedule;
     }
 

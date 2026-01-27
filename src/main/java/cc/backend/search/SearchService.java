@@ -44,7 +44,7 @@ public class SearchService {
         // 결과 반환
         return SearchShowResponseDTO.SearchShowDTO.SearchShowResultDTO.builder()
                 .searchShowDTOs(dtoPage.getContent())
-                .total(pageResult.getTotalElements()) // total count 포함
+                .total(pageResult.getTotalElements())
                 .build();
     }
 }
