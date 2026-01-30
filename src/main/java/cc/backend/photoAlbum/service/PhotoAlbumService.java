@@ -1,5 +1,6 @@
 package cc.backend.photoAlbum.service;
 
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.photoAlbum.dto.PerformerShowListResponseDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumRequestDTO;
 import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
@@ -15,7 +16,7 @@ public interface PhotoAlbumService {
 
     public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO createPhotoAlbum(PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId);
     public PhotoAlbumResponseDTO.PhotoAlbumResultWithPresignedUrlDTO getPhotoAlbum(Long photoAlbumId, Long memberId);
-    public Slice<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable);
+    public PageResponse<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable);
     public PhotoAlbumResponseDTO.PhotoAlbumResultDTO updatePhotoAlbum(Long photoAlbumId, PhotoAlbumRequestDTO.CreatePhotoAlbumDTO requestDTO, Long memberId);
     public String deletePhotoAlbum(Long photoAlbumId, Long memberId);
     public PhotoAlbumResponseDTO.ScrollMemberPhotoAlbumDTO getAllRecentPhotoAlbumList(Long cursorId, LocalDateTime updatedAt, int size);

@@ -1,6 +1,7 @@
 package cc.backend.photoAlbum.controller;
 
 import cc.backend.apiPayLoad.ApiResponse;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.SliceResponse;
 import cc.backend.member.entity.Member;
 import cc.backend.photoAlbum.dto.PerformerShowListResponseDTO;
@@ -60,11 +61,11 @@ public class PhotoAlbumController {
 
     @GetMapping("/member/{memberId}")
     @Operation(summary = "등록자 계정의 전체 사진첩 피드 조회 API", description = "등록자의 사진첩 피드를 전체 조회하는 API 입니다.")
-    public ApiResponse<SliceResponse<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO>> getPhotoAlbumList(
+    public ApiResponse<PageResponse<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO>> getPhotoAlbumList(
             @AuthenticationPrincipal(expression = "member") Member member,
             @PathVariable("memberId") Long performerId,
             @ParameterObject Pageable pageable) {
-        return ApiResponse.onSuccess(SliceResponse.of(photoAlbumService.getPhotoAlbumList(member.getId(), performerId, pageable)));
+        return ApiResponse.onSuccess((photoAlbumService.getPhotoAlbumList(member.getId(), performerId, pageable)));
     }
 
     @PreAuthorize("hasRole('PERFORMER')")

@@ -29,7 +29,7 @@ public interface PhotoAlbumRepository extends JpaRepository<PhotoAlbum, Long> {
     JOIN a.member m
     WHERE m.id = :performerId
 """)
-    Slice<PhotoAlbum> findByPerformerId(
+    Page<PhotoAlbum> findByPerformerId(
             @Param("performerId") Long performerId,
             Pageable pageable
     );
