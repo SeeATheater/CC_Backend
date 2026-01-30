@@ -2,9 +2,9 @@ package cc.backend.photoAlbum.service;
 
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
+import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.config.s3.S3Service;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static cc.backend.amateurShow.converter.AmateurConverter.mergeSchedule;
@@ -118,7 +117,7 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
-    public Slice<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable){
+    public PageResponse<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> getPhotoAlbumList(Long memberId, Long performerId, Pageable pageable){
         //로그인 검사
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_AUTHORIZED));
@@ -132,11 +131,10 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         );
 
         // 사진첩 단위 조회
-        Slice<PhotoAlbum> albumSlice = photoAlbumRepository.findByPerformerId(performerId, sortedPageable);
-        List<PhotoAlbum> albums = albumSlice.getContent();
+        Page<PhotoAlbum> albumPage = photoAlbumRepository.findByPerformerId(performerId, sortedPageable);
 
         // 사진첩 id 추출
-        List<Long> albumIds = albums.stream()
+        List<Long> albumIds = albumPage.stream()
                 .map(PhotoAlbum::getId)
                 .toList();
 
@@ -144,8 +142,8 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
         Map<Long, ImageResponseDTO.ImageResultWithPresignedUrlDTO> imageDtoMap =
                 getFirstImageDTOForPhotoAlbums(albumIds);
 
-        // DTO 변환
-        List<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> content = albums.stream()
+        // DTO 변환 - stream으로 하면 메타데이터 다 날라가서 Page.map()으로 바로 변환
+        Page<PhotoAlbumResponseDTO.SinglePhotoAlbumDTO> content = albumPage
                 .map(album -> PhotoAlbumResponseDTO.SinglePhotoAlbumDTO.builder()
                         .amateurShowId(album.getAmateurShow().getId())
                         .photoAlbumId(album.getId())
@@ -154,10 +152,9 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
                         .detailAddress(album.getAmateurShow().getDetailAddress())
                         .imageResultWithPresignedUrlDTO(imageDtoMap.get(album.getId()))
                         .build()
-                )
-                .toList();
+                );
 
-        return new SliceImpl<>(content, sortedPageable, albumSlice.hasNext());
+        return PageResponse.of(content);
     }
 
     @Override
