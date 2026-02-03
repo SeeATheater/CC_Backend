@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AmateurRoundsRepository extends JpaRepository<AmateurRounds, Long> {
@@ -24,4 +25,6 @@ public interface AmateurRoundsRepository extends JpaRepository<AmateurRounds, Lo
     int increaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 
     List<AmateurRounds> findByAmateurShowId(Long amateurShowId);
+
+    Optional<AmateurRounds> findByIdAndAmateurShow_Id(Long id, Long amateurShowId);
 }

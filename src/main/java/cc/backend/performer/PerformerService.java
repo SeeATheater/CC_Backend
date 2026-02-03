@@ -53,7 +53,6 @@ public class PerformerService {
             return ShowReservationResponseDTO.builder()
                     .showId(show.getId())
                     .showTitle(show.getName())
-                    .posterImageUrl(show.getPosterImageUrl())
                     .detailAddress(show.getDetailAddress())
                     .schedule(schedule)
                     .roundSummaries(Collections.emptyList())
@@ -94,7 +93,7 @@ public class PerformerService {
 
         // 5) 선택 회차 결정
         AmateurRounds selectedRound = (roundId != null)
-                ? amateurRoundsRepository.findById(roundId)
+                ? amateurRoundsRepository.findByIdAndAmateurShow_Id(roundId, amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.ROUND_NOT_FOUND))
                 : rounds.get(0);
 
@@ -114,8 +113,10 @@ public class PerformerService {
 
         // 7) 응답 조립
         return ShowReservationResponseDTO.builder()
+                .showId(show.getId())
                 .showTitle(show.getName())
                 .detailAddress(show.getDetailAddress())
+                .schedule(schedule)
                 .roundSummaries(summaries)
                 .selectedRoundId(selectedRound.getId())
                 .selectedPerformanceDateTime(selectedRound.getPerformanceDateTime())

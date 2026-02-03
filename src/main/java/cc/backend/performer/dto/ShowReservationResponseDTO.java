@@ -20,8 +20,7 @@ public class ShowReservationResponseDTO {
     private Long showId;
     @Schema(description = "공연명")
     private String showTitle;
-    @Schema(description = "포스터 이미지 url")
-    private String posterImageUrl;
+
     @Schema(description = "공연장 주소")
     private String detailAddress;
 
