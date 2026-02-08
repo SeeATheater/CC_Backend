@@ -30,6 +30,9 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
 
 
 url:
