@@ -21,7 +21,7 @@ public class AmateurUpdateRequestDTO {
     //private String place; // 공연장 주소
     private LocalDate start; // 공연 시작 날짜
     private LocalDate end; // 공연 종료 날짜
-    private String runtime; // 러닝타임
+    private Integer runtime; // 러닝타임
     private String bankName; // 은행명
     private String account; // 계좌번호
     private String depositor; // 입금자명

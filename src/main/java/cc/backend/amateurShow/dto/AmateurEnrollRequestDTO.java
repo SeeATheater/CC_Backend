@@ -27,7 +27,7 @@ public class AmateurEnrollRequestDTO {
     @NotNull(message = "종료 날짜는 필수입니다")
     private LocalDate end; // 공연 종료 날짜
 
-    private String runtime; // 러닝타임
+    private Integer runtime; // 러닝타임
     private String bankName; // 은행명
     private String account; // 계좌번호
     private String depositor; // 입금자명

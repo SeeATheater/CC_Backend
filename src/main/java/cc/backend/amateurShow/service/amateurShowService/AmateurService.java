@@ -23,6 +23,7 @@ public interface AmateurService {
     List<AmateurShowResponseDTO.AmateurShowList> getShowRanking();
     List<AmateurShowResponseDTO.AmateurShowList> getRecentlyHotShow();
     List<AmateurShowResponseDTO.AmateurShowList> getShowClosing();
+    AmateurShowResponseDTO.AmateurShowResult getCreatedShow(Long memberId, Long amateurId);
 
 
     Slice<AmateurShowResponseDTO.MyShowAmateurShowList> getMyAmateurShow(Long memberId, AmateurShowStatus showStatus, Pageable pageable);

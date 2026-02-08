@@ -55,9 +55,18 @@ public class AmateurController {
     }
 
     @GetMapping("/{amateurShowId}")
-    @Operation(summary = "소극장 공연 조회 - 단건")
+    @Operation(summary = "승인된 소극장 공연 단건 조회 - 일반 사용자용")
     public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getAmateurShow(@PathVariable Long amateurShowId){
         return ApiResponse.onSuccess(amateurService.getAmateurShow(amateurShowId));
+    }
+
+    @PreAuthorize("hasRole('PERFORMER')")
+    @GetMapping("/created/{amateurShowId}")
+    @Operation(summary = "방금 등록한 공연 단건 조회(아직 미승인) - 등록자용")
+    public ApiResponse<AmateurShowResponseDTO.AmateurShowResult> getCreatedShow(
+            @AuthenticationPrincipal(expression = "member") Member member,
+            @PathVariable Long amateurShowId){
+        return ApiResponse.onSuccess(amateurService.getCreatedShow(member.getId(), amateurShowId));
     }
 
     @GetMapping("/ranking")
