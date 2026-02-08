@@ -54,7 +54,7 @@ public class AdminApprovalService {
     }
 
     public PageResponse<AdminApprovalListResponseDTO> getApprovalList(int page, int size, String keyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
         Page<AmateurShow> pageResult =
                 (keyword != null && !keyword.isBlank())
