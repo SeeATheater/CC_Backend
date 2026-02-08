@@ -45,7 +45,7 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
             Pageable pageable
     );
 
-
+    Optional<AmateurShow> findByIdAndMemberId(Long id, Long memberId);
 
     Slice<AmateurShow> findByMember_IdOrderByIdDesc(Long memberId, Pageable pageable);
 

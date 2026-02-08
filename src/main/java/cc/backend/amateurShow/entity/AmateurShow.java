@@ -44,7 +44,7 @@ public class AmateurShow extends BaseEntity {
     private String depositor; // 입금자명
 
     // 추가
-    private String runtime;
+    private Integer runtime;
 
     private String hashtag;
 

@@ -271,7 +271,7 @@ public class AmateurConverter {
                 //.place(amateurShow.getPlace())
                 .posterImageUrl(amateurShow.getPosterImageUrl())
                 .schedule(schedule)
-                .runtime(amateurShow.getRuntime())
+                .runtime(amateurShow.getRuntime() + "분")
                 .account(amateurShow.getAccount())
                 .contact(amateurShow.getContact())
                 .hashtag(amateurShow.getHashtag())

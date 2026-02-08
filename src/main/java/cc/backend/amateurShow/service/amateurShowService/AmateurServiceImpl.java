@@ -447,6 +447,19 @@ public class AmateurServiceImpl implements AmateurService {
         AmateurShow amateurShow = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
+        if(!amateurShow.getApprovalStatus().equals(ApprovalStatus.APPROVED)) {
+            throw new GeneralException((ErrorStatus.NOT_APPROVED_SHOW));
+        }
+
+        return AmateurConverter.toResponseDTO(amateurShow);
+    }
+
+    @Override
+    public AmateurShowResponseDTO.AmateurShowResult getCreatedShow(Long memberId, Long amateurShowId){
+        AmateurShow amateurShow =
+                amateurShowRepository.findByIdAndMemberId(amateurShowId, memberId)
+                        .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER));
+
         return AmateurConverter.toResponseDTO(amateurShow);
     }
 
