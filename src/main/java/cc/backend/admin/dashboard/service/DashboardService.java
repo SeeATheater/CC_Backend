@@ -83,7 +83,7 @@ public class DashboardService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd / HH:mm");
 
     public PageResponse<ApprovalSummaryResponseDTO> getApprovalList(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
         Page<AmateurShow> result = amateurShowRepository.findAll(pageable);
 
@@ -107,8 +107,8 @@ public class DashboardService {
 
     public PageResponse<ReservationSummaryResponseDTO> getReservationList(int page, int size) {
         Sort sort = Sort.by(
-                Sort.Order.asc("performanceDateTime"),
-                Sort.Order.asc("id")
+                Sort.Order.desc("performanceDateTime"),
+                Sort.Order.desc("id")
         );
         Pageable pageable = PageRequest.of(page, size, sort);
 
