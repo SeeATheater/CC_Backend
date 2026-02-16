@@ -1,7 +1,6 @@
 package cc.backend.notice.service;
 
 import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
@@ -43,7 +42,6 @@ public class NoticeServiceImpl implements NoticeService {
     private final MemberNoticeRepository memberNoticeRepository;
     private final AmateurShowRepository amateurShowRepository;
     private final CommentRepository commentRepository;
-    private final AmateurTicketRepository amateurTicketRepository;
     private final MemberLikeRepository memberLikeRepository;
 
     private static final int BATCH_SIZE = 50;
@@ -260,6 +258,8 @@ public class NoticeServiceImpl implements NoticeService {
                 .build();
     }
 
+    @Override
+    @Transactional
     public NoticeResponseDTO.NoticeDTO notifyRecommendation(ApprovalShowEvent event) {
 
         if (noticeRepository.existsByContentIdAndType(
@@ -272,10 +272,7 @@ public class NoticeServiceImpl implements NoticeService {
 
 
         // 2. 새 공연 해시태그 계산
-        Set<String> newTagsSet = Arrays.stream(Optional.ofNullable(show.getHashtag()).orElse("").split("[#,\\s]+"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toSet());
+        Set<String> newTagsSet = parseHashtags(show.getHashtag());
 
         if (newTagsSet.isEmpty()) return null; // 태그 없으면 추천 불가
 
@@ -333,6 +330,13 @@ public class NoticeServiceImpl implements NoticeService {
 
     }
 
+    private Set<String> parseHashtags(String raw) {
+        return Arrays.stream(Optional.ofNullable(raw).orElse("").split("[#,\\s]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+    }
+
     private boolean shouldRecommendToMember(Member member, Set<String> newTagsSet) {
         // 회원이 좋아요한 공연자 목록 조회
         List<MemberLike> likedPerformers = memberLikeRepository.findByLikerId(member.getId());
@@ -340,21 +344,22 @@ public class NoticeServiceImpl implements NoticeService {
 
         for (MemberLike like : likedPerformers) {
             Long likedPerformerId = like.getPerformer().getId();
-            List<String> hashtags = amateurShowRepository.findHashtagsByMemberId(likedPerformerId);
+            Set<String> memberTags = amateurShowRepository.findHashtagsByMemberId(likedPerformerId)
+                    .stream()
+                    .flatMap(tag -> parseHashtags(tag).stream())
+                    .collect(Collectors.toSet());
 
-            for (String existingHashtags : hashtags) {
-                Set<String> existingTagsSet = Arrays.stream(existingHashtags.split("#"))
-                        .map(String::trim)
-                        .collect(Collectors.toSet());
-                Set<String> intersection = new HashSet<>(newTagsSet);
-                intersection.retainAll(existingTagsSet);
+            Set<String> intersection = new HashSet<>(newTagsSet);
+            intersection.retainAll(memberTags);
 
-                if (!intersection.isEmpty()) return true;
-            }
+            if (!intersection.isEmpty()) return true;
+
         }
         return false;
     }
 
+    @Override
+    @Transactional
     public NoticeResponseDTO.NoticeDTO notifyApproval(ApprovalShowEvent event) {
         AmateurShow show = amateurShowRepository.findById(event.amateurShowId())
                 .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
@@ -389,6 +394,8 @@ public class NoticeServiceImpl implements NoticeService {
 
     }
 
+    @Override
+    @Transactional
     public NoticeResponseDTO.NoticeDTO notifyLikers(ApprovalShowEvent event) {
         Long amateurShowId = event.amateurShowId();
 
