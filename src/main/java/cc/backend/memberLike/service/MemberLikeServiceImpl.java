@@ -97,7 +97,6 @@ public class MemberLikeServiceImpl implements MemberLikeService {
 
     }
 
-
     private Member getMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
