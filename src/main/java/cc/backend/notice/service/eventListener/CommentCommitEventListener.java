@@ -1,12 +1,10 @@
-package cc.backend.notice.service;
+package cc.backend.notice.service.eventListener;
 
 import cc.backend.kafka.event.commentEvent.CommentEvent;
 import cc.backend.kafka.event.commentEvent.CommentProducer;
-import cc.backend.kafka.event.hotBoardEvent.HotBoardEvent;
-import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.event.CommentCommitEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,6 +14,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class CommentCommitEventListener {
     private final CommentProducer commentProducer;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentCommit(CommentCommitEvent event) {
 

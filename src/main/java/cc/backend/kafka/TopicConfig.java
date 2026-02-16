@@ -11,7 +11,7 @@ public class TopicConfig {
     @Bean
     public NewTopic approvalShowTopic() {
         return TopicBuilder.name("approval-show-topic")
-                .partitions(3)       // 파티션 수를 3개로 설정
+                .partitions(1)       // 파티션 수
                 .replicas(1)         // 단일 브로커(Docker 1대) 환경
                 .build();
     }

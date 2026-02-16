@@ -1,9 +1,10 @@
-package cc.backend.notice.service;
+package cc.backend.notice.service.eventListener;
 
 import cc.backend.kafka.event.rejectShowEvent.RejectShowEvent;
 import cc.backend.kafka.event.rejectShowEvent.RejectShowProducer;
 import cc.backend.notice.event.RejectCommitEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +15,7 @@ public class RejectCommitEventListener {
 
     private final RejectShowProducer rejectShowProducer;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRejectCommit(RejectCommitEvent event) {
 

@@ -1,9 +1,10 @@
-package cc.backend.notice.service;
+package cc.backend.notice.service.eventListener;
 
 import cc.backend.kafka.event.replyEvent.ReplyEvent;
 import cc.backend.kafka.event.replyEvent.ReplyProducer;
 import cc.backend.notice.event.ReplyCommitEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +15,7 @@ public class ReplyCommitEventListener {
 
     private final ReplyProducer replyProducer;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReplyCommit(ReplyCommitEvent event) {
 

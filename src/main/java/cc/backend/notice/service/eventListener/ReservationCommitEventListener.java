@@ -1,9 +1,10 @@
-package cc.backend.notice.service;
+package cc.backend.notice.service.eventListener;
 
 import cc.backend.notice.event.TicketReservationCommitEvent;
 import cc.backend.kafka.event.reservationCompletedEvent.ReservationCompletedEvent;
 import cc.backend.kafka.event.reservationCompletedEvent.ReservationCompletedProducer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +15,7 @@ public class ReservationCommitEventListener {
 
     private final ReservationCompletedProducer reservationCompletedProducer;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReservationCommit(TicketReservationCommitEvent event) {
 

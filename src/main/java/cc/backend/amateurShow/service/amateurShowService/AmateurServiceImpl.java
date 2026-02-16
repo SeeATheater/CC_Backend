@@ -3,6 +3,7 @@ package cc.backend.amateurShow.service.amateurShowService;
 import cc.backend.amateurShow.dto.AmateurShowResponseDTO;
 import cc.backend.amateurShow.dto.AmateurUpdateRequestDTO;
 import cc.backend.amateurShow.entity.*;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.*;
 import cc.backend.amateurShow.converter.AmateurConverter;
 import cc.backend.amateurShow.dto.AmateurEnrollRequestDTO;
