@@ -19,7 +19,7 @@ public class ReservationCommitEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReservationCommit(TicketReservationCommitEvent event) {
 
-        // TempTicket 생성 트랜잭션 커밋 완료 후 Kafka 이벤트 발송
+        // RealTicket 생성 트랜잭션 커밋 완료 후 Kafka 이벤트 발송
         reservationCompletedProducer.publish(
                 new ReservationCompletedEvent(event.amateurShowId(), event.realTicketId(), event.memberId())
         );
