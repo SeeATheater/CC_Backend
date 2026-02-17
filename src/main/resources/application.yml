@@ -56,9 +56,7 @@ kakaopay:
     approval: ${KAKAOPAY_APPROVE_URL}
     cancel: ${KAKAOPAY_CANCEL_URL}
     fail: ${KAKAOPAY_FAIL_URL}
-front:
-  kakaopay:
-    complete-url: ${FRONT_KAKAOPAY_COMPLETE_URL}
+
 management:
   endpoints:
     web:
