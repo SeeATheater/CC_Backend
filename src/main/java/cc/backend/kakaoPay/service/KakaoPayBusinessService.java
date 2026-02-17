@@ -187,16 +187,18 @@ public class KakaoPayBusinessService {
     }
 
     // 결제 중단(취소/실패) 시 재고 복구 로직
-    public void stopPayment(String partnerOrderId) {
+    public Long stopPayment(String partnerOrderId) {
 
         Long ticketId = Long.valueOf(partnerOrderId);
 
         TempTicket tempTicket = tempTicketRepository.findById(ticketId)
                                                           .orElseThrow(() -> new GeneralException(ErrorStatus.TEMP_TICKET_NOT_FOUND));
 
+        Long playId=tempTicket.getAmateurRound().getAmateurShow().getId();
+
         // 이미 처리된 건이면 패스
         if (tempTicket.getReservationStatus() != ReservationStatus.PENDING) {
-            return;
+            return playId;
         }
 
         // 1. 재고 복구 (증가)
@@ -207,5 +209,7 @@ public class KakaoPayBusinessService {
 
         // 2. 티켓 상태 변경
         tempTicket.updateReservationStatus(ReservationStatus.EXPIRED);
+
+        return playId;
     }
 }

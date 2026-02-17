@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +20,9 @@ import java.io.IOException;
 public class KakaoPayController {
 
     private final KakaoPayBusinessService kakaoPayBusinessService;
-
-    @Value("${front.kakaopay.complete-url}")
-    private String frontKakaoPayCompleteUrl;
+    
+//    private static final String FRONT_DOMAIN = "http://localhost:5173";
+    private static final String FRONT_DOMAIN = "https://seeatheater.site";
 
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
@@ -43,31 +42,37 @@ public class KakaoPayController {
                 kakaoPayBusinessService.completePayment(partnerOrderId, pgToken);
 
         response.sendRedirect(
-                frontKakaoPayCompleteUrl + "?playId=" + result.getAmateurShowId()
+                FRONT_DOMAIN + "/ticketing/" + result.getAmateurShowId() + "?payment=success"
         );
     }
 
     // 사용자가 X버튼으로 결제 도중 취소 (환불 아님)
     @GetMapping("/cancel")
     @Operation(summary = "카카오페이 결제 중단 취소 (자동 호출)", description = "결제 중단 시 카카오 서버에서 cancel_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
-    public ApiResponse<String> cancel(@RequestParam("partner_order_id") String partnerOrderId) {
+    public void cancel(@RequestParam("partner_order_id") String partnerOrderId, HttpServletResponse response) throws IOException{
         try {
-            kakaoPayBusinessService.stopPayment(partnerOrderId);
-            return ApiResponse.onSuccess("결제가 취소되었습니다.");
-        } catch (NumberFormatException e) {
-            return ApiResponse.onFailure("INVALID_ORDER_ID", "유효하지 않은 주문번호입니다.", null);
+            Long playId = kakaoPayBusinessService.stopPayment(partnerOrderId);
+            response.sendRedirect(
+                    FRONT_DOMAIN + "/ticketing/" + playId + "?payment=cancel"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(FRONT_DOMAIN);
         }
     }
 
     // 결제 실패 (시간 초과 15분)
     @GetMapping("/fail")
     @Operation(summary = "카카오페이 결제 실패 (자동 호출)", description = "15분간 결제 미완료 시 카카오 서버에서 fail_url로 자동 호출되는 API입니다. 직접 호출하지 마세요.")
-    public ApiResponse<String> fail(@RequestParam("partner_order_id") String partnerOrderId) {
+    public void fail(@RequestParam("partner_order_id") String partnerOrderId,HttpServletResponse response) throws IOException{
         try {
-            kakaoPayBusinessService.stopPayment(partnerOrderId);
-            return ApiResponse.onSuccess("결제에 실패했습니다.");
-        } catch (NumberFormatException e) {
-            return ApiResponse.onFailure("INVALID_ORDER_ID", "유효하지 않은 주문번호입니다.", null);
+            Long playId = kakaoPayBusinessService.stopPayment(partnerOrderId);
+            response.sendRedirect(
+                    FRONT_DOMAIN + "/ticketing/" + playId + "?payment=fail"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(FRONT_DOMAIN);
         }
     }
 }
