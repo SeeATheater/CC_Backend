@@ -24,8 +24,8 @@ public class TempTicketExpireScheduler {
     @Scheduled(fixedDelay = 60000)
     public void expirePendingTickets() {
 
-        LocalDateTime nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-        LocalDateTime expireTime = nowKst.minusMinutes(15);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expireTime = now.minusMinutes(15);
 
         List<TempTicket> expiredTickets =
                 tempTicketRepository.findExpiredPendingTickets(expireTime);
