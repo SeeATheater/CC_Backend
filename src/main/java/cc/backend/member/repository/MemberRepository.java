@@ -18,6 +18,8 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     @Query("select m from Member m where m.email = :email")
     Optional<Member> findMemberByEmail(@Param("email") String email);
 
+    Optional<Member> findMemberByKakaoId(String kakaoId);
+
     Page<Member> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
 
     boolean existsByUsername(String username);

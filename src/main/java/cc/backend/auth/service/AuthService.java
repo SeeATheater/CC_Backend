@@ -46,26 +46,18 @@ public class AuthService {
 
     private Member findOrCreateMember(KakaoUserInfo userInfo, Role role) {
         String email = userInfo.getKakaoAccount().getEmail();
-        String nickname = userInfo.getProperties().getNickname();
-        String name = userInfo.getKakaoAccount().getName();
-
-        String encryptedPhone = "";
-        try {
-            encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
-        } catch (Exception e) {
-            throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
-        }
-
         String kakaoId = userInfo.getId().toString();
 
-       if (email == null || nickname == null || name == null || encryptedPhone == null)  {
-            log.error("필수 정보 누락 - 이메일: {}, 닉네임: {}, 이름: {}, 전화번호: {}",
-                    email, nickname, name, encryptedPhone);
-            throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
+        // 1차: kakaoId로 조회
+        Optional<Member> existingMember = memberRepository.findMemberByKakaoId(kakaoId);
+
+        // 2차: 카카오가 아니라 이메일로 가입한 기존 회원 조회
+        if (existingMember.isEmpty() && email != null) {
+            log.info("kakaoId로 회원 미발견, email로 2차 조회: {}", email);
+            existingMember = memberRepository.findMemberByEmail(email);
         }
 
-        Optional<Member> existingMember = memberRepository.findMemberByEmail(email);
-
+        //기존 멤버인 경우 먼저 반환
         if (existingMember.isPresent()) {
             Member member = existingMember.get();
 
@@ -76,7 +68,7 @@ public class AuthService {
                     throw new GeneralException(ErrorStatus.MEMBER_ROLE_ALREADY_EXISTS);
                 }
 
-                //같은 역할일 경우 로그인 처리
+                //기존 계정이 이메일로만 가입한 경우 kakaoId 자동 연동
                 if (member.getKakaoId() == null) {
                     member.updateKakaoId(kakaoId);
                 }
@@ -91,13 +83,10 @@ public class AuthService {
 
         }
 
-        return createNewMember(userInfo, role, kakaoId);
-    }
-
-    private Member createNewMember(KakaoUserInfo userInfo, Role role, String kakaoId) {
-        String email = userInfo.getKakaoAccount().getEmail();
+        // 기존 멤버가 아닌 경우 새 맴버 생성
         String nickname = userInfo.getProperties().getNickname();
         String name = userInfo.getKakaoAccount().getName();
+
         String encryptedPhone = "";
         try {
             encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
@@ -105,6 +94,19 @@ public class AuthService {
             throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
         }
 
+        if (email == null || nickname == null || name == null)  {
+            log.error("필수 정보 누락 - 이메일: {}, 닉네임: {}, 이름: {}, 전화번호: {}",
+                    email, nickname, name, encryptedPhone);
+            throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
+        }
+
+        return createNewMember(userInfo, role, kakaoId, encryptedPhone);
+    }
+
+    private Member createNewMember(KakaoUserInfo userInfo, Role role, String kakaoId, String encryptedPhone) {
+        String email = userInfo.getKakaoAccount().getEmail();
+        String nickname = userInfo.getProperties().getNickname();
+        String name = userInfo.getKakaoAccount().getName();
         String username = generateUsername(nickname);
 
         Member newMember = Member.builder()
@@ -155,7 +157,7 @@ public class AuthService {
             throw new GeneralException(ErrorStatus.PHONENUM_ENCRYPT_FAIL);
         }
 
-            // 회원 정보 업데이트 및 재활성화
+        // 회원 정보 업데이트 및 재활성화
         member.reactivateMember();
         member.updateRole(newRole); // 역할 업데이트
         member.updateName(name);
