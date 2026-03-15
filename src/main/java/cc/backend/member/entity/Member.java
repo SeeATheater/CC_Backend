@@ -52,7 +52,7 @@ public class Member extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ActiveStatus active_status;
 
-    @Column(name = "kakao_id")
+    @Column(name = "kakao_id", unique = true) //createMember() 멱등성을 위해 unique 보장
     private String kakaoId;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)

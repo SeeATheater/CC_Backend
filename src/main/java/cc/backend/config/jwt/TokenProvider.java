@@ -26,15 +26,14 @@ import java.util.Date;
 public class TokenProvider {
 
     private static final String AUTHORITIES_KEY = "auth";
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 5;            // 5시간
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 5;            //ms단위: 5시간
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  //ms단위: 7일
 
     private final MemberRepository memberRepository;
     private final RefreshTokenService refreshTokenService;
     private final Key key;
 
     public TokenProvider(@Value("${jwt.secret}") String secretKey, MemberRepository memberRepository,RefreshTokenService refreshTokenService) {
-        log.info("JWT Secret Key (Generation): {}", secretKey); // Secret Key 출력
 
         this.memberRepository = memberRepository;
         this.refreshTokenService = refreshTokenService;
@@ -43,38 +42,50 @@ public class TokenProvider {
     }
 
     public TokenDTO generateTokenDto(Member member) {
-        long now = System.currentTimeMillis();
-
         // Access Token 생성
-        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
-        String accessToken = Jwts.builder()
-                .setSubject(member.getEmail())      // payload "sub": "name"
-                .claim(AUTHORITIES_KEY, "ROLE_" + member.getRole().name())        // payload "auth": "ROLE_USER"
-                .setExpiration(accessTokenExpiresIn)        // payload "exp": 151621022 (ex)
-                .signWith(key, SignatureAlgorithm.HS512)    // header "alg": "HS512"
-                .compact();
+        String accessToken = createAccessToken(member);
 
         // Refresh Token 생성
-        String refreshToken = Jwts.builder()
-                .setSubject(member.getEmail())
-                .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
-                .signWith(key, SignatureAlgorithm.HS512)
-                .compact();
+        String refreshToken = createRefreshToken(member);
 
-        refreshTokenService.saveRefreshToken(member.getEmail(), refreshToken);
+        refreshTokenService.saveRefreshToken(member.getId(), refreshToken);
 
         return TokenDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    private String createAccessToken(Member member) {
+        long now = System.currentTimeMillis();
+
+        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
+
+        return Jwts.builder()
+                .setSubject(String.valueOf(member.getId()))  // payload "sub": "id"
+                .claim(AUTHORITIES_KEY, "ROLE_" + member.getRole().name()) // payload "auth": "ROLE_USER"
+                .setExpiration(accessTokenExpiresIn)    // payload "exp": 151621022 (ex)
+                .signWith(key, SignatureAlgorithm.HS512)     // header "alg": "HS512"
+                .compact();
+    }
+
+    private String createRefreshToken(Member member) {
+        long now = System.currentTimeMillis();
+
+        return Jwts.builder()
+                .setSubject(String.valueOf(member.getId()))
+                .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
-        String email = claims.getSubject();
+        Long memberId = Long.valueOf(claims.getSubject());
 
         // Member 조회
-        Member member = memberRepository.findMemberByEmail(email)
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
         // 활성 상태 확인
@@ -91,7 +102,6 @@ public class TokenProvider {
 
 
     public boolean validateToken(String token) {
-        log.info("JWT Secret Key (Validation): {}", Base64.getEncoder().encodeToString(key.getEncoded())); // Secret Key 출력
 
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -122,19 +132,24 @@ public class TokenProvider {
         }
 
         Claims claims = parseClaims(refreshToken);
-        String email = claims.getSubject();
+        Long memberId = Long.valueOf(claims.getSubject());
 
-        if (!refreshTokenService.validateRefreshToken(email, refreshToken)) {
+        if (!refreshTokenService.validateRefreshToken(memberId, refreshToken)) {
             throw new GeneralException(ErrorStatus.INVALID_REFRESH_TOKEN);
         }
 
-        Member member = memberRepository.findMemberByEmail(email)
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
 
-        return generateTokenDto(member);
+        String newAccessToken = createAccessToken(member);
+
+        return TokenDTO.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken) //전에 발급받은 refreshToken은 그대로 유지
+                .build();
     }
 
-    public void logout(String email) {
-        refreshTokenService.deleteRefreshToken(email);
+    public void logout(Long memberId) {
+        refreshTokenService.deleteRefreshToken(memberId);
     }
 }

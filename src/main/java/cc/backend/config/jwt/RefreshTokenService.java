@@ -14,32 +14,32 @@ public class RefreshTokenService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;
+    private static final Duration REFRESH_TOKEN_EXPIRE_TIME = Duration.ofDays(7);
 
     // 리프레시 토큰 저장
-    public void saveRefreshToken(String email, String refreshToken) {
-        String key = REFRESH_TOKEN_PREFIX + email;
-        redisTemplate.opsForValue().set(key, refreshToken, Duration.ofSeconds(REFRESH_TOKEN_EXPIRE_TIME));
-        log.debug("리프레시 토큰 저장 완료 - 사용자: {}", email);
+    public void saveRefreshToken(Long memberId, String refreshToken) {
+        String key = REFRESH_TOKEN_PREFIX + memberId;
+        redisTemplate.opsForValue().set(key, refreshToken, REFRESH_TOKEN_EXPIRE_TIME);
+        log.debug("리프레시 토큰 저장 완료 - 사용자: {}", memberId);
     }
 
     // 리프레시 토큰 조회
-    public String getRefreshToken(String email) {
-        String key = REFRESH_TOKEN_PREFIX + email;
+    public String getRefreshToken(Long memberId) {
+        String key = REFRESH_TOKEN_PREFIX + memberId;
         Object token = redisTemplate.opsForValue().get(key);
         return token != null ? token.toString() : null;
     }
 
     // 리프레시 토큰 검증
-    public boolean validateRefreshToken(String email, String refreshToken) {
-        String savedToken = getRefreshToken(email);
+    public boolean validateRefreshToken(Long memberId, String refreshToken) {
+        String savedToken = getRefreshToken(memberId);
         return savedToken != null && savedToken.equals(refreshToken);
     }
 
     // 리프레시 토큰 삭제 (로그아웃 시)
-    public void deleteRefreshToken(String email) {
-        String key = REFRESH_TOKEN_PREFIX + email;
+    public void deleteRefreshToken(Long memberId) {
+        String key = REFRESH_TOKEN_PREFIX + memberId;
         redisTemplate.delete(key);
-        log.debug("리프레시 토큰 삭제 완료 - 사용자: {}", email);
+        log.debug("리프레시 토큰 삭제 완료 - 사용자: {}", memberId);
     }
 }
