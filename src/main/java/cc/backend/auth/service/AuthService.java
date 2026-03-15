@@ -14,6 +14,7 @@ import cc.backend.member.repository.MemberRepository;
 import cc.backend.member.util.AESUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,10 +52,28 @@ public class AuthService {
         // 1차: kakaoId로 조회
         Optional<Member> existingMember = memberRepository.findMemberByKakaoId(kakaoId);
 
-        // 2차: 카카오가 아니라 이메일로 가입한 기존 회원 조회
+        // 2차: kakaoId에 해당하는 계정 없는 경우, 이메일 대조로 기존 회원 조회
         if (existingMember.isEmpty() && email != null) {
             log.info("kakaoId로 회원 미발견, email로 2차 조회: {}", email);
-            existingMember = memberRepository.findMemberByEmail(email);
+            Optional<Member> emailMember = memberRepository.findMemberByEmail(email);
+
+            if (emailMember.isPresent()) {
+                Member member = emailMember.get();
+
+                //같은 이메일이 등록된 서로 다른 kakao계정 존재(A,B)
+                // A계정으로 서비스 가입,
+                // B계정으로 로그인 시도할 경우, B의 kakaoId가 없어 이메일로 로그인 시도
+                // 해당 이메일로 멤버 조회시 기존 계정인 A가 반환
+                // A와 연결된 멤버의 kakaoId가 B로 바뀌는 email fallback으로 우회 로그인 문제 발생 가능
+                // 우회 로그인 에러 던짐
+                if (member.getKakaoId() != null && !member.getKakaoId().equals(kakaoId)) {
+                    log.warn("Email fallback blocked. email={}, existingKakaoId={}, loginKakaoId={}",
+                            email, member.getKakaoId(), kakaoId);
+                    throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
+                }
+                existingMember = emailMember;   // 🔥 이거 필요
+
+            }
         }
 
         //기존 멤버인 경우 먼저 반환
@@ -87,7 +106,7 @@ public class AuthService {
         String nickname = userInfo.getProperties().getNickname();
         String name = userInfo.getKakaoAccount().getName();
 
-        String encryptedPhone = "";
+        String encryptedPhone;
         try {
             encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
         } catch (Exception e) {
@@ -118,7 +137,34 @@ public class AuthService {
                 .kakaoId(kakaoId)
                 .build();
 
-        return memberRepository.save(newMember);
+        //멱등성 문제 방지(duplicate-write handling)
+        try {
+            return memberRepository.save(newMember);
+
+        } catch (DataIntegrityViolationException e) {
+            //동시에 들어온 두번째 요청이 save실패 후 catch 구문으로 빠져 첫 요청으로 생성된 멤버를 반환하도록
+            log.warn("Concurrent kakao signup detected. retry lookup. kakaoId={}", kakaoId);
+
+            Optional<Member> kakaoMember = memberRepository.findMemberByKakaoId(kakaoId);
+            if (kakaoMember.isPresent()) {
+                return kakaoMember.get();
+            }
+
+            if (email != null) {
+                Optional<Member> emailMember = memberRepository.findMemberByEmail(email);
+                if (emailMember.isPresent()) {
+                    Member member = emailMember.get();
+                    // email fallback은 kakaoId가 없는 계정에만 허용
+                    // 이메일 가입 계정만 허용
+                    if (member.getKakaoId() == null) {
+                        member.updateKakaoId(kakaoId);
+                        return member;
+                    }
+                }
+            }
+
+            throw e;
+        }
     }
 
     //유저네임 = 닉네임 + 랜덤숫자 3개
@@ -150,7 +196,7 @@ public class AuthService {
         String nickname = userInfo.getProperties().getNickname();
         String newUsername = generateUsername(nickname);
 
-        String encryptedPhone = "";
+        String encryptedPhone;
         try {
             encryptedPhone = AESUtil.encrypt(userInfo.getKakaoAccount().getPhoneNumber());
         } catch (Exception e) {
@@ -164,11 +210,21 @@ public class AuthService {
         member.updateUsername(newUsername);
         member.updatePhone(encryptedPhone);
 
+        // CASE 1: 기존 계정이 이메일로만 가입되어 kakaoId가 없는 경우
+        // → 현재 로그인한 kakaoId를 연결하여 계정을 재활성화
         if (member.getKakaoId() == null) {
             member.updateKakaoId(kakaoId);
+        } else if (!member.getKakaoId().equals(kakaoId)) {
+            // CASE 2: 기존 계정에 이미 kakaoId가 연결되어 있지만,
+            // 로그인 시도한 kakaoId와 다른 경우
+            // → email fallback을 통한 계정 탈취 가능성이 있으므로 로그인 차단
+            log.warn("Reactivation blocked. memberId={}, existingKakaoId={}, loginKakaoId={}",
+                    member.getId(), member.getKakaoId(), kakaoId);
+            throw new GeneralException(ErrorStatus.INVALID_KAKAO_USER_INFO);
         }
 
-
+        // CASE 3: 기존 계정의 kakaoId와 현재 로그인한 kakaoId가 동일한 경우
+        // → 정상적인 재로그인이므로 추가 처리 없이 그대로 진행
         return member;
     }
 }
