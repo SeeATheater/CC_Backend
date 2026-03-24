@@ -157,4 +157,5 @@ public class AmateurShow extends BaseEntity {
         this.status = AmateurShowStatus.REJECT;     //이거 수정 필요
         this.rejectReason = rejectReason;
     }
+
 }

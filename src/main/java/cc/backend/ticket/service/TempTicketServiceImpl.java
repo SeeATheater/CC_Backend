@@ -8,7 +8,8 @@ import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.event.entity.TicketReservationEvent;
+import cc.backend.notice.event.TicketReservationCommitEvent;
+import cc.backend.kafka.event.reservationCompletedEvent.ReservationCompletedProducer;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.ticket.dto.request.TempTicketCreateRequestDTO;
@@ -39,6 +40,7 @@ public class TempTicketServiceImpl implements TempTicketService {
     private final ApplicationEventPublisher eventPublisher;
     private final RealTicketService realTicketService;
     private final MemberRepository memberRepository;
+    private final ReservationCompletedProducer reservationCompletedProducer;
 
 
     @Override
@@ -89,9 +91,6 @@ public class TempTicketServiceImpl implements TempTicketService {
                 .build();
 
         TempTicket saved = tempTicketRepository.save(ticket);
-
-        //티켓 예매 알림 이벤트 생성
-        eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
 
         // realTicket은 API를 사용해 호출
 
