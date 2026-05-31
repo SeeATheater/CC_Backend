@@ -4,6 +4,7 @@ import cc.backend.admin.account.dto.AccountRequest;
 import cc.backend.admin.account.dto.AccountResponse;
 import cc.backend.member.entity.Account;
 import cc.backend.member.entity.Member;
+import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.AccountRepository;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +80,7 @@ public class AdminAccountService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        if (!member.getRole().equals("ADMIN")) {
+        if (!Role.ADMIN.equals(member.getRole())) {
             throw new IllegalStateException("관리자 권한이 필요합니다.");
         }
     }
