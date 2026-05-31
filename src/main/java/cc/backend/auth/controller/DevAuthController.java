@@ -20,7 +20,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Profile({"local", "dev"})
+@Profile("(local | dev) & !prod")
 public class DevAuthController {
 
     private final TokenProvider tokenProvider;
