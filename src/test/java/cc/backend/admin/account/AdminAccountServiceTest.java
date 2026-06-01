@@ -52,6 +52,25 @@ class AdminAccountServiceTest {
     }
 
     @Test
+    void createAccount_throwsWhenMemberRoleIsNull() {
+        Long memberId = 1L;
+        Member memberWithNullRole = Member.builder()
+                .email("null-role@test.com")
+                .role(null)
+                .build();
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(memberWithNullRole));
+
+        AccountRequest request = AccountRequest.builder()
+                .bankName("bank")
+                .accountNumber("123-456")
+                .accountOwner("owner")
+                .build();
+
+        assertThrows(IllegalStateException.class, () -> adminAccountService.createAccount(memberId, request));
+    }
+
+    @Test
     void createAccount_succeedsWhenMemberIsAdmin() {
         Long memberId = 1L;
         Member admin = Member.builder()
@@ -82,5 +101,7 @@ class AdminAccountServiceTest {
         assertEquals(10L, response.getId());
         assertEquals(memberId, response.getMemberId());
         assertEquals("bank", response.getBankName());
+        assertEquals("123-456", response.getAccountNumber());
+        assertEquals("owner", response.getAccountOwner());
     }
 }
