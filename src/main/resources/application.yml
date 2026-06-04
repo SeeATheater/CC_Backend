@@ -34,6 +34,11 @@ spring:
     time-zone: Asia/Seoul
     date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+frontend:
+  base-url: ${FRONTEND_BASE_URL}
 
 url:
   access-token: https://oauth2.googleapis.com/token
