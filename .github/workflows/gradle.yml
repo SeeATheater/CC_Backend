@@ -5,6 +5,13 @@ on:
     branches: [ "develop" ]
   pull_request:
     branches: [ "develop" ]
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE || 'ccapp' }}
+  DOCKER_TAG: ${{ vars.DOCKER_TAG || 'latest' }}
+  DEPLOY_USER: ${{ vars.DEPLOY_USER || 'ubuntu' }}
+  DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/home/ubuntu/ccapp' }}
 
 jobs:
   build-and-deploy:
@@ -32,44 +39,45 @@ jobs:
 
       # 5. Docker Build & Push
       - name: Build and push Docker image
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           echo "🔨 Building Docker image..."
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ccapp:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${DOCKER_IMAGE}:${DOCKER_TAG} .
           
           echo "🔐 Logging into Docker Hub..."
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           
           echo "📤 Pushing to Docker Hub..."
-          docker push ${{ secrets.DOCKER_USERNAME }}/ccapp:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/${DOCKER_IMAGE}:${DOCKER_TAG}
 
       # 6. 배포 파일들을 EC2로 복사
       - name: Copy deployment files to EC2
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
-          username: ubuntu
+          username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.PRIVATE_KEY }}
           source: "docker-compose.yml,switch-blue-green.sh,health-check.sh,rollback.sh"
-          target: /home/ubuntu/ccapp
+          target: ${{ env.DEPLOY_PATH }}
           overwrite: true
 
       # 7. EC2에서 블루그린 배포 실행
       - name: Deploy with Blue-Green strategy
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
-          username: ubuntu
+          username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/ccapp
+            cd "${{ env.DEPLOY_PATH }}"
             
             echo "🔒 Docker Hub Login"
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
             
             echo "📦 Pull latest images"
+            export APP_IMAGE="${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
             docker compose pull
             
             chmod +x switch-blue-green.sh health-check.sh rollback.sh

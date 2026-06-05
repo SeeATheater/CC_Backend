@@ -1,6 +1,7 @@
 package cc.backend.config.jwt;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,19 +26,18 @@ public class SecurityConfig {
     private final TokenProvider tokenProvider;
     private final JwtFilter jwtFilter;
 
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
 
-        // 배포 환경
-        config.addAllowedOriginPattern("https://seeatheater.site");
-        config.addAllowedOriginPattern("https://www.seeatheater.site");
-        config.addAllowedOriginPattern("https://api.seeatheater.site");
-
-        // 개발 환경
-        config.addAllowedOriginPattern("http://localhost:*");
+        for (String origin : allowedOrigins.split(",")) {
+            config.addAllowedOriginPattern(origin.trim());
+        }
 
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,9 @@ import java.io.IOException;
 public class KakaoPayController {
 
     private final KakaoPayBusinessService kakaoPayBusinessService;
-    
-//    private static final String FRONT_DOMAIN = "http://localhost:5173";
-    private static final String FRONT_DOMAIN = "https://seeatheater.site";
+
+    @Value("${frontend.base-url}")
+    private String frontendBaseUrl;
 
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
@@ -47,7 +48,7 @@ public class KakaoPayController {
                 kakaoPayBusinessService.completePayment(partnerOrderId, pgToken);
 
         response.sendRedirect(
-                FRONT_DOMAIN + "/ticketing/" + result.getAmateurShowId() + "?payment=success"
+                frontendBaseUrl + "/ticketing/" + result.getAmateurShowId() + "?payment=success"
         );
     }
 
@@ -58,11 +59,11 @@ public class KakaoPayController {
         try {
             Long playId = kakaoPayBusinessService.stopPayment(partnerOrderId);
             response.sendRedirect(
-                    FRONT_DOMAIN + "/ticketing/" + playId + "?payment=cancel"
+                    frontendBaseUrl + "/ticketing/" + playId + "?payment=cancel"
             );
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(FRONT_DOMAIN);
+            response.sendRedirect(frontendBaseUrl);
         }
     }
 
@@ -73,11 +74,11 @@ public class KakaoPayController {
         try {
             Long playId = kakaoPayBusinessService.stopPayment(partnerOrderId);
             response.sendRedirect(
-                    FRONT_DOMAIN + "/ticketing/" + playId + "?payment=fail"
+                    frontendBaseUrl + "/ticketing/" + playId + "?payment=fail"
             );
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(FRONT_DOMAIN);
+            response.sendRedirect(frontendBaseUrl);
         }
     }
 }
