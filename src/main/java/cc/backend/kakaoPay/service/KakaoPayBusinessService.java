@@ -91,6 +91,11 @@ public class KakaoPayBusinessService {
             throw new GeneralException(ErrorStatus.TEMP_TICKET_TID_NOT_FOUND);
         }
 
+        Long amateurShowId = tempTicket.getAmateurTicket().getAmateurShow().getId();
+        if (isRealTicketAlreadyIssued(tempTicket)) {
+            return new KakaoPayResultResponseDTO(amateurShowId, null);
+        }
+
         // 멤버를 DB에서 추적하기
         String partnerUserId = tempTicket.getMember().getId().toString();
         KakaoPayApproveResponseDTO responseDTO;
@@ -119,13 +124,19 @@ public class KakaoPayBusinessService {
 
         // 예약 확정 및 최종 티켓 생성
         confirmReservation(tempTicket);
-        realTicketService.createRealTicketFromTempTicket(tempTicket);
+        if (!isRealTicketAlreadyIssued(tempTicket)) {
+            realTicketService.createRealTicketFromTempTicket(tempTicket);
+        }
 
-        Long amateurShowId = tempTicket.getAmateurTicket().getAmateurShow().getId();
         return new KakaoPayResultResponseDTO(
                 amateurShowId,
                 responseDTO
         );
+    }
+
+    private boolean isRealTicketAlreadyIssued(TempTicket tempTicket) {
+        return tempTicket.getKakaoTid() != null
+                && realTicketRepository.existsByKakaoTid(tempTicket.getKakaoTid());
     }
 
     private void confirmReservation(TempTicket tempTicket) {

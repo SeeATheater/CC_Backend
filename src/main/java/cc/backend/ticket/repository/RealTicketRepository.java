@@ -26,6 +26,8 @@ public interface RealTicketRepository extends JpaRepository<RealTicket, Long> {
 
     Slice<RealTicket> findAllByMemberIdAndReservationStatus(Long memberId, ReservationStatus reservationStatus, Pageable pageable);
 
+    boolean existsByKakaoTid(String kakaoTid);
+
     List<RealTicket> findByShowTitleAndReservationStatusInOrderByIdDesc(
             String showTitle,
             List<ReservationStatus> statuses
