@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -30,6 +32,9 @@ public class KakaoPayController {
     @Operation(summary = "카카오페이 결제 준비", description = "카카오페이 결제창 URL을 발급합니다.")
     public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam Long tempTicketId,
                                                        @AuthenticationPrincipal(expression = "member") Member member) {
+        if (member == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
         return ApiResponse.onSuccess(kakaoPayBusinessService.preparePayment(tempTicketId, String.valueOf(member.getId())));
     }
 

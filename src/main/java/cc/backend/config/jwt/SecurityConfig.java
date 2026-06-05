@@ -65,7 +65,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/auth/**").permitAll()
 
-                        .requestMatchers("/kakaoPay/**").permitAll() // 카카오페이 관련 API 허용
+                        .requestMatchers(HttpMethod.GET, "/kakaoPay/approve", "/kakaoPay/cancel", "/kakaoPay/fail").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/kakaoPay/ready").authenticated()
 
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
