@@ -61,6 +61,7 @@ REDIS_HOST=redis
 
 ## Follow-up Work
 
+- Use [Backend Operational Audit Plan](BACKEND_OPERATIONAL_AUDIT_PLAN.md) as the reference for backend stabilization follow-up PRs.
 - Move Docker registry from Docker Hub to ECR.
 - Use GitHub OIDC instead of long-lived AWS keys.
 - Revisit blue/green deployment after dev/staging is stable.

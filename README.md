@@ -41,3 +41,8 @@
 ---
 ## 아키텍쳐
 <img width="1483" height="563" alt="CC 아키텍처 drawio" src="https://github.com/user-attachments/assets/b74fbc11-d0fe-476a-a68c-bb5ee57cf3fe" />
+
+## 운영 문서
+
+- [Dev/Staging Deployment Plan](docs/DEPLOYMENT_PLAN.md)
+- [Backend Operational Audit Plan](docs/BACKEND_OPERATIONAL_AUDIT_PLAN.md): 배포 이후 백엔드 운영 안정화와 데이터 정합성 개선을 위한 후속 PR 분리 기준 문서
