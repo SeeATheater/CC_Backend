@@ -178,7 +178,7 @@ Expected results:
 
 ## Deployment Steps
 
-1. Prepare EC2 with Docker, Docker Compose, and optional Nginx.
+1. Prepare EC2 with Docker, Docker Compose, and Nginx. Nginx is required for this dev/staging deployment because public traffic enters through port `80` and is reverse-proxied to the active blue/green app container.
 2. Create `/home/ubuntu/ccapp`.
 3. Add `.env` on EC2 using `.env.example` as the template.
 4. Configure GitHub Secrets and optional Variables.
