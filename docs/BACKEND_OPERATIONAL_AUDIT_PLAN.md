@@ -15,71 +15,87 @@ This document is intentionally documentation-only. It must not include real secr
 
 ## Overall Summary
 
-The backend is now deployable to the new AWS dev/staging environment, but production readiness still depends on payment/ticket consistency, database schema governance, authorization regression tests, validation consistency, transaction boundaries, and observability.
+This document is the post-deployment audit plan for improving backend operational stability and data consistency after the new AWS dev/staging redeployment.
 
-The highest-risk area is payment and ticket state consistency. Application-level duplicate RealTicket prevention exists, but DB-level invariants, concurrency behavior, scheduler interaction, and compensation policies still need a deeper audit before production.
+Scope:
 
-Recommended direction:
+- Payment and ticket consistency
+- RDS schema and entity alignment
+- Authentication and authorization boundaries
+- API validation and exception handling
+- Transaction boundaries and external API calls
+- Observability and operational runbooks
 
-- Start with tests and audits before risky refactors.
-- Add DB constraints only after checking existing data.
-- Keep payment and ticket changes small, reversible, and covered by concurrency tests.
-- Treat this document as the backlog map for follow-up PRs.
+Non-goals for this document:
 
-## Critical
+- No production code changes
+- No business logic changes
+- No database schema changes
+- No `SecurityConfig` changes
+- No real secret values
 
-| Item | Risk | Recommended branch | Expected files | Verification |
-| --- | --- | --- | --- | --- |
-| RealTicket `kakaoTid` DB uniqueness | Application checks can reduce duplicate issuance, but without a DB unique index, concurrent approve retry risk remains. | `fix/enforce-real-ticket-kakaotid-uniqueness` | `RealTicket.java`, migration files, `RealTicketRepository.java`, KakaoPay tests | Duplicate data SQL, migration dry-run, concurrent approve retry test |
-| Cancel/fail/scheduler stock restore race | Callback and scheduler paths can target the same pending TempTicket. Stock restore must be atomic and idempotent. | `fix/atomic-temp-ticket-expiration-stock-restore` | `KakaoPayBusinessService.java`, `TempTicketExpireScheduler.java`, `TempTicketRepository.java`, concurrency tests | Concurrent cancel/fail/scheduler test, final stock assertion |
-| KakaoPay external calls inside transaction | Long DB transactions around external API calls can create partial failure and lock-duration issues. | `refactor/kakaopay-transaction-boundaries` | `KakaoPayBusinessService.java`, `KakaoPayService.java`, payment tests | Failure simulation, transaction boundary tests, DB state assertions |
-| KakaoPay approve success but DB save failure | If external approval succeeds and local DB persistence fails, manual recovery or compensation policy is required. | `fix/payment-approve-compensation-policy` | `KakaoPayBusinessService.java`, payment recovery docs/tests | Mock DB failure after approve, verify defined recovery behavior |
+Recommended operating principle:
 
-## High
+- Fix low-risk visibility and validation issues first.
+- Analyze real RDS data before adding unique constraints or changing ticket/payment state transitions.
+- Treat payment, ticket stock, refund, and scheduler behavior as high-risk areas that require tests and rollback plans before implementation.
 
-| Item | Risk | Recommended branch | Expected files | Verification |
-| --- | --- | --- | --- | --- |
-| `ddl-auto=update` risk | Hibernate schema auto-update can hide schema drift and mutate production schema unexpectedly. | `chore/introduce-db-migration-baseline` | `application.yml`, `application-prod.yml`, Flyway or Liquibase migrations | Empty DB migration, staging snapshot migration |
-| RDS schema and entity mismatch | Current live schema may not match entity annotations, nullable rules, indexes, or FK expectations. | `audit/rds-schema-entity-alignment` | Audit doc first, then entity/migration files | `SHOW CREATE TABLE`, schema-only dump, index checklist |
-| Admin authorization consistency | Admin APIs should consistently enforce `ADMIN` role and avoid controller-level gaps. | `fix/admin-authorization-audit` | `admin/**Controller.java`, method security tests | audience/performer/admin request matrix |
-| `@AuthenticationPrincipal` null safety | Controllers often assume authenticated `Member`; SecurityConfig and controller behavior must match. | `fix/auth-principal-null-safety-audit` | Controllers using `@AuthenticationPrincipal`, tests | Unauthenticated request matrix, 401/403 assertions |
-| DTO validation gaps | `@RequestBody` without `@Valid` or DTO constraints can cause inconsistent 400/500 behavior. | `fix/request-dto-validation-baseline` | Request DTOs, controllers, exception tests | Invalid payload tests |
-| Exception handling inconsistency | `GeneralException`, `IllegalArgumentException`, `IllegalStateException`, `ResponseStatusException`, raw `RuntimeException`, and `printStackTrace()` are mixed. | `fix/exception-handling-consistency` | Global exception handler, affected controllers/services | Representative error response tests |
+## Severity Classification
 
-## Medium
+### Critical
 
 | Item | Risk | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- | --- |
-| SecurityConfig `permitAll` inventory | Public endpoint list should be locked by tests to avoid accidental exposure. | `test/security-permitall-regression` | Security tests | Authenticated/unauthenticated endpoint matrix |
-| `/auth/dev/*` profile guard regression | Dev auth must stay unavailable under `prod`. | `test/dev-auth-profile-guard` | Profile context tests | dev profile registers controller, prod profile does not |
-| Refresh token lifecycle | Redis refresh token save, validate, logout, expiry, and reuse-after-logout behavior needs tests. | `test/refresh-token-lifecycle` | `TokenProvider.java`, `RefreshTokenService.java`, auth tests | login/refresh/logout/refresh-after-logout tests |
-| Actuator health detail | Public health detail is useful in dev/staging, but should be restricted before production. | `chore/actuator-prod-hardening` | `application-prod.yml`, docs | Prod profile health response check |
-| Smoke test automation | Manual deployment checks are easy to skip. | `chore/dev-smoke-test-script` | `scripts/smoke-test.sh`, deployment docs | Script exits non-zero on failed checks |
-| Operational log runbook | App, Docker, Redis, and Nginx log commands should be documented in one place. | `docs/ops-runbook-logs` | Deployment docs/runbook | Manual command verification on EC2 |
+| RealTicket duplicate issuance and DB uniqueness | Application-level duplicate prevention exists, but `RealTicket.kakaoTid` has no DB-level unique constraint. Concurrent approve retries can still be risky without a database invariant. | `fix/enforce-real-ticket-kakaotid-uniqueness` | `RealTicket.java`, DB migration files, `RealTicketRepository.java`, KakaoPay tests | Duplicate data SQL, migration dry-run, concurrent approve retry test |
+| Stock restore duplication across cancel/fail/scheduler | `stopPayment()` restores stock for `PENDING` TempTicket, while scheduler can also expire pending tickets. Concurrent execution may restore stock more than once unless state update and stock restore are atomic. | `fix/atomic-temp-ticket-expiration-stock-restore` | `KakaoPayBusinessService.java`, `TempTicketExpireScheduler.java`, `TempTicketRepository.java`, concurrency tests | Concurrent cancel/fail/scheduler test, stock count assertion |
+| Payment approval external call inside transactional service | `KakaoPayBusinessService` is class-level `@Transactional`; external KakaoPay approve/cancel calls can occur inside DB transactions. Long transactions and partial failures can cause consistency problems. | `refactor/kakaopay-transaction-boundaries` | `KakaoPayBusinessService.java`, `KakaoPayService.java`, payment tests | Transaction boundary tests, failure simulation, DB state assertions |
+| Payment success but DB save failure | If KakaoPay approval succeeds but DB confirmation or RealTicket creation fails, the system needs a compensation policy. | `fix/payment-approve-compensation-policy` | `KakaoPayBusinessService.java`, error handling policy, tests | Mock DB failure after approve, verify compensation/manual recovery record |
 
-## Low
+### High
 
 | Item | Risk | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- | --- |
-| Remove production `printStackTrace()` | Direct stack trace printing is noisy and less searchable than structured logs. | `chore/remove-printstacktrace-production` | Affected production classes | Compile, error path tests |
-| API null/empty response policy | Inconsistent null and empty responses make FE handling harder. | `docs/api-response-policy` | API docs, DTO notes | Contract review |
-| Service responsibility split | Large services are harder to test but refactoring them before behavior tests is risky. | `refactor/service-responsibility-split-plan` | Design doc first | No code verification until implementation PR |
-| Immutable Docker tags | Mutable `latest` tags reduce rollback traceability. | `chore/docker-immutable-image-tags` | GitHub Actions, deploy scripts, docs | Deploy and rollback by commit SHA tag |
+| `ddl-auto=update` in dev/prod config | Hibernate can silently mutate schema and hide schema drift. This is risky before production migration. | `chore/introduce-db-migration-baseline` | `application.yml`, `application-prod.yml`, Flyway or Liquibase files | Schema dump comparison, migration from empty DB, migration from staging snapshot |
+| Entity and RDS schema mismatch | JPA annotations do not necessarily match the live RDS schema created by `ddl-auto=update`. | `audit/rds-schema-entity-alignment` | Documentation first, then entity/migration files | RDS schema dump, `SHOW CREATE TABLE`, entity annotation checklist |
+| Admin authorization consistency | Role hierarchy exists, but admin endpoints should be audited for consistent `ADMIN` enforcement and no controller-level gaps. | `fix/admin-authorization-audit` | `admin/**Controller.java`, method security annotations, tests | Unauthorized/performer/audience/admin API tests |
+| `@AuthenticationPrincipal` null safety | Many controllers directly use `member.getId()` or pass `member` assuming authentication. Security rules should match these assumptions. | `fix/auth-principal-null-safety-audit` | Controllers using `@AuthenticationPrincipal`, tests | Unauthenticated request matrix, 401/403 assertions |
+| API validation gaps | Multiple controllers use `@RequestBody` without `@Valid`; DTO constraints should be reviewed. | `fix/request-dto-validation-baseline` | Request DTOs, controllers, exception handler | Invalid payload tests, error response format assertions |
+| Exception handling inconsistency | `IllegalArgumentException`, `IllegalStateException`, `GeneralException`, `ResponseStatusException`, and `printStackTrace()` are mixed. | `fix/exception-handling-consistency` | Global exception handler, affected services/controllers | Representative error contract tests |
+
+### Medium
+
+| Item | Risk | Recommended branch | Expected files | Verification |
+| --- | --- | --- | --- | --- |
+| SecurityConfig `permitAll` inventory | Current public endpoints should be documented and regression-tested so future changes do not accidentally expose user APIs. | `test/security-permitall-regression` | `SecurityConfig.java` tests only, docs | Spring Security request matcher tests |
+| `/auth/dev/*` profile guard regression | Current controller uses `(local | dev) & !prod`; this should be verified in profile-based tests. | `test/dev-auth-profile-guard` | `DevAuthController` tests, context tests | dev profile registers bean, prod profile does not |
+| Refresh token lifecycle | Redis refresh token save/validate/logout behavior should be tested with expiry and logout flows. | `test/refresh-token-lifecycle` | `TokenProvider.java`, `RefreshTokenService.java`, auth tests | Login, refresh, logout, refresh-after-logout tests |
+| Public actuator health detail | `/actuator/health` is public and `show-details: always`; useful in dev/staging but too verbose for production. | `chore/actuator-prod-hardening` | `application-prod.yml`, deployment docs | Prod profile health response check |
+| Logging and operational commands | App, Nginx, and Docker log commands should be documented and eventually centralized. | `docs/ops-runbook-logs` | `docs/DEPLOYMENT_PLAN.md`, runbook docs | Manual command verification on EC2 |
+| Smoke test automation | Manual smoke tests exist in documentation, but repeatable script would reduce deployment risk. | `chore/dev-smoke-test-script` | `scripts/smoke-test.sh`, docs | Run script against dev/staging host |
+
+### Low
+
+| Item | Risk | Recommended branch | Expected files | Verification |
+| --- | --- | --- | --- | --- |
+| Remove `printStackTrace()` | Stack traces are printed directly in some controllers/converters/tests. Replace with structured logging where production code is affected. | `chore/remove-printstacktrace-production` | `KakaoPayController.java`, `PhotoAlbumServiceImpl.java`, `AmateurConverter.java` | Compile, error path tests |
+| API empty/null response policy | Some APIs return empty lists while others may return null fields. Define response conventions. | `docs/api-response-policy` | API docs, DTO notes | Contract review |
+| Service size and responsibility split | Large services such as payment, board, photo album, and amateur show services are harder to test. | `refactor/service-responsibility-split-plan` | Design doc first | No code verification until implementation PR |
+| Docker image tag immutability | Deployment currently still uses mutable image tags. This affects rollback traceability. | `chore/docker-immutable-image-tags` | GitHub Actions, deploy scripts, docs | Deploy by commit SHA tag and rollback test |
 
 ## Payment And Ticket Consistency
 
-### Risks
+### Current Observations
 
-- `RealTicket.kakaoTid` should be reviewed for a unique index.
-- Existing duplicate RealTicket rows must be checked before adding a unique constraint.
-- Approve retry must be idempotent for the same TempTicket/order.
-- Cancel, fail, and scheduler paths must not restore stock more than once.
-- TempTicket status transitions need a documented allowed transition matrix.
-- Payment success followed by local DB failure needs compensation or manual recovery policy.
+- `KakaoPayBusinessService.completePayment()` checks `RealTicketRepository.existsByKakaoTid(tempTicket.getKakaoTid())` before issuing a RealTicket.
+- `RealTicket.kakaoTid` is mapped with `@Column(name = "kakao_tid")`, but no unique constraint is declared at the entity level.
+- `TempTicket.kakaoTid` is also stored and used for KakaoPay approve.
+- `confirmReservation()` returns early if TempTicket is already `RESERVED`.
+- `stopPayment()` restores stock and changes TempTicket to `EXPIRED` only when current status is `PENDING`.
+- `KakaoPayBusinessService` is class-level transactional, while KakaoPay external API calls are made inside service methods.
 
-### Duplicate Data Check SQL
+### Existing Duplicate Data Check SQL
 
-Run against a staging snapshot or read-only operational session. Do not commit query output if it contains user data.
+Run these against a read-only staging snapshot first:
 
 ```sql
 SELECT kakao_tid, COUNT(*) AS cnt
@@ -107,24 +123,24 @@ ORDER BY kakao_tid, id;
 ### Required Tests
 
 - First approve creates exactly one RealTicket.
-- Repeated approve for the same TempTicket does not create a second RealTicket.
-- Concurrent approve for the same TempTicket creates exactly one RealTicket.
+- Repeated approve for the same TempTicket does not create additional RealTickets.
+- Concurrent repeated approve creates exactly one RealTicket.
 - Cancel callback and fail callback racing against scheduler restore stock once.
-- Approve after TempTicket expiration does not issue a RealTicket.
-- KakaoPay approve succeeds but local DB persistence fails and follows a documented recovery policy.
+- Approve after TempTicket expiration fails without issuing a RealTicket.
+- KakaoPay approve succeeds but RealTicket creation fails: verify defined compensation behavior.
 
-### State Transition Draft
+### Recommended State Transition Audit
 
-TempTicket:
+Document legal TempTicket transitions before refactoring:
 
 ```text
 PENDING -> RESERVED
 PENDING -> EXPIRED
-RESERVED -> terminal for TempTicket
+RESERVED -> no further TempTicket transition
 EXPIRED -> terminal
 ```
 
-RealTicket:
+Document legal RealTicket transitions:
 
 ```text
 RESERVED -> CANCELLED
@@ -133,13 +149,13 @@ CANCELLED -> terminal
 USED -> terminal
 ```
 
-Do not implement a full state machine until real data, scheduler behavior, and KakaoPay retry behavior are verified.
+Do not implement a full state machine before confirming real data, scheduler behavior, and KakaoPay redirect retry behavior.
 
 ## DB Level Audit
 
-### Schema Dump
+### RDS Schema Dump Commands
 
-Use schema-only dumps first. Never commit dumps that contain production or user data.
+Use a staging-safe account and never commit dump files containing production data.
 
 ```bash
 mysqldump \
@@ -152,8 +168,6 @@ mysqldump \
   <db-name> > schema-only.sql
 ```
 
-### SQL Checks
-
 ```sql
 SHOW TABLES;
 SHOW CREATE TABLE real_ticket;
@@ -165,172 +179,244 @@ SHOW INDEX FROM temp_ticket;
 SHOW INDEX FROM member;
 ```
 
-### Items To Compare
+### Schema Items To Check
 
-- Entity nullable rules vs actual table nullable rules.
-- Unique constraints and indexes.
-- Foreign keys for member, ticket, amateur round, and show relations.
-- `real_ticket.kakao_tid` uniqueness/index status.
-- `temp_ticket.reservation_status` and `created_at` index for scheduler.
-- Query patterns used by ticket list, admin ticket search, and payment duplicate checks.
-- Current `ddl-auto=update` behavior under dev/prod profiles.
+- `real_ticket.kakao_tid`: nullable, unique, index status.
+- `temp_ticket.kakao_tid`: nullable and index status.
+- Ticket ownership columns: `member_id`, `amateur_rounds_id`, `amateur_ticket_id`.
+- Reservation status columns: enum string length and nullable status.
+- FK constraints between ticket, member, amateur round, and amateur ticket tables.
+- Indexes for:
+  - member ticket list: `real_ticket.member_id`
+  - member and status ticket list: `real_ticket.member_id`, `real_ticket.reservation_status`
+  - admin search: `real_ticket.show_title`, `real_ticket.reservation_status`
+  - payment duplicate check: `real_ticket.kakao_tid`
+  - pending expiration: `temp_ticket.reservation_status`, `temp_ticket.created_at`
+
+### `ddl-auto=update` Risk
+
+Current config includes `ddl-auto: update` in common and prod profile configuration. This is acceptable only as a temporary dev/staging convenience. Before production:
+
+- Baseline the current schema.
+- Introduce Flyway or Liquibase.
+- Change production schema management away from Hibernate auto-update.
+- Test migration on a staging snapshot.
 
 ## Authentication And Authorization Audit
 
 ### Items To Verify
 
-- `/auth/dev/login` and `/auth/dev/refresh` are not registered under `prod`.
-- SecurityConfig public endpoint list is intentional.
+- `/auth/dev/login` and `/auth/dev/refresh` remain unavailable when `prod` profile is active.
+- `SecurityConfig` public endpoint list is intentional and tested.
 - `POST /kakaoPay/ready` requires authentication.
 - `GET /kakaoPay/approve`, `/kakaoPay/cancel`, and `/kakaoPay/fail` remain public callback endpoints.
-- Admin APIs consistently require `ADMIN`.
-- Performer and audience permissions are separated.
-- `@AuthenticationPrincipal` usage is null-safe or protected by authentication rules.
-- Redis refresh token lifecycle handles login, refresh, logout, expiry, and refresh-after-logout.
+- Admin APIs consistently require `ADMIN` role.
+- Performer-only and audience-only actions are separated.
+- Controllers using `@AuthenticationPrincipal(expression = "member")` do not rely on public endpoints.
+- Logout handles missing or invalid authentication consistently.
+- Refresh token Redis lifecycle is tested for login, refresh, logout, expiry, and refresh reuse after logout.
 
-### PermitAll Inventory To Regression-Test
+### SecurityConfig PermitAll Inventory
+
+Current public categories to audit:
 
 - `OPTIONS /**`
 - `/actuator/health`, `/actuator/info`
 - `/error`
 - `/auth/**`
 - KakaoPay callback endpoints
-- Swagger/OpenAPI docs
+- Swagger and OpenAPI docs
 - `/admin/login`
 - Public read APIs for photo albums, boards, amateurs
 - `/upload/**`
 
+Important follow-up:
+
+- Since `/auth/**` is broad, profile tests for `DevAuthController` are essential.
+- Since `/upload/**` is public, confirm whether this path is only a generated S3 object path or an application endpoint that can mutate state.
+
 ## API Validation And Exception Handling
 
-### Validation Search
+### Validation Audit Targets
+
+Search pattern:
 
 ```bash
 rg -n "@RequestBody" src/main/java
 rg -n "@Valid @RequestBody|@RequestBody .*@Valid" src/main/java
 ```
 
-### DTO Constraint Candidates
+Review each request DTO for:
 
-- `@NotNull` for required IDs, enum values, and date fields.
+- `@NotNull` for required IDs and enum fields.
 - `@NotBlank` for required strings.
-- `@Positive` for quantity, price, page, and size values.
-- `@Size` for user-provided text.
-- `@Valid` for nested DTOs and request lists.
+- `@Positive` or `@PositiveOrZero` for quantity, price, page, and size fields.
+- `@Size` for bounded text fields.
+- `@Valid` for nested DTOs and lists.
 
-### Exception Policy Direction
+### Exception Consistency
 
-- Use `GeneralException` for domain/business errors with known error codes.
-- Use validation exceptions for request validation failures.
-- Avoid raw `RuntimeException` for expected business errors.
-- Replace production `printStackTrace()` with structured logging.
-- Keep API error response shape consistent.
+Current code mixes several exception paths:
 
-## Transaction And External API Audit
+- `GeneralException`
+- `IllegalArgumentException`
+- `IllegalStateException`
+- `ResponseStatusException`
+- raw `RuntimeException`
+- direct `printStackTrace()`
 
-### Questions
+Recommended direction:
 
-- Which service methods call KakaoPay inside an open DB transaction?
-- What DB state remains if KakaoPay approve succeeds but local DB save fails?
-- What DB state remains if KakaoPay cancel succeeds but local ticket cancellation fails?
-- Are stock decrease and TempTicket update atomic?
+- Use `GeneralException` for business errors with defined error codes.
+- Use validation exceptions for invalid request DTOs.
+- Use structured logging instead of `printStackTrace()`.
+- Keep one API error response format for controllers.
+- Add tests for representative 400, 401, 403, 404, 409, and 500 responses.
+
+## Transactions And External API Calls
+
+### Audit Questions
+
+- Which methods call KakaoPay inside an open DB transaction?
+- What DB state exists when KakaoPay approve succeeds but local DB save fails?
+- What happens if KakaoPay cancel succeeds but local ticket cancellation fails?
+- Are stock decrease and TempTicket state transitions atomic?
 - Are stock restore and TempTicket expiration atomic?
-- Can scheduler and callback process the same TempTicket concurrently?
+- Can scheduler and callback process the same TempTicket at the same time?
 
-### Recommended Refactor Order
+### Recommended Refactoring Direction
 
-1. Add regression tests for current behavior.
-2. Define payment and ticket state transitions.
-3. Separate external API calls from long transactions where safe.
-4. Add compensation/manual recovery policy.
-5. Consider outbox or payment event table only after the simpler behavior is tested.
+Do not jump directly into a full rewrite. Recommended sequence:
+
+1. Add tests that reproduce current behavior.
+2. Extract transaction boundary decisions into smaller private/application methods.
+3. Move external API calls outside long transactions where possible.
+4. Add compensation or manual recovery records for unresolved external/local mismatches.
+5. Consider outbox or payment event table only after current flows are covered by tests.
 
 ## Observability And Operations
 
-### Current Focus
+### Current Dev/Staging Checks
 
-- Actuator health endpoint.
-- Docker Compose app/Redis logs.
-- Nginx access/error logs.
-- Deployment smoke test commands.
-- Rollback and blue/green verification commands.
+- `/actuator/health` is public.
+- Docker Compose health checks target app containers.
+- Redis runs inside Docker Compose.
+- Nginx proxies public port 80 to blue/green app ports.
+- Deployment documentation includes smoke test commands.
 
-### Follow-Up Candidates
+### Recommended Operational Improvements
 
 | Item | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- |
-| CloudWatch log shipping | `chore/cloudwatch-log-agent-dev` | EC2 setup docs, CloudWatch agent config | App/Nginx/Docker logs visible in CloudWatch |
-| Smoke test script | `chore/dev-smoke-test-script` | `scripts/smoke-test.sh`, docs | Script exits non-zero on failed checks |
-| Rollback runbook | `docs/rollback-runbook` | Deployment docs | Manual rollback drill on dev/staging |
-| Request correlation ID | `chore/request-correlation-id` | filter/interceptor/log config | Request ID appears in app logs |
+| CloudWatch log shipping | `chore/cloudwatch-log-agent-dev` | EC2 setup docs, CloudWatch agent config | App, Nginx, Docker logs visible in CloudWatch |
+| Smoke test script | `chore/dev-smoke-test-script` | `scripts/smoke-test.sh`, docs | Script exits non-zero on failed health/API checks |
+| Deployment rollback drill | `docs/rollback-runbook` | Deployment docs | Manual rollback on dev/staging |
+| Actuator production hardening | `chore/actuator-prod-hardening` | `application-prod.yml`, docs | Prod health does not expose unnecessary details |
+| Error log correlation | `chore/request-correlation-id` | filter/interceptor/log config | Request ID appears in app logs |
+
+### Incident Commands To Document
+
+```bash
+docker compose ps
+docker logs ccapp-blue --tail=200
+docker logs ccapp-green --tail=200
+docker logs redis --tail=100
+sudo tail -n 200 /var/log/nginx/error.log
+sudo tail -n 200 /var/log/nginx/access.log
+curl -i http://localhost/actuator/health
+docker exec redis redis-cli ping
+```
 
 ## Safe To Fix Immediately
 
+These are low-risk and can be done without changing business policy:
+
 - Add security/profile regression tests for `/auth/dev/*`.
 - Add SecurityConfig endpoint access tests.
-- Add request DTO validation for clearly required fields.
+- Add request DTO validation to clearly required fields.
 - Replace production `printStackTrace()` with logger usage.
-- Add a dev/staging smoke test script.
-- Expand operational runbook commands.
-- Add refresh token lifecycle tests.
+- Add smoke test script for dev/staging.
+- Expand deployment runbook with rollback and log commands.
+- Add repository/service tests for refresh token logout lifecycle.
 
 ## Analyze Before Fixing
 
+These require real schema/data review or a behavior matrix before implementation:
+
 - `RealTicket.kakaoTid` unique constraint.
-- Existing duplicate ticket/payment data cleanup.
-- Entity and RDS schema alignment.
-- `ddl-auto=update` replacement with Flyway or Liquibase.
-- Cancel/fail/scheduler stock restore race.
+- Existing duplicate payment/ticket data cleanup.
+- Entity nullable/index/FK alignment with RDS.
+- `ddl-auto=update` migration to Flyway or Liquibase.
+- Stock restore race between callback and scheduler.
 - Full admin/performer/audience authorization matrix.
-- API null/empty response policy.
+- API response null/empty conventions.
 - Actuator exposure policy by environment.
 
 ## Risky To Change Now
 
+These should wait until tests and data audit are complete:
+
 - Full payment state machine rewrite.
-- Moving all KakaoPay calls outside transactions without compensation design.
-- Adding unique constraints before duplicate data is checked.
+- Moving all KakaoPay external calls outside transactions without compensation design.
+- Introducing DB unique constraints before duplicate data is checked and cleaned.
 - Replacing scheduler behavior without concurrency tests.
-- Large service decomposition before regression tests.
-- Production migration tooling rollout without staging rehearsal.
+- Large service decomposition of payment, board, photo album, or amateur show flows.
+- Production migration tooling rollout without staging snapshot rehearsal.
 
 ## Recommended Work Order
 
 1. `test/security-permitall-regression`
    - Purpose: lock down current authentication boundary.
-   - Verification: authenticated/unauthenticated endpoint matrix.
+   - Files: Security tests, profile context tests.
+   - Verification: unauthenticated/authenticated request matrix.
 
 2. `chore/dev-smoke-test-script`
    - Purpose: make deployment verification repeatable.
-   - Verification: run script against dev/staging host.
+   - Files: `scripts/smoke-test.sh`, deployment docs.
+   - Verification: run against dev/staging host.
 
 3. `audit/rds-schema-entity-alignment`
-   - Purpose: compare live RDS schema with JPA entities.
-   - Verification: schema-only dump and index checklist.
+   - Purpose: compare real RDS schema with JPA entities.
+   - Files: audit doc only at first.
+   - Verification: schema-only dump and table/index checklist.
 
 4. `test/payment-ticket-consistency-regression`
    - Purpose: add tests before risky payment changes.
-   - Verification: repeated approve, concurrent approve, and stock restore race tests.
+   - Files: KakaoPay, TempTicket, RealTicket tests.
+   - Verification: repeated approve, concurrent approve, cancel/fail/scheduler races.
 
 5. `fix/enforce-real-ticket-kakaotid-uniqueness`
    - Purpose: add DB invariant after duplicate data check.
-   - Verification: migration dry-run and duplicate insert failure test.
+   - Files: migration file, entity/repository tests.
+   - Verification: migration dry-run, duplicate insert failure test.
 
 6. `fix/atomic-temp-ticket-expiration-stock-restore`
    - Purpose: prevent double stock restore.
+   - Files: payment service, scheduler, repository, tests.
    - Verification: concurrent callback/scheduler test.
 
 7. `fix/request-dto-validation-baseline`
    - Purpose: reduce invalid input and inconsistent 500s.
+   - Files: DTOs, controllers, exception tests.
    - Verification: invalid payload test suite.
 
 8. `refactor/kakaopay-transaction-boundaries`
    - Purpose: reduce long transactions and define compensation.
+   - Files: payment service structure and tests.
    - Verification: failure simulation around external API and DB save.
 
 9. `chore/introduce-db-migration-baseline`
-   - Purpose: replace Hibernate schema auto-update with managed migration.
-   - Verification: empty DB migration and staging snapshot migration.
+   - Purpose: move away from `ddl-auto=update`.
+   - Files: Flyway or Liquibase baseline, application config.
+   - Verification: empty DB migration, staging snapshot migration.
 
 10. `chore/actuator-prod-hardening`
-    - Purpose: reduce production health endpoint exposure.
+    - Purpose: reduce production operational exposure.
+    - Files: prod config, docs.
     - Verification: prod profile health response check.
+
+## Final Notes
+
+- This audit plan intentionally separates documentation, tests, data checks, and risky refactors.
+- Payment and ticket consistency must be protected at both application and database levels.
+- The next most valuable PR is not a refactor; it is a test/audit PR that proves current behavior before changing it.
