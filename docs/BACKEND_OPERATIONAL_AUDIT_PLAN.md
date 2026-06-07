@@ -1,5 +1,18 @@
 # Backend Operational Audit Plan
 
+## Purpose
+
+This document is the follow-up PR separation guide for backend operational stabilization after the dev/staging redeployment.
+
+Use this document to decide:
+
+- Which issues should be fixed immediately.
+- Which issues require real data or schema analysis first.
+- Which issues are risky and should wait until tests, rollback plans, and migration plans are ready.
+- Which branch should own each follow-up task.
+
+This document is intentionally documentation-only. It must not include real secret values, real private keys, passwords, access tokens, or production-only operational credentials.
+
 ## Overall Summary
 
 This document is the post-deployment audit plan for improving backend operational stability and data consistency after the new AWS dev/staging redeployment.
@@ -23,6 +36,9 @@ Non-goals for this document:
 
 Recommended operating principle:
 
+- Audit externally exposed endpoints before expanding the dev/staging surface with DNS and HTTPS.
+- Establish a repeatable smoke-test baseline before changing DNS, HTTPS, OAuth callback URLs, KakaoPay callback URLs, or frontend API base URLs.
+- Configure dev/staging DNS, HTTPS, and callback URLs after the security and smoke-test baseline exists.
 - Fix low-risk visibility and validation issues first.
 - Analyze real RDS data before adding unique constraints or changing ticket/payment state transitions.
 - Treat payment, ticket stock, refund, and scheduler behavior as high-risk areas that require tests and rollback plans before implementation.
@@ -42,6 +58,10 @@ Recommended operating principle:
 
 | Item | Risk | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- | --- |
+| Public endpoint exposure audit | The dev/staging server is already externally reachable. `/auth/**`, `/upload/**`, Swagger, Actuator, and KakaoPay callback rules should be audited before adding DNS/HTTPS and making the environment easier to consume. | `security/audit-permit-all-rules` | SecurityConfig audit docs, request matrix, security tests | unauthenticated/authenticated endpoint matrix |
+| Smoke-test baseline before infrastructure changes | DNS/HTTPS changes are hard to validate without a repeatable baseline. Manual curl checks are not enough for later comparisons. | `ops/add-dev-smoke-test-script` | `scripts/smoke-test.sh`, deployment docs | Script passes against current HTTP endpoint and later HTTPS domain |
+| Dev/staging DNS, HTTPS, and callback URL setup | OAuth, KakaoPay redirect, CORS, and frontend API base URL verification are unstable when they rely on a raw EC2 public IP. A real HTTPS dev/staging domain should be configured before full integration testing. | `infra/configure-dev-domain-https` | Nginx HTTPS docs/config, deployment docs, environment reference | `https://<dev-api-domain>/actuator/health`, OAuth redirect check, KakaoPay callback URL check |
+| Dev/staging callback environment update | `FRONTEND_BASE_URL`, `CORS_ALLOWED_ORIGINS`, OAuth redirect URI, and KakaoPay callback URLs must move from IP-based values to domain-based values together. | `chore/update-dev-callback-urls` | EC2 `.env` guide, provider console checklist, deployment docs | HTTPS smoke test, OAuth login test, KakaoPay ready/approve/cancel/fail redirect test |
 | `ddl-auto=update` in dev/prod config | Hibernate can silently mutate schema and hide schema drift. This is risky before production migration. | `chore/introduce-db-migration-baseline` | `application.yml`, `application-prod.yml`, Flyway or Liquibase files | Schema dump comparison, migration from empty DB, migration from staging snapshot |
 | Entity and RDS schema mismatch | JPA annotations do not necessarily match the live RDS schema created by `ddl-auto=update`. | `audit/rds-schema-entity-alignment` | Documentation first, then entity/migration files | RDS schema dump, `SHOW CREATE TABLE`, entity annotation checklist |
 | Admin authorization consistency | Role hierarchy exists, but admin endpoints should be audited for consistent `ADMIN` enforcement and no controller-level gaps. | `fix/admin-authorization-audit` | `admin/**Controller.java`, method security annotations, tests | Unauthorized/performer/audience/admin API tests |
@@ -53,7 +73,7 @@ Recommended operating principle:
 
 | Item | Risk | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- | --- |
-| SecurityConfig `permitAll` inventory | Current public endpoints should be documented and regression-tested so future changes do not accidentally expose user APIs. | `test/security-permitall-regression` | `SecurityConfig.java` tests only, docs | Spring Security request matcher tests |
+| SecurityConfig `permitAll` regression tests | Current public endpoints should be documented and regression-tested so future changes do not accidentally expose user APIs. | `test/security-permitall-regression` | `SecurityConfig.java` tests only, docs | Spring Security request matcher tests |
 | `/auth/dev/*` profile guard regression | Current controller uses `(local | dev) & !prod`; this should be verified in profile-based tests. | `test/dev-auth-profile-guard` | `DevAuthController` tests, context tests | dev profile registers bean, prod profile does not |
 | Refresh token lifecycle | Redis refresh token save/validate/logout behavior should be tested with expiry and logout flows. | `test/refresh-token-lifecycle` | `TokenProvider.java`, `RefreshTokenService.java`, auth tests | Login, refresh, logout, refresh-after-logout tests |
 | Public actuator health detail | `/actuator/health` is public and `show-details: always`; useful in dev/staging but too verbose for production. | `chore/actuator-prod-hardening` | `application-prod.yml`, deployment docs | Prod profile health response check |
@@ -290,13 +310,19 @@ Do not jump directly into a full rewrite. Recommended sequence:
 - Redis runs inside Docker Compose.
 - Nginx proxies public port 80 to blue/green app ports.
 - Deployment documentation includes smoke test commands.
+- Public endpoint exposure should be audited before adding DNS/HTTPS.
+- A repeatable smoke-test script should exist before DNS/HTTPS changes.
+- DNS, HTTPS, and callback URLs should be configured before full OAuth, KakaoPay, and frontend integration verification, but after the security and smoke-test baseline exists.
 
 ### Recommended Operational Improvements
 
 | Item | Recommended branch | Expected files | Verification |
 | --- | --- | --- | --- |
+| Public endpoint audit | `security/audit-permit-all-rules` | Security docs, request matrix, security tests | unauthenticated/authenticated endpoint matrix |
+| Smoke test script | `ops/add-dev-smoke-test-script` | `scripts/smoke-test.sh`, docs | Script exits non-zero on failed health/API checks |
+| Dev/staging DNS and HTTPS setup | `infra/configure-dev-domain-https` | Nginx HTTPS setup docs/config, deployment docs | HTTPS health, Swagger, public API smoke tests |
+| Callback URL update | `chore/update-dev-callback-urls` | Environment guide, provider console checklist, deployment docs | OAuth redirect and KakaoPay callback tests |
 | CloudWatch log shipping | `chore/cloudwatch-log-agent-dev` | EC2 setup docs, CloudWatch agent config | App, Nginx, Docker logs visible in CloudWatch |
-| Smoke test script | `chore/dev-smoke-test-script` | `scripts/smoke-test.sh`, docs | Script exits non-zero on failed health/API checks |
 | Deployment rollback drill | `docs/rollback-runbook` | Deployment docs | Manual rollback on dev/staging |
 | Actuator production hardening | `chore/actuator-prod-hardening` | `application-prod.yml`, docs | Prod health does not expose unnecessary details |
 | Error log correlation | `chore/request-correlation-id` | filter/interceptor/log config | Request ID appears in app logs |
@@ -318,6 +344,9 @@ docker exec redis redis-cli ping
 
 These are low-risk and can be done without changing business policy:
 
+- Audit and document public endpoint exposure.
+- Add a repeatable smoke test script for the current dev/staging HTTP endpoint.
+- Document dev/staging DNS, HTTPS, and callback URL setup after the baseline exists.
 - Add security/profile regression tests for `/auth/dev/*`.
 - Add SecurityConfig endpoint access tests.
 - Add request DTO validation to clearly required fields.
@@ -330,6 +359,8 @@ These are low-risk and can be done without changing business policy:
 
 These require real schema/data review or a behavior matrix before implementation:
 
+- DNS/HTTPS rollout should wait until public endpoint audit and smoke-test baseline are complete.
+- Full OAuth and KakaoPay integration verification after domain-based HTTPS callback URLs are configured.
 - `RealTicket.kakaoTid` unique constraint.
 - Existing duplicate payment/ticket data cleanup.
 - Entity nullable/index/FK alignment with RDS.
@@ -352,58 +383,85 @@ These should wait until tests and data audit are complete:
 
 ## Recommended Work Order
 
-1. `test/security-permitall-regression`
+1. `security/audit-permit-all-rules`
+   - Purpose: audit externally reachable endpoints before adding DNS/HTTPS or expanding integration traffic.
+   - Files: SecurityConfig audit docs, request matrix, security tests.
+   - Verification: unauthenticated/authenticated endpoint matrix.
+
+2. `ops/add-dev-smoke-test-script`
+   - Purpose: make deployment verification repeatable before infrastructure changes.
+   - Files: `scripts/smoke-test.sh`, deployment docs.
+   - Verification: run against the current HTTP dev/staging endpoint.
+
+3. `infra/configure-dev-domain-https`
+   - Purpose: configure dev/staging DNS and HTTPS after the security and smoke-test baseline exists.
+   - Files: Nginx HTTPS docs/config, deployment docs.
+   - Verification: run the same smoke test against `https://<dev-api-domain>`.
+
+4. `chore/update-dev-callback-urls`
+   - Purpose: move callback and frontend integration URLs from raw IP-based values to domain-based HTTPS values.
+   - Files: EC2 `.env` guide, provider console checklist, deployment docs.
+   - Verification: OAuth redirect check, KakaoPay approve/cancel/fail callback check, CORS check.
+
+5. `test/security-permitall-regression`
    - Purpose: lock down current authentication boundary.
    - Files: Security tests, profile context tests.
    - Verification: unauthenticated/authenticated request matrix.
 
-2. `chore/dev-smoke-test-script`
-   - Purpose: make deployment verification repeatable.
-   - Files: `scripts/smoke-test.sh`, deployment docs.
-   - Verification: run against dev/staging host.
+6. `payment/audit-and-test-ticket-consistency`
+   - Purpose: combine payment/ticket audit with tests so the audit does not become a dead-end document-only task.
+   - Files: audit docs, KakaoPay tests, TempTicket tests, RealTicket tests.
+   - Verification: schema-only checks, duplicate `kakao_tid` SQL, repeated approve tests, concurrent approve tests, cancel/fail/scheduler race tests.
 
-3. `audit/rds-schema-entity-alignment`
-   - Purpose: compare real RDS schema with JPA entities.
-   - Files: audit doc only at first.
-   - Verification: schema-only dump and table/index checklist.
-
-4. `test/payment-ticket-consistency-regression`
-   - Purpose: add tests before risky payment changes.
-   - Files: KakaoPay, TempTicket, RealTicket tests.
-   - Verification: repeated approve, concurrent approve, cancel/fail/scheduler races.
-
-5. `fix/enforce-real-ticket-kakaotid-uniqueness`
+7. `payment/enforce-real-ticket-kakaotid-uniqueness`
    - Purpose: add DB invariant after duplicate data check.
    - Files: migration file, entity/repository tests.
    - Verification: migration dry-run, duplicate insert failure test.
 
-6. `fix/atomic-temp-ticket-expiration-stock-restore`
+8. `payment/atomic-temp-ticket-expiration-stock-restore`
    - Purpose: prevent double stock restore.
    - Files: payment service, scheduler, repository, tests.
    - Verification: concurrent callback/scheduler test.
 
-7. `fix/request-dto-validation-baseline`
+9. `validation/add-ticket-request-validation`
    - Purpose: reduce invalid input and inconsistent 500s.
    - Files: DTOs, controllers, exception tests.
    - Verification: invalid payload test suite.
 
-8. `refactor/kakaopay-transaction-boundaries`
+10. `chore/standardize-api-exception-handling`
+   - Purpose: reduce mixed exception behavior before deeper frontend integration.
+   - Files: exception handler, affected controllers/services, tests.
+   - Verification: representative 400, 401, 403, 404, 409, and 500 response tests.
+
+11. `refactor/kakaopay-transaction-boundaries`
    - Purpose: reduce long transactions and define compensation.
    - Files: payment service structure and tests.
    - Verification: failure simulation around external API and DB save.
 
-9. `chore/introduce-db-migration-baseline`
+12. `frontend/integration-stabilization`
+   - Purpose: stabilize payment button behavior, token refresh, result messages, API base URL, and admin route protection after backend guards and callback URLs are stable.
+   - Files: frontend environment/configuration and route/payment handling files.
+   - Verification: FE login, token refresh, KakaoPay ready, redirect result, and admin route checks.
+
+13. `chore/introduce-db-migration-baseline`
    - Purpose: move away from `ddl-auto=update`.
    - Files: Flyway or Liquibase baseline, application config.
    - Verification: empty DB migration, staging snapshot migration.
 
-10. `chore/actuator-prod-hardening`
+14. `chore/actuator-prod-hardening`
     - Purpose: reduce production operational exposure.
     - Files: prod config, docs.
     - Verification: prod profile health response check.
+
+15. `docs/aws-architecture-improvement-plan`
+    - Purpose: split long-term AWS improvements into smaller tracks instead of treating ECR, OIDC, ALB, ElastiCache, ECS/Fargate, and blue/green redesign as one task.
+    - Files: architecture decision docs.
+    - Verification: documented decision tree and follow-up branch list.
 
 ## Final Notes
 
 - This audit plan intentionally separates documentation, tests, data checks, and risky refactors.
 - Payment and ticket consistency must be protected at both application and database levels.
 - The next most valuable PR is not a refactor; it is a test/audit PR that proves current behavior before changing it.
+- Documentation should be updated inside each follow-up PR instead of being deferred to the end.
+- Long-term AWS architecture work should be split into smaller tracks such as SSH ingress hardening, registry/IAM, ALB/Route 53, ElastiCache, and ECS/Fargate migration.

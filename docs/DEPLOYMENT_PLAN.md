@@ -81,6 +81,60 @@ Keep these as follow-up improvements, not part of the first dev/staging stabiliz
 - Run tests in CI instead of `./gradlew build -x test`.
 - Move from Docker Hub secrets to ECR/OIDC later.
 
+## Verification Before Dev Domain And HTTPS
+
+After the first EC2/Nginx health check succeeds, establish the security and smoke-test baseline before changing DNS, HTTPS, OAuth callback URLs, KakaoPay callback URLs, or frontend API base URLs.
+
+This order matters. Without a repeatable smoke test, it is difficult to tell whether a later HTTPS/domain change failed, whether the existing app was already unhealthy, or whether OAuth/KakaoPay callback settings are wrong.
+
+Recommended follow-up branches before domain changes:
+
+- `security/audit-permit-all-rules`
+- `ops/add-dev-smoke-test-script`
+
+The smoke test should accept a base URL so the same checks can run before and after HTTPS:
+
+```bash
+./scripts/smoke-test.sh http://<dev-api-host>
+./scripts/smoke-test.sh https://<dev-api-domain>
+```
+
+## Dev Domain, HTTPS, And Callback URLs
+
+Configure a dev/staging API domain and HTTPS after the public endpoint audit and smoke-test script are in place.
+
+DNS and HTTPS are still required before full OAuth, KakaoPay, and frontend integration verification. Google OAuth, Kakao OAuth, KakaoPay redirect URLs, frontend CORS, and frontend API base URL checks are much more stable when they use a real HTTPS domain instead of a raw EC2 public IP.
+
+Recommended follow-up branches:
+
+- `infra/configure-dev-domain-https`
+- `chore/update-dev-callback-urls`
+- `docs/update-domain-https-deployment-guide`
+
+Items to configure:
+
+- Dev/staging API domain, for example `<dev-api-domain>`.
+- DNS `A` record pointing to the EC2 public IP or Elastic IP.
+- Nginx HTTPS certificate using Certbot or another certificate provider.
+- HTTP `80` to HTTPS `443` redirect.
+- `FRONTEND_BASE_URL`.
+- `CORS_ALLOWED_ORIGINS`.
+- `GOOGLE_REDIRECT_URI`.
+- Kakao OAuth redirect URI.
+- `KAKAOPAY_APPROVE_URL`.
+- `KAKAOPAY_CANCEL_URL`.
+- `KAKAOPAY_FAIL_URL`.
+- Google, Kakao, and KakaoPay console callback/redirect settings.
+
+Smoke test again with the HTTPS domain:
+
+```bash
+curl -i https://<dev-api-domain>/actuator/health
+curl -i https://<dev-api-domain>/swagger-ui/index.html
+curl -i https://<dev-api-domain>/amateurs/ranking
+curl -i -X POST "https://<dev-api-domain>/kakaoPay/ready?tempTicketId=1"
+```
+
 ## Nginx Blue/Green Setup
 
 `switch-blue-green.sh` and `rollback.sh` expect the Nginx upstream entries below in `/etc/nginx/sites-available/default`.
@@ -184,12 +238,19 @@ Expected results:
 4. Configure GitHub Secrets and optional Variables.
 5. Push to `develop` or run the workflow manually.
 6. Verify health with `/actuator/health`.
+7. Audit public endpoints and confirm no obvious dev/staging exposure issue.
+8. Add a repeatable smoke test script and run it against the current HTTP endpoint.
+9. Configure dev/staging DNS, HTTPS, and callback URLs.
+10. Run the same smoke test against the HTTPS domain before full OAuth, KakaoPay, and frontend integration verification.
 
 ## Follow-up Work
 
+- Use [Backend Operational Audit Plan](BACKEND_OPERATIONAL_AUDIT_PLAN.md) as the reference for backend stabilization follow-up PRs.
+- Audit public endpoints and add a repeatable smoke test before DNS/HTTPS changes.
+- Configure dev/staging DNS, HTTPS, and callback URLs after the smoke-test baseline exists.
 - Move Docker registry from Docker Hub to ECR.
 - Use GitHub OIDC instead of long-lived AWS keys.
 - Revisit blue/green deployment after dev/staging is stable.
 - Move runtime secrets to AWS Systems Manager Parameter Store or Secrets Manager.
 - Replace `ddl-auto=update` with a managed migration strategy before production.
-- Add HTTPS/domain routing before production OAuth and KakaoPay verification.
+- Revisit ALB, Route 53 operations, and production HTTPS architecture as a larger AWS architecture improvement.
