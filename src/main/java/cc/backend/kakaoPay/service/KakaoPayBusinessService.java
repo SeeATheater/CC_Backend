@@ -45,6 +45,10 @@ public class KakaoPayBusinessService {
             throw new GeneralException(ErrorStatus.NOT_TEMP_TICKET_OWNER);
         }
 
+        if (tempTicket.getKakaoTid() != null) {
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_STATUS_INVALID);
+        }
+
         // 재고 선점
         preemptStock(tempTicket);
 

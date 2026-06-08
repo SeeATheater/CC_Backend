@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -65,16 +65,8 @@ class TempTicketServiceImplTest {
         GeneralException exception = assertThrows(GeneralException.class,
                 () -> tempTicketService.createTempTicket(1L, 1L, 1L, member, null));
 
-        assertEquals(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
-        verifyNoInteractions(
-                memberRepository,
-                amateurShowRepository,
-                amateurRoundsRepository,
-                amateurTicketRepository,
-                tempTicketRepository,
-                eventPublisher,
-                realTicketService
-        );
+        assertSame(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
+        verifyNoRepositoryOrEventInteractions();
     }
 
     private void assertInvalidQuantityRejected(int quantity) {
@@ -86,7 +78,11 @@ class TempTicketServiceImplTest {
         GeneralException exception = assertThrows(GeneralException.class,
                 () -> tempTicketService.createTempTicket(1L, 1L, 1L, member, requestDTO));
 
-        assertEquals(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
+        assertSame(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
+        verifyNoRepositoryOrEventInteractions();
+    }
+
+    private void verifyNoRepositoryOrEventInteractions() {
         verifyNoInteractions(
                 memberRepository,
                 amateurShowRepository,
