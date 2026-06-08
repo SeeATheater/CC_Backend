@@ -95,9 +95,11 @@ Recommended follow-up branches before domain changes:
 The smoke test should accept a base URL so the same checks can run before and after HTTPS:
 
 ```bash
-./scripts/smoke-test.sh http://<dev-api-host>
-./scripts/smoke-test.sh https://<dev-api-domain>
+./scripts/dev-smoke-test.sh http://<dev-api-host>
+./scripts/dev-smoke-test.sh https://<dev-api-domain>
 ```
+
+The current baseline script is `scripts/dev-smoke-test.sh`. See [Public Endpoint Baseline](PUBLIC_ENDPOINT_BASELINE.md) for the expected public/private endpoint matrix.
 
 ## Dev Domain, HTTPS, And Callback URLs
 
@@ -217,6 +219,18 @@ From a local machine, use the public dev/staging base URL:
 curl -i http://<dev-api-host>/actuator/health
 curl -i http://<dev-api-host>/amateurs/ranking
 curl -i -X POST "http://<dev-api-host>/kakaoPay/ready?tempTicketId=1"
+```
+
+Use the repeatable smoke script for the public/private endpoint baseline:
+
+```bash
+./scripts/dev-smoke-test.sh http://<dev-api-host>
+```
+
+After DNS/HTTPS is configured, run the same checks against the HTTPS domain:
+
+```bash
+./scripts/dev-smoke-test.sh https://<dev-api-domain>
 ```
 
 Expected results:
