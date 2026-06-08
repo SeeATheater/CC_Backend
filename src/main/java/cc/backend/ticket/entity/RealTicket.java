@@ -18,6 +18,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(uniqueConstraints = @UniqueConstraint(
+        name = "uk_real_ticket_kakao_tid",
+        columnNames = "kakao_tid"
+))
 public class RealTicket extends BaseEntity {
 
     @Id
