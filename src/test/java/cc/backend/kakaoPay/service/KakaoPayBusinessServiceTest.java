@@ -4,6 +4,8 @@ import cc.backend.amateurShow.entity.AmateurRounds;
 import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.AmateurRoundsRepository;
+import cc.backend.apiPayLoad.code.status.ErrorStatus;
+import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayApproveResponseDTO;
 import cc.backend.kakaoPay.dto.responseDTO.KakaoPayResultResponseDTO;
 import cc.backend.member.entity.Member;
@@ -23,6 +25,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -96,6 +100,20 @@ class KakaoPayBusinessServiceTest {
         assertNull(result.getApproveResponse());
         verify(kakaoPayService, never()).approve(any(), any(), any(), any());
         verify(realTicketService, never()).createRealTicketFromTempTicket(any());
+    }
+
+    @Test
+    void preparePayment_throwsWhenKakaoTidAlreadyExists() {
+        TempTicket tempTicket = createTempTicket(ReservationStatus.PENDING);
+
+        when(tempTicketRepository.findWithTicketAndShowById(1L)).thenReturn(Optional.of(tempTicket));
+
+        GeneralException exception = assertThrows(GeneralException.class,
+                () -> kakaoPayBusinessService.preparePayment(1L, "10"));
+
+        assertSame(ErrorStatus.TEMP_TICKET_STATUS_INVALID, exception.getCode());
+        verify(amateurRoundsRepository, never()).decreaseStock(anyLong(), anyInt());
+        verify(kakaoPayService, never()).ready(anyLong(), anyString());
     }
 
     private TempTicket createTempTicket(ReservationStatus status) {
