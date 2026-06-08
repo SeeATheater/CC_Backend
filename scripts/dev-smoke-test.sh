@@ -75,7 +75,7 @@ expect_health_up() {
   elif [[ "$status" != "200" ]]; then
     echo "FAIL actuator health: expected 200, got $status"
     FAILED=1
-  elif ! grep -q '"status":"UP"' "$body"; then
+  elif ! grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"' "$body"; then
     echo "FAIL actuator health: response does not contain status UP"
     FAILED=1
   else
