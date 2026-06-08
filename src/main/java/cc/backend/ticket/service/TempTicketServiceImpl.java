@@ -44,6 +44,9 @@ public class TempTicketServiceImpl implements TempTicketService {
     @Override
     @Transactional
     public TempTicketCreateResponseDTO createTempTicket(Long amateurShowId, Long amateurRoundId, Long amateurTicketId, Member member, TempTicketCreateRequestDTO requestDTO) {
+        if (requestDTO == null || requestDTO.getQuantity() <= 0) {
+            throw new GeneralException(ErrorStatus.TEMP_TICKET_QUANTITY);
+        }
 
         Member memberRef = memberRepository.getReferenceById(member.getId());
         AmateurShow show = amateurShowRepository.findById(amateurShowId)

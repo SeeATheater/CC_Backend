@@ -11,8 +11,11 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/tickets")
+@Validated
 public class TempTicketController {
 
     private final TempTicketService tempTicketService;
@@ -140,11 +144,11 @@ public class TempTicketController {
             }
     )
     public ApiResponse<TempTicketCreateResponseDTO> createTempTicket(
-            @PathVariable Long amateurShowId,
-            @RequestParam Long amateurRoundId,
-            @RequestParam Long amateurTicketId,
+            @PathVariable @Positive(message = "_BAD_REQUEST") Long amateurShowId,
+            @RequestParam @Positive(message = "_BAD_REQUEST") Long amateurRoundId,
+            @RequestParam @Positive(message = "_BAD_REQUEST") Long amateurTicketId,
             @AuthenticationPrincipal(expression = "member") Member member,
-            @RequestBody TempTicketCreateRequestDTO requestDTO) {
+            @Valid @RequestBody TempTicketCreateRequestDTO requestDTO) {
         return ApiResponse.onSuccess(
                 tempTicketService.createTempTicket(amateurShowId, amateurRoundId, amateurTicketId, member, requestDTO)
         );
