@@ -30,33 +30,15 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 2-1. Gradle 캐시 설정
+      # 3. Gradle 8.13 설정 및 캐시
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      # 3. gradlew 권한 부여
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+        with:
+          gradle-version: '8.13'
 
       # 4. Gradle Build (테스트 제외)
       - name: Build with Gradle (skip tests)
-        run: |
-          for i in 1 2 3; do
-            echo "🔨 Gradle build attempt $i/3"
-            if ./gradlew build -x test; then
-              echo "✅ Gradle build completed"
-              exit 0
-            fi
-
-            echo "⚠️ Gradle build failed on attempt $i/3"
-            if [ "$i" -lt 3 ]; then
-              echo "⏳ Retrying in 10 seconds..."
-              sleep 10
-            fi
-          done
-
-          echo "❌ Gradle build failed after 3 attempts"
-          exit 1
+        run: gradle build -x test
 
       # 5. Docker Build & Push
       - name: Build and push Docker image
