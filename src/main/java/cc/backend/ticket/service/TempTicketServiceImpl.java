@@ -48,10 +48,6 @@ public class TempTicketServiceImpl implements TempTicketService {
             throw new GeneralException(ErrorStatus.TEMP_TICKET_QUANTITY);
         }
 
-        if (requestDTO.getQuantity() <= 0) {
-            throw new GeneralException(ErrorStatus.TEMP_TICKET_QUANTITY);
-        }
-
         Member memberRef = memberRepository.getReferenceById(member.getId());
         AmateurShow show = amateurShowRepository.findById(amateurShowId)
                 .orElseThrow(()-> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
