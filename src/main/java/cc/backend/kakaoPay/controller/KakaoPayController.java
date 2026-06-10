@@ -8,10 +8,13 @@ import cc.backend.member.entity.Member;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,6 +23,8 @@ import java.io.IOException;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/kakaoPay")
+@Validated
+@Slf4j
 public class KakaoPayController {
 
     private final KakaoPayBusinessService kakaoPayBusinessService;
@@ -30,7 +35,7 @@ public class KakaoPayController {
     // 결제 준비 요청 (결제 페이지에 대한 url 발급 요청)
     @PostMapping("/ready")
     @Operation(summary = "카카오페이 결제 준비", description = "카카오페이 결제창 URL을 발급합니다.")
-    public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam Long tempTicketId,
+    public ApiResponse<KakaoPayReadyResponseDTO> preparePayment(@RequestParam @Positive(message = "_BAD_REQUEST") Long tempTicketId,
                                                        @AuthenticationPrincipal(expression = "member") Member member) {
         if (member == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
@@ -62,7 +67,7 @@ public class KakaoPayController {
                     frontendBaseUrl + "/ticketing/" + playId + "?payment=cancel"
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("KakaoPay cancel redirect handling failed. partnerOrderId={}", partnerOrderId, e);
             response.sendRedirect(frontendBaseUrl);
         }
     }
@@ -77,7 +82,7 @@ public class KakaoPayController {
                     frontendBaseUrl + "/ticketing/" + playId + "?payment=fail"
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("KakaoPay fail redirect handling failed. partnerOrderId={}", partnerOrderId, e);
             response.sendRedirect(frontendBaseUrl);
         }
     }

@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/myTickets")
+@Validated
 public class MyTicketController {
     private final TempTicketService tempTicketService;
     private final RealTicketService realTicketService;
@@ -130,7 +133,7 @@ public class MyTicketController {
             }
     )
     public ApiResponse<RealTicketResponseDTO> cancelTicket(
-            @PathVariable Long realTicketId,
+            @PathVariable @Positive(message = "_BAD_REQUEST") Long realTicketId,
             @AuthenticationPrincipal(expression = "member") Member member) {
 
         RealTicketResponseDTO myTicket = kakaoPayBusinessService.cancelTicket(member.getId(), realTicketId);

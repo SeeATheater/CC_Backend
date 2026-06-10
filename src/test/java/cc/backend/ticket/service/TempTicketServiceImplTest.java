@@ -49,30 +49,48 @@ class TempTicketServiceImplTest {
     private TempTicketServiceImpl tempTicketService;
 
     @Test
-    void createTempTicket_throwsWhenQuantityIsZero() {
-        TempTicketCreateRequestDTO request = TempTicketCreateRequestDTO.builder()
-                .quantity(0)
-                .build();
-
-        GeneralException exception = assertThrows(GeneralException.class,
-                () -> tempTicketService.createTempTicket(1L, 1L, 1L, mock(Member.class), request));
-
-        assertSame(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
-        verifyNoInteractions(memberRepository, amateurShowRepository, amateurRoundsRepository,
-                amateurTicketRepository, tempTicketRepository, eventPublisher);
+    void createTempTicket_rejectsZeroQuantity() {
+        assertInvalidQuantityRejected(0);
     }
 
     @Test
-    void createTempTicket_throwsWhenQuantityIsNegative() {
-        TempTicketCreateRequestDTO request = TempTicketCreateRequestDTO.builder()
-                .quantity(-1)
-                .build();
+    void createTempTicket_rejectsNegativeQuantity() {
+        assertInvalidQuantityRejected(-1);
+    }
+
+    @Test
+    void createTempTicket_rejectsNullRequest() {
+        Member member = mock(Member.class);
 
         GeneralException exception = assertThrows(GeneralException.class,
-                () -> tempTicketService.createTempTicket(1L, 1L, 1L, mock(Member.class), request));
+                () -> tempTicketService.createTempTicket(1L, 1L, 1L, member, null));
 
         assertSame(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
-        verifyNoInteractions(memberRepository, amateurShowRepository, amateurRoundsRepository,
-                amateurTicketRepository, tempTicketRepository, eventPublisher);
+        verifyNoRepositoryOrEventInteractions();
+    }
+
+    private void assertInvalidQuantityRejected(int quantity) {
+        TempTicketCreateRequestDTO requestDTO = TempTicketCreateRequestDTO.builder()
+                .quantity(quantity)
+                .build();
+        Member member = mock(Member.class);
+
+        GeneralException exception = assertThrows(GeneralException.class,
+                () -> tempTicketService.createTempTicket(1L, 1L, 1L, member, requestDTO));
+
+        assertSame(ErrorStatus.TEMP_TICKET_QUANTITY, exception.getCode());
+        verifyNoRepositoryOrEventInteractions();
+    }
+
+    private void verifyNoRepositoryOrEventInteractions() {
+        verifyNoInteractions(
+                memberRepository,
+                amateurShowRepository,
+                amateurRoundsRepository,
+                amateurTicketRepository,
+                tempTicketRepository,
+                eventPublisher,
+                realTicketService
+        );
     }
 }

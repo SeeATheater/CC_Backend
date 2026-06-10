@@ -7,11 +7,14 @@ import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,6 +62,24 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         });
 
         return handleExceptionInternalArgs(e,HttpHeaders.EMPTY,ErrorStatus.valueOf("_BAD_REQUEST"),request,errors);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
+            MissingServletRequestParameterException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, headers, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, e.getMessage());
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, headers, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, e.getMessage());
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, headers, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, e.getMessage());
     }
 
     //일반적인 예외 처리
