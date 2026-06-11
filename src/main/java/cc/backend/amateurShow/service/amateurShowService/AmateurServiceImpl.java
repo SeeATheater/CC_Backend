@@ -12,6 +12,7 @@ import cc.backend.amateurShow.repository.specification.AmateurShowSpecification;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.entity.enums.BoardType;
+import cc.backend.config.s3.S3Service;
 import cc.backend.event.entity.NewShowEvent;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
@@ -26,6 +27,7 @@ import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AmateurServiceImpl implements AmateurService {
@@ -54,6 +57,7 @@ public class AmateurServiceImpl implements AmateurService {
     private final MemberLikeRepository memberLikeRepository;
     private final ImageService imageService;
     private final ImageRepository imageRepository;
+    private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher; //이벤트 생성
 
     // 소극장 공연 등록
@@ -451,7 +455,7 @@ public class AmateurServiceImpl implements AmateurService {
             throw new GeneralException((ErrorStatus.NOT_APPROVED_SHOW));
         }
 
-        return AmateurConverter.toResponseDTO(amateurShow);
+        return AmateurConverter.toResponseDTO(amateurShow, resolvePosterImageUrl(amateurShow));
     }
 
     @Override
@@ -460,7 +464,30 @@ public class AmateurServiceImpl implements AmateurService {
                 amateurShowRepository.findByIdAndMemberId(amateurShowId, memberId)
                         .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_PERFORMER));
 
-        return AmateurConverter.toResponseDTO(amateurShow);
+        return AmateurConverter.toResponseDTO(amateurShow, resolvePosterImageUrl(amateurShow));
+    }
+
+    private String resolvePosterImageUrl(AmateurShow amateurShow) {
+        Image posterImage = imageRepository.findByFilePathAndContentId(
+                FilePath.amateurShow,
+                amateurShow.getId()
+        );
+
+        if (posterImage == null || posterImage.getKeyName() == null || posterImage.getKeyName().isBlank()) {
+            return amateurShow.getPosterImageUrl();
+        }
+
+        try {
+            return s3Service.createPresignedGetUrl(posterImage.getKeyName());
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to create presigned poster URL. amateurShowId={}, keyName={}",
+                    amateurShow.getId(),
+                    posterImage.getKeyName(),
+                    e
+            );
+            return amateurShow.getPosterImageUrl();
+        }
     }
 
     // 오늘 진행하는 소극장 공연 리스트 조회

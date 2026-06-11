@@ -203,6 +203,12 @@ public class AmateurConverter {
 
     // --소극장 공연 단건 조회 response--
     public static AmateurShowResponseDTO.AmateurShowResult toResponseDTO(AmateurShow amateurShow) {
+        return toResponseDTO(amateurShow, amateurShow.getPosterImageUrl());
+    }
+
+    public static AmateurShowResponseDTO.AmateurShowResult toResponseDTO(
+            AmateurShow amateurShow,
+            String posterImageUrl) {
         AmateurNotice amateurNotice = amateurShow.getAmateurNotice();
         AmateurShowResponseDTO.AmateurShowResult.Notice notice = null;
         if (amateurNotice != null) {
@@ -269,7 +275,7 @@ public class AmateurConverter {
                 .bankName(amateurShow.getBankName())
                 .depositor(amateurShow.getDepositor())
                 //.place(amateurShow.getPlace())
-                .posterImageUrl(amateurShow.getPosterImageUrl())
+                .posterImageUrl(posterImageUrl)
                 .schedule(schedule)
                 .runtime(amateurShow.getRuntime() + "분")
                 .account(amateurShow.getAccount())
