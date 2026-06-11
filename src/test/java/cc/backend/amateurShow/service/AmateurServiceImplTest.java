@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,6 +86,52 @@ class AmateurServiceImplTest {
         assertEquals("https://static.example/poster.jpeg", result.getPosterImageUrl());
     }
 
+    @Test
+    void getAmateurShowKeepsStoredUrlWhenPosterImageKeyNameIsNull() {
+        AmateurShow show = approvedShow();
+        Image poster = posterImage(null);
+
+        when(amateurShowRepository.findById(19L)).thenReturn(Optional.of(show));
+        when(imageRepository.findByFilePathAndContentId(FilePath.amateurShow, 19L))
+                .thenReturn(poster);
+
+        AmateurShowResponseDTO.AmateurShowResult result = amateurService.getAmateurShow(19L);
+
+        assertEquals("https://static.example/poster.jpeg", result.getPosterImageUrl());
+        verifyNoInteractions(s3Service);
+    }
+
+    @Test
+    void getAmateurShowKeepsStoredUrlWhenPosterImageKeyNameIsBlank() {
+        AmateurShow show = approvedShow();
+        Image poster = posterImage("   ");
+
+        when(amateurShowRepository.findById(19L)).thenReturn(Optional.of(show));
+        when(imageRepository.findByFilePathAndContentId(FilePath.amateurShow, 19L))
+                .thenReturn(poster);
+
+        AmateurShowResponseDTO.AmateurShowResult result = amateurService.getAmateurShow(19L);
+
+        assertEquals("https://static.example/poster.jpeg", result.getPosterImageUrl());
+        verifyNoInteractions(s3Service);
+    }
+
+    @Test
+    void getAmateurShowKeepsStoredUrlWhenPresignedUrlCreationFails() {
+        AmateurShow show = approvedShow();
+        Image poster = posterImage();
+
+        when(amateurShowRepository.findById(19L)).thenReturn(Optional.of(show));
+        when(imageRepository.findByFilePathAndContentId(FilePath.amateurShow, 19L))
+                .thenReturn(poster);
+        when(s3Service.createPresignedGetUrl(poster.getKeyName()))
+                .thenThrow(new IllegalStateException("S3 unavailable"));
+
+        AmateurShowResponseDTO.AmateurShowResult result = amateurService.getAmateurShow(19L);
+
+        assertEquals("https://static.example/poster.jpeg", result.getPosterImageUrl());
+    }
+
     private AmateurShow approvedShow() {
         Member member = Member.builder().email("performer@example.test").build();
         ReflectionTestUtils.setField(member, "id", 32L);
@@ -101,9 +148,13 @@ class AmateurServiceImplTest {
     }
 
     private Image posterImage() {
+        return posterImage("amateurShow/poster.jpeg");
+    }
+
+    private Image posterImage(String keyName) {
         return Image.builder()
                 .id(55L)
-                .keyName("amateurShow/poster.jpeg")
+                .keyName(keyName)
                 .filePath(FilePath.amateurShow)
                 .contentId(19L)
                 .memberId(32L)

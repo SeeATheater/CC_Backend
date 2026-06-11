@@ -106,7 +106,16 @@ public class S3Service {
         return createPresignedGetUrl(keyName);
     }
 
-    // Public content remains private in S3; only a short-lived signed URL is exposed.
+    /**
+     * Creates a short-lived presigned GET URL without performing a member authorization check.
+     * Callers must verify that {@code keyName} belongs to content that may be exposed by their
+     * domain before invoking this overload. Unlike {@link #createPresignedGetUrl(String, Long)},
+     * this method does not validate a member and is intended for publicly readable domain content
+     * that remains private in S3.
+     *
+     * @param keyName S3 object key authorized by the calling domain service
+     * @return short-lived presigned GET URL
+     */
     public String createPresignedGetUrl(String keyName) {
 
         //예외처리 필요-추후개발(사진 업로드할때 아무것도 안넣으면 url 필드가 비어서 get할때도 계속 에러남 - 막아두거나 따로 처리해야할듯)

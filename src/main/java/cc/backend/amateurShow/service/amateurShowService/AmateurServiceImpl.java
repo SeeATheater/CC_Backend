@@ -27,6 +27,7 @@ import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.ticket.dto.response.ReserveListResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AmateurServiceImpl implements AmateurService {
@@ -475,7 +477,17 @@ public class AmateurServiceImpl implements AmateurService {
             return amateurShow.getPosterImageUrl();
         }
 
-        return s3Service.createPresignedGetUrl(posterImage.getKeyName());
+        try {
+            return s3Service.createPresignedGetUrl(posterImage.getKeyName());
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to create presigned poster URL. amateurShowId={}, keyName={}",
+                    amateurShow.getId(),
+                    posterImage.getKeyName(),
+                    e
+            );
+            return amateurShow.getPosterImageUrl();
+        }
     }
 
     // 오늘 진행하는 소극장 공연 리스트 조회
