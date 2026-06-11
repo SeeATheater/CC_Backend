@@ -33,7 +33,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_INVALID_CODE(HttpStatus.BAD_REQUEST, "MEMBER4004", "토큰이 유효하지 않습니다."),
     MEMBER_NOT_ADMIN(HttpStatus.FORBIDDEN, "MEMBER4005", "해당 사용자게에게 관리자 권한이 없습니다."),
     MEMBER_NOT_PERFORMER(HttpStatus.FORBIDDEN, "MEMBER4011", "등록자 계정이 아니기에 접근권한이 없습니다."),
-    INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER4012", "유효하지않은 리프레시 토큰입니다."),
     INVALID_USERNAME_EMPTY(HttpStatus.BAD_REQUEST, "MEMBER4013", "유저네임 입력값이 비어있습니다."),
     INVALID_USERNAME_LENGTH(HttpStatus.BAD_REQUEST, "MEMBER4014", "유저네임은 1~20자로 설정해주세요 "),
     PHONENUM_ENCRYPT_FAIL(HttpStatus.BAD_REQUEST, "MEMBER4015", "전화번호 암호화 실패"),
