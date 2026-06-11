@@ -22,7 +22,9 @@ public class ShowReservationResponseDTO {
     private String showTitle;
     @Schema(description = "포스터 이미지 url")
     private String posterImageUrl;
-    @Schema(description = "공연장 주소")
+    @Schema(description = "공연장 도로명 주소")
+    private String roadAddress;
+    @Schema(description = "공연장 상세 주소")
     private String detailAddress;
 
     @Schema(description = "공연 기간")
