@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,6 +82,11 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, headers, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, e.getMessage());
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<Object> accessDenied(Exception e, WebRequest request) {
+        return handleExceptionInternalFalse(e, ErrorStatus._FORBIDDEN, HttpHeaders.EMPTY, ErrorStatus._FORBIDDEN.getHttpStatus(), request, e.getMessage());
     }
 
     //일반적인 예외 처리
