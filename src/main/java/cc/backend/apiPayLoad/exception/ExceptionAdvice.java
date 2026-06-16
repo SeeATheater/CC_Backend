@@ -86,7 +86,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
     public ResponseEntity<Object> accessDenied(Exception e, WebRequest request) {
-        return handleExceptionInternalFalse(e, ErrorStatus._FORBIDDEN, HttpHeaders.EMPTY, ErrorStatus._FORBIDDEN.getHttpStatus(), request, e.getMessage());
+        return handleExceptionInternalFalse(e, ErrorStatus._FORBIDDEN, HttpHeaders.EMPTY, ErrorStatus._FORBIDDEN.getHttpStatus(), request, null);
     }
 
     //일반적인 예외 처리
