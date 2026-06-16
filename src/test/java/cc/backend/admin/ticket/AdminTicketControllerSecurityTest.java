@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cc.backend.apiPayLoad.PageResponse;
+import cc.backend.config.jwt.JwtAccessDeniedHandler;
+import cc.backend.config.jwt.JwtAuthenticationEntryPoint;
 import cc.backend.config.jwt.JwtFilter;
 import cc.backend.config.jwt.MethodSecurityConfig;
 import cc.backend.config.jwt.SecurityConfig;
@@ -45,6 +47,12 @@ class AdminTicketControllerSecurityTest {
 
     @MockitoBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
+
+    @MockitoBean
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockitoBean
+    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Test
     @WithMockUser(roles = "ADMIN")
