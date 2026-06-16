@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Base64;
@@ -107,13 +108,13 @@ public class TokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("잘못된 JWT 서명입니다.");
+            log.debug("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰입니다.");
+            log.debug("만료된 JWT 토큰입니다.");
         } catch (UnsupportedJwtException e) {
-            log.info("지원되지 않는 JWT 토큰입니다.");
+            log.debug("지원되지 않는 JWT 토큰입니다.");
         } catch (IllegalArgumentException e) {
-            log.info("JWT 토큰이 잘못되었습니다.");
+            log.debug("JWT 토큰이 잘못되었습니다.");
         }
         return false;
     }
@@ -151,5 +152,20 @@ public class TokenProvider {
 
     public void logout(Long memberId) {
         refreshTokenService.deleteRefreshToken(memberId);
+    }
+
+    public void logoutByRefreshToken(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            return;
+        }
+
+        try {
+            Long memberId = Long.valueOf(parseClaims(refreshToken).getSubject());
+            if (refreshTokenService.validateRefreshToken(memberId, refreshToken)) {
+                refreshTokenService.deleteRefreshToken(memberId);
+            }
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("로그아웃 요청의 refresh token을 확인할 수 없습니다.");
+        }
     }
 }

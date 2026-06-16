@@ -28,7 +28,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @WebMvcTest(controllers = SecurityConfigPublicEndpointBaselineTest.BaselineController.class)
-@Import({SecurityConfig.class, SecurityConfigPublicEndpointBaselineTest.TestSecurityBeans.class})
+@Import({
+        SecurityConfig.class,
+        JwtAuthenticationEntryPoint.class,
+        JwtAccessDeniedHandler.class,
+        SecurityConfigPublicEndpointBaselineTest.TestSecurityBeans.class
+})
 @TestPropertySource(properties = "cors.allowed-origins=http://localhost:*")
 class SecurityConfigPublicEndpointBaselineTest {
 
@@ -57,13 +62,28 @@ class SecurityConfigPublicEndpointBaselineTest {
     @WithAnonymousUser
     void privateEndpointsBlockAnonymousRequests() throws Exception {
         mockMvc.perform(post("/kakaoPay/ready?tempTicketId=1"))
-                .andExpect(authBlocked());
+                .andExpect(unauthorized());
         mockMvc.perform(get("/myTickets/list"))
-                .andExpect(authBlocked());
+                .andExpect(unauthorized());
         mockMvc.perform(get("/member/myPage"))
-                .andExpect(authBlocked());
+                .andExpect(unauthorized());
         mockMvc.perform(get("/admin/dashboard/approval"))
-                .andExpect(authBlocked());
+                .andExpect(unauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void authEndpointsUseExplicitPublicRules() throws Exception {
+        mockMvc.perform(post("/auth/refresh"))
+                .andExpect(notAuthBlocked());
+        mockMvc.perform(post("/auth/logout"))
+                .andExpect(notAuthBlocked());
+        mockMvc.perform(post("/auth/kakao/callback"))
+                .andExpect(notAuthBlocked());
+        mockMvc.perform(get("/login/oauth2/code/google"))
+                .andExpect(notAuthBlocked());
+        mockMvc.perform(get("/auth/internal"))
+                .andExpect(unauthorized());
     }
 
     private static ResultMatcher notAuthBlocked() {
@@ -71,9 +91,9 @@ class SecurityConfigPublicEndpointBaselineTest {
                 .isNotIn(HttpServletResponse.SC_UNAUTHORIZED, HttpServletResponse.SC_FORBIDDEN);
     }
 
-    private static ResultMatcher authBlocked() {
+    private static ResultMatcher unauthorized() {
         return result -> assertThat(result.getResponse().getStatus())
-                .isIn(HttpServletResponse.SC_UNAUTHORIZED, HttpServletResponse.SC_FORBIDDEN);
+                .isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     @RestController
@@ -92,6 +112,25 @@ class SecurityConfigPublicEndpointBaselineTest {
 
         @PostMapping("/kakaoPay/ready")
         String kakaoPayReady() {
+            return "ok";
+        }
+
+        @PostMapping({
+                "/auth/refresh",
+                "/auth/logout",
+                "/auth/kakao/callback"
+        })
+        String publicAuthEndpoint() {
+            return "ok";
+        }
+
+        @GetMapping("/login/oauth2/code/google")
+        String googleCallback() {
+            return "ok";
+        }
+
+        @GetMapping("/auth/internal")
+        String privateAuthEndpoint() {
             return "ok";
         }
 

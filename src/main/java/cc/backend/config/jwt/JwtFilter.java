@@ -43,10 +43,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 2. validateToken 으로 토큰 유효성 검사
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-            log.info("벨리데이트 토큰 통과함");
             Authentication authentication = tokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.info(" 현재 인증 정보: {}", authentication);
         }
 
         filterChain.doFilter(request, response);
@@ -56,13 +54,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        log.info("🔍 Received Authorization Header: {}", bearerToken);
 
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            //String token = bearerToken.split(" ")[1].trim();
-            String token = bearerToken.substring(BEARER_PREFIX.length()).trim();
-            log.info("🔍 Extracted JWT Token: {}", token);
-            return token;
+            return bearerToken.substring(BEARER_PREFIX.length()).trim();
         }
         return null;
     }
