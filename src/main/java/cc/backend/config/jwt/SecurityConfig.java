@@ -23,8 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final TokenProvider tokenProvider;
     private final JwtFilter jwtFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -58,12 +59,23 @@ public class SecurityConfig {
                 )
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 비활성화
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()  // 헬스체크 허용
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/auth/refresh",
+                                "/auth/logout",
+                                "/auth/kakao/callback",
+                                "/auth/dev/login",
+                                "/auth/dev/refresh"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/login/oauth2/code/google").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/kakaoPay/approve", "/kakaoPay/cancel", "/kakaoPay/fail").permitAll()
                         .requestMatchers(HttpMethod.POST, "/kakaoPay/ready").authenticated()
@@ -86,8 +98,6 @@ public class SecurityConfig {
                         .requestMatchers("/upload/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .apply(new JwtSecurityConfig(tokenProvider));
-        http
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // JwtFilter 등록
 
         return http.build();
