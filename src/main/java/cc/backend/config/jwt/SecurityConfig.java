@@ -73,7 +73,8 @@ public class SecurityConfig {
                                 "/auth/logout",
                                 "/auth/kakao/callback",
                                 "/auth/dev/login",
-                                "/auth/dev/refresh"
+                                "/auth/dev/refresh",
+                                "/auth/review/login" // [임시] 앱 심사용 일반 로그인, 심사 후 revert
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/login/oauth2/code/google").permitAll()
 
