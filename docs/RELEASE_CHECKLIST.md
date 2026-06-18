@@ -102,6 +102,8 @@ Release can proceed only if:
 - Active app container is healthy behind Nginx.
 - FE calls the correct API URL.
 - Login, reserve, KakaoPay ready, and admin approval are manually verified at least once.
+- Duplicate `/kakaoPay/ready` on the same TempTicket is verified not to double-decrease stock.
+- Duplicate KakaoPay approve is verified not to create more than one RealTicket for the same `kakao_tid`.
 - Kakao Developers and KakaoPay callback domains match the deployed URLs.
 - No known P0 risk in `docs/PAYMENT_AUTH_RISK_REGISTER.md` remains unverified.
 

@@ -18,6 +18,8 @@ Prometheus/Grafana are not currently required for this release. They are listed 
 | Logs | Docker json-file log rotation configured for app and Redis |
 | Smoke test | `scripts/dev-smoke-test.sh` |
 
+This is a dev/staging baseline. Public `/actuator/health` with `show-details: always` is useful while validating RDS and Redis connectivity, but it is too verbose for production-facing operation. Before production release, harden Actuator exposure by limiting health details, restricting endpoint access, or separating internal health checks from public liveness checks.
+
 ## Health Check Baseline
 
 | Check | Command/API | Healthy Criteria |
@@ -233,6 +235,7 @@ Current project state:
 - `/actuator/health` and `/actuator/info` are exposed.
 - Prometheus dependency is not present.
 - `/actuator/prometheus` is not exposed.
+- Public health details are a dev/staging convenience and should be hardened before production.
 
 Current minimum monitoring is therefore:
 

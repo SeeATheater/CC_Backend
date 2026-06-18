@@ -46,7 +46,7 @@ Use dedicated dev/staging test accounts only. If a password is needed, share it 
 | Purpose | Verify approve/cancel/fail callbacks preserve reservation and stock consistency. |
 | Preconditions | KakaoPay ready succeeds and callback URLs point to backend domain. |
 | Steps | 1. From KakaoPay window, approve one payment. 2. Repeat with cancel. 3. Repeat with fail if available. 4. Refresh/revisit callback URL only if safe. |
-| Expected Result | Approve creates one RealTicket. Cancel/fail do not create RealTicket and restore/expire TempTicket according to current policy. Duplicate approve does not create duplicate RealTicket. |
+| Expected Result | First approve creates one RealTicket. A duplicate approve must not create a second RealTicket; QA should accept either idempotent success or a controlled non-5xx/known error only if DB state remains consistent. Cancel/fail do not create RealTicket and restore/expire TempTicket according to current policy. |
 | APIs/DB | `GET /kakaoPay/approve`, `/cancel`, `/fail`, `temp_ticket.reservation_status`, `real_ticket.kakao_tid`, `amateur_rounds.total_ticket` |
 | Logs | KakaoPay request/response status, `Duplicate entry`, `DataIntegrityViolationException` |
 | Cleanup | Cancel test tickets where supported; otherwise mark test records for later cleanup. |
