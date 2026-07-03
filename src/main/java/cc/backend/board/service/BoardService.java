@@ -13,7 +13,8 @@ import cc.backend.board.entity.HotBoard;
 import cc.backend.board.entity.enums.BoardType;
 import cc.backend.board.repository.BoardLikeRepository;
 import cc.backend.board.repository.HotBoardRepository;
-import cc.backend.event.entity.PromoteHotEvent;
+import cc.backend.kafka.event.hotBoardEvent.HotBoardEvent;
+import cc.backend.kafka.service.OutboxService;
 import cc.backend.image.DTO.ImageRequestDTO;
 import cc.backend.image.DTO.ImageResponseDTO;
 import cc.backend.image.FilePath;
@@ -26,7 +27,6 @@ import cc.backend.member.enumerate.Role;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +48,7 @@ public class BoardService {
     private final ImageService imageService;
     private final ImageRepository imageRepository;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final OutboxService outboxService;
 
     // 게시글 작성
     @Transactional
@@ -361,7 +361,12 @@ public class BoardService {
                     .build();
             hotBoardRepository.save(hotBoard);
 
-            eventPublisher.publishEvent(new PromoteHotEvent(board.getId(), board.getMember().getId())); //핫게 이벤트 생성
+            // 핫 게시글 알림 이벤트를 같은 트랜잭션에서 Outbox에 저장
+            outboxService.appendOutboxEvent(
+                    HotBoardEvent.create(board.getId(), board.getMember().getId()),
+                    "hot-board-topic",
+                    board.getId().toString()
+            );
         }
     }
 

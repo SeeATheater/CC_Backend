@@ -8,7 +8,6 @@ import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.event.entity.TicketReservationEvent;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import cc.backend.ticket.dto.request.TempTicketCreateRequestDTO;
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +34,6 @@ public class TempTicketServiceImpl implements TempTicketService {
     private final AmateurShowRepository amateurShowRepository;
     private final AmateurTicketRepository amateurTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
-    private final ApplicationEventPublisher eventPublisher;
     private final RealTicketService realTicketService;
     private final MemberRepository memberRepository;
 
@@ -92,9 +89,6 @@ public class TempTicketServiceImpl implements TempTicketService {
                 .build();
 
         TempTicket saved = tempTicketRepository.save(ticket);
-
-        //티켓 예매 알림 이벤트 생성
-        eventPublisher.publishEvent(new TicketReservationEvent(ticket.getAmateurTicket().getAmateurShow(), ticket.getAmateurTicket(), memberRef));
 
         // realTicket은 API를 사용해 호출
 

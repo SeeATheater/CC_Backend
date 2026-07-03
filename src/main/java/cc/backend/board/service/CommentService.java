@@ -11,12 +11,12 @@ import cc.backend.board.entity.CommentLike;
 import cc.backend.board.repository.BoardRepository;
 import cc.backend.board.repository.CommentLikeRepository;
 import cc.backend.board.repository.CommentRepository;
-import cc.backend.event.entity.CommentEvent;
-import cc.backend.event.entity.ReplyEvent;
+import cc.backend.kafka.event.commentEvent.CommentEvent;
+import cc.backend.kafka.event.replyEvent.ReplyEvent;
+import cc.backend.kafka.service.OutboxService;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,8 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
-    private final ApplicationEventPublisher eventPublisher; //이벤트 생성자
+    private final OutboxService outboxService;
+
     //댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long boardId, Long memberId, CommentRequest req) {
@@ -47,7 +48,14 @@ public class CommentService {
             comment = Comment.createComment(req.getContent(), member, board);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new CommentEvent(boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId()));   //댓글 이벤트 생성
+            //댓글 이벤트 outbox에 커밋
+            outboxService.appendOutboxEvent(
+                    CommentEvent.create(
+                            boardId, board.getMember().getId(), comment.getId(), comment.getMember().getId()
+                    ),
+                    "comment-created-topic",
+                    boardId.toString()
+            );
         } else {
             // 대댓글
             Comment parent = commentRepository.findById(req.getParentCommentId())
@@ -62,9 +70,18 @@ public class CommentService {
             comment = Comment.createReply(req.getContent(), member, board, parent);
             commentRepository.save(comment);
 
-            eventPublisher.publishEvent(new ReplyEvent(parent.getId(), parent.getMember().getId(), comment.getId(), comment.getMember().getId())); //대댓글 이벤트 생성
+            //대댓글 이벤트 outbox에 커밋
+            outboxService.appendOutboxEvent(
+                    ReplyEvent.create(
+                            parent.getId(),
+                            parent.getMember().getId(),
+                            comment.getId(),
+                            comment.getMember().getId()
+                    ),
+                    "reply-created-topic",
+                    parent.getId().toString()
+            );
         }
-
 
         board.increaseCommentCount();
 

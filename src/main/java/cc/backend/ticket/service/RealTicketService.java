@@ -6,6 +6,8 @@ import cc.backend.amateurShow.repository.AmateurRoundsRepository;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
+import cc.backend.kafka.event.reservationCompletedEvent.ReservationCompletedEvent;
+import cc.backend.kafka.service.OutboxService;
 import cc.backend.ticket.dto.response.RealTicketResponseDTO;
 import cc.backend.ticket.dto.response.ShowSnapshot;
 import cc.backend.ticket.entity.TempTicket;
@@ -32,6 +34,7 @@ public class RealTicketService {
     private final RealTicketRepository realTicketRepository;
     private final TempTicketRepository tempTicketRepository;
     private final AmateurRoundsRepository amateurRoundsRepository;
+    private final OutboxService outboxService;
 
 
     @Transactional
@@ -67,7 +70,18 @@ public class RealTicketService {
                 .kakaoTid(tempTicket.getKakaoTid())
                 .build();
 
-        realTicketRepository.save(realTicket);
+        RealTicket ticket = realTicketRepository.save(realTicket);
+
+        // 예약 완료 이벤트를 같은 트랜잭션에서 Outbox에 저장
+        outboxService.appendOutboxEvent(
+                ReservationCompletedEvent.create(
+                        ticket.getAmateurRound().getAmateurShow().getId(),
+                        ticket.getId(),
+                        ticket.getMember().getId()
+                ),
+                "reservation-completed-topic",
+                ticket.getMember().getId().toString()
+        );
     }
 
     public Slice<RealTicketResponseDTO> getMyTicketList(Long memberId, String status, int page, int size) {
