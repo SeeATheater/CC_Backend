@@ -4,6 +4,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowRejectRequestDTO;
 import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.admin.amateurShow.dto.AdminApprovalListResponseDTO;
 import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
@@ -29,8 +30,12 @@ public class AdminApprovalService {
 
     @Transactional
     public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {
-        AmateurShow show = amateurShowRepository.findById(showId)
+        AmateurShow show = amateurShowRepository.findByIdForUpdate(showId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
+
+        if (show.getApprovalStatus() == ApprovalStatus.APPROVED) {
+            throw new GeneralException(ErrorStatus.AMATEURSHOW_ALREADY_APPROVED);
+        }
 
         show.approve();
 
