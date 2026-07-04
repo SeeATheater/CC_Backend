@@ -9,12 +9,25 @@ import cc.backend.kafka.event.approvalShowEvent.ApprovalShowEvent;
 import cc.backend.kafka.event.approvalShowEvent.consumer.ApprovalConsumer;
 import cc.backend.kafka.event.approvalShowEvent.consumer.LikerConsumer;
 import cc.backend.kafka.event.approvalShowEvent.consumer.RecommendConsumer;
+import cc.backend.kafka.event.commentEvent.CommentConsumer;
+import cc.backend.kafka.event.commentEvent.CommentEvent;
 import cc.backend.kafka.event.common.DomainEvent;
 import cc.backend.kafka.publisher.KafkaOutboxRelay;
 import cc.backend.kafka.repository.OutboxEventRepository;
 import cc.backend.kafka.repository.ProcessedEventRepository;
 import cc.backend.notice.service.NoticeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -39,6 +52,9 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +63,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 임시 MySQL과 Kafka를 사용해 Outbox 발행 및 Consumer 멱등성을 검증하는 통합 테스트.
@@ -64,6 +81,12 @@ import static org.mockito.Mockito.verify;
  *     -> Approval/Liker/Recommend Consumer가 각자 메시지 소비
  *     -> Consumer Group별 ProcessedEvent 총 3건 생성
  *     -> 동일 이벤트를 다시 발행해도 NoticeService는 추가 호출되지 않음
+ *
+ * 시나리오 3: malformed JSON 격리와 다음 offset 처리
+ *     -> raw byte[] malformed JSON을 comment-created-topic에 발행
+ *     -> 재시도 없이 comment-created-topic-dlq로 원본 byte[] 이동
+ *     -> 다음 정상 CommentEvent에서 Listener 일시 실패 2회 후 3번째 처리 성공
+ *     -> ProcessedEvent 저장 및 Consumer 진행 확인
  * </pre>
  */
 @Testcontainers
@@ -105,7 +128,7 @@ final class NotificationPipelineIntegrationTest {
     private ProcessedEventRepository processedEventRepository;
 
     @Autowired
-    private KafkaTemplate<String, DomainEvent> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -169,6 +192,69 @@ final class NotificationPipelineIntegrationTest {
         assertThat(processedEventRepository.count()).isEqualTo(3);
     }
 
+    @Test
+    void malformedJsonIsPublishedToDlqAsOriginalBytesAndNextRecordIsRetried() throws Exception {
+        String sourceTopic = "comment-created-topic";
+        String dlqTopic = sourceTopic + "-dlq";
+        byte[] malformedPayload = "{not-valid-json".getBytes(StandardCharsets.UTF_8);
+
+        try (KafkaConsumer<String, byte[]> dlqConsumer = createDlqConsumer()) {
+            dlqConsumer.subscribe(List.of(dlqTopic));
+
+            publishMalformedJson(sourceTopic, malformedPayload);
+
+            await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+                ConsumerRecords<String, byte[]> records =
+                        dlqConsumer.poll(Duration.ofMillis(500));
+
+                assertThat(records)
+                        .extracting(ConsumerRecord::value)
+                        .anySatisfy(value -> assertThat(value)
+                                .containsExactly(malformedPayload));
+            });
+        }
+
+        CommentEvent validEvent = CommentEvent.create(301L, 302L, 303L, 304L);
+        when(noticeService.notifyNewComment(any(CommentEvent.class)))
+                .thenThrow(new IllegalStateException("temporary notice failure"))
+                .thenThrow(new IllegalStateException("temporary notice failure"))
+                .thenReturn(null);
+
+        kafkaTemplate.send(sourceTopic, validEvent.boardId().toString(), validEvent).get();
+
+        await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+            verify(noticeService, org.mockito.Mockito.times(3))
+                    .notifyNewComment(any(CommentEvent.class));
+            assertThat(processedEventRepository.existsByEventIdAndConsumerGroup(
+                    validEvent.eventId(),
+                    "comment-notice-group"
+            )).isTrue();
+        });
+    }
+
+    private void publishMalformedJson(String topic, byte[] payload) throws Exception {
+        Map<String, Object> properties = Map.of(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers(),
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class
+        );
+
+        try (KafkaProducer<String, byte[]> producer = new KafkaProducer<>(properties)) {
+            producer.send(new ProducerRecord<>(topic, "malformed", payload)).get();
+        }
+    }
+
+    private KafkaConsumer<String, byte[]> createDlqConsumer() {
+        Map<String, Object> properties = Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers(),
+                ConsumerConfig.GROUP_ID_CONFIG, "dlq-verification-" + UUID.randomUUID(),
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class
+        );
+        return new KafkaConsumer<>(properties);
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @EnableKafka
@@ -185,6 +271,7 @@ final class NotificationPipelineIntegrationTest {
             ApprovalConsumer.class,
             LikerConsumer.class,
             RecommendConsumer.class,
+            CommentConsumer.class,
             NoticeServiceTestConfig.class
     })
     static class TestApplication {

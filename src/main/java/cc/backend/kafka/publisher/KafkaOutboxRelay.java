@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaOutboxRelay {
 
     private final OutboxEventRepository outboxEventRepository;
-    private final KafkaTemplate<String, DomainEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
     @Value("${outbox.max-attempts:3}")
@@ -56,7 +56,14 @@ public class KafkaOutboxRelay {
                 outboxEvent.markPublished();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                handleFailure(outboxEvent, e);
+
+                // 애플리케이션 종료나 작업 취소는 이벤트 자체의 발행 실패가 아님
+                // 실패 횟수를 증가시키지 않고 PENDING으로 유지해 다음 실행에서 재처리
+                log.warn(
+                        "Outbox publishing interrupted. outboxId={}, eventId={}",
+                        outboxEvent.getId(),
+                        outboxEvent.getEventId()
+                );
                 return;
             } catch (Exception e) {
                 handleFailure(outboxEvent, e);
@@ -65,7 +72,7 @@ public class KafkaOutboxRelay {
     }
 
     private void handleFailure(OutboxEvent outboxEvent, Exception exception) {
-        outboxEvent.markFailed(resolveRootMessage(exception), maxAttempts);
+        outboxEvent.recordPublishFailure(resolveRootMessage(exception), maxAttempts);
 
         log.error(
                 "Outbox publish failed. outboxId={}, eventId={}, attempts={}, status={}",
@@ -82,7 +89,7 @@ public class KafkaOutboxRelay {
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
-        return cause.getMessage();
+        return cause.getMessage();  //OutboxEvent.lastError 필드용
     }
 
     // Kafka 메시지 전송을 위해 이벤트를 역직렬화

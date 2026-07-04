@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
     boolean existsByLikerAndPerformer(Member liker, Member performer);
@@ -38,10 +39,11 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
             Pageable pageable
     );
     @Query("""
-        SELECT ml
+        SELECT DISTINCT ml.liker
         FROM MemberLike ml
-        JOIN FETCH ml.liker
-        JOIN FETCH ml.performer
+        WHERE ml.performer.id IN :performerIds
     """)
-    List<MemberLike> findAllWithMembers();
+    List<Member> findDistinctLikersByPerformerIdIn(
+            @Param("performerIds") Set<Long> performerIds
+    );
 }

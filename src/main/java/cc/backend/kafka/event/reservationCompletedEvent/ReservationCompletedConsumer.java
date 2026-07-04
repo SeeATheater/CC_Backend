@@ -7,6 +7,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import static cc.backend.kafka.event.common.DomainEventValidator.requireNonNullEvent;
+
 @Component
 @RequiredArgsConstructor
 class ReservationCompletedConsumer {
@@ -23,7 +25,7 @@ class ReservationCompletedConsumer {
     )
     @Transactional
     public void consume(ReservationCompletedEvent event) {
-        if (event == null) return;
+        requireNonNullEvent(event);
 
         int inserted = processedEventRepository.insertIfAbsent(
                 event.eventId(),

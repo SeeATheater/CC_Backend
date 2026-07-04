@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>, JpaSpecificationExecutor<AmateurShow> {
@@ -97,12 +96,10 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
             s.member.id AS performerId,
             s.hashtag AS hashtag
         FROM AmateurShow s
-        WHERE s.member.id IN :performerIds
-          AND s.approvalStatus = :approvalStatus
+        WHERE s.approvalStatus = :approvalStatus
           AND s.id <> :newShowId
     """)
-    List<PerformerHashtagView> findHashtagsByPerformerIds(
-            @Param("performerIds") Set<Long> performerIds,
+    List<PerformerHashtagView> findApprovedHistoricalPerformerHashtags(
             @Param("approvalStatus") ApprovalStatus approvalStatus,
             @Param("newShowId") Long newShowId
     );

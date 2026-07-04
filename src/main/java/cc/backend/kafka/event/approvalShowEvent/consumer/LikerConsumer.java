@@ -9,6 +9,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import static cc.backend.kafka.event.common.DomainEventValidator.requireNonNullEvent;
+
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class LikerConsumer {
 
     @Transactional
     public void consume(ApprovalShowEvent event) {
-        if (event == null) return;
+        requireNonNullEvent(event);
 
         int inserted = processedEventRepository.insertIfAbsent(
                 event.eventId(),

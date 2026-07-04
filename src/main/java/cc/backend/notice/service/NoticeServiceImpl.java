@@ -322,42 +322,28 @@ public class NoticeServiceImpl implements NoticeService {
             AmateurShow newShow,
             Set<String> newTags
     ) {
-        List<MemberLike> likes = memberLikeRepository.findAllWithMembers();
-        if (likes.isEmpty()) return List.of();
-
-        Set<Long> performerIds = likes.stream()
-                .map(like -> like.getPerformer().getId())
+        // 1. 좋아요 테이블 전체를 읽기 전에 승인된 과거 공연의 태그로
+        //    신규 공연과 취향이 겹치는 공연자 ID부터 좁힌다.
+        Set<Long> matchedPerformerIds = amateurShowRepository
+                .findApprovedHistoricalPerformerHashtags(
+                        ApprovalStatus.APPROVED,
+                        newShow.getId()
+                )
+                .stream()
+                .filter(row -> !Collections.disjoint(
+                        newTags,
+                        parseHashtags(row.getHashtag())
+                ))
+                .map(PerformerHashtagView::getPerformerId)
                 .collect(Collectors.toSet());
 
-        Map<Long, Set<String>> tagsByPerformer =
-                amateurShowRepository.findHashtagsByPerformerIds(
-                                performerIds,
-                                ApprovalStatus.APPROVED,
-                                newShow.getId()
-                        )
-                        .stream()
-                        .collect(Collectors.groupingBy(
-                                PerformerHashtagView::getPerformerId,
-                                Collectors.flatMapping(
-                                        row -> parseHashtags(row.getHashtag()).stream(),
-                                        Collectors.toSet()
-                                )
-                        ));
+        if (matchedPerformerIds.isEmpty()) return List.of();
 
-        Map<Long, Member> targets = new LinkedHashMap<>();
-
-        for (MemberLike like : likes) {
-            Set<String> performerTags = tagsByPerformer.getOrDefault(
-                    like.getPerformer().getId(),
-                    Set.of()
-            );
-
-            if (!Collections.disjoint(newTags, performerTags)) {
-                targets.putIfAbsent(like.getLiker().getId(), like.getLiker());
-            }
-        }
-
-        return new ArrayList<>(targets.values());
+        // 2. 관련 공연자를 좋아한 회원만 DB에서 조회한다.
+        //    DISTINCT로 여러 공연자를 좋아한 동일 회원의 중복 알림을 방지한다.
+        return memberLikeRepository.findDistinctLikersByPerformerIdIn(
+                matchedPerformerIds
+        );
     }
 
     private String createPersonalMessage(AmateurShow show, Member member) {

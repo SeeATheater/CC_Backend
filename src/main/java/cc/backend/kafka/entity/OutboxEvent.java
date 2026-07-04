@@ -55,7 +55,7 @@ public class OutboxEvent extends BaseEntity {
     private LocalDateTime publishedAt;
 
     @Column(length = 1000)
-    private String lastError;
+    private String lastError;   //디버그용 에러 메시지
 
     //pending 상태 OutboxEvent 생성
     public static OutboxEvent pending(
@@ -74,15 +74,16 @@ public class OutboxEvent extends BaseEntity {
         return outbox;
     }
 
-    //published로 상태 변경
+    // Kafka 발행 성공이 확인된 이벤트를 최종 상태인 PUBLISHED로 변경
     public void markPublished() {
         status = OutboxStatus.PUBLISHED;
         publishedAt = LocalDateTime.now();
     }
 
-    public void markFailed(String errorMessage, int maxAttempts) {
+    // 실제 발행 실패를 기록하고 최대 실패 허용 횟수에 도달하면 FAILED로 변경
+    public void recordPublishFailure(String errorMessage, int maxAttempts) {
         attempts++;
-        lastError = truncate(errorMessage);
+        lastError = truncate(errorMessage);     //에러 메시지 중 1000자까지만 남기고 잘라서 저장
 
         if (attempts >= maxAttempts) {
             status = OutboxStatus.FAILED;

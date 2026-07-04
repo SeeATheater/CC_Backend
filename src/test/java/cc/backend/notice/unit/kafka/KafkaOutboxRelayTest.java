@@ -13,14 +13,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -31,8 +35,12 @@ import static org.mockito.Mockito.when;
  * PENDING Outbox 조회
  *     -> KafkaTemplate이 발행 실패 반환
  *     -> Relay 호출마다 attempts 증가
- *     -> 최대 재시도 횟수(3회)에 도달
+ *     -> 최대 발행 실패 허용 횟수(3회)에 도달
  *     -> Outbox 상태가 FAILED로 변경되고 마지막 오류가 기록됨
+ *
+ * Worker interrupt
+ *     -> 종료/취소 경로이므로 attempts를 증가시키지 않음
+ *     -> Outbox는 PENDING을 유지해 다음 실행에서 재처리
  * </pre>
  */
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +50,7 @@ class KafkaOutboxRelayTest {
     private OutboxEventRepository outboxEventRepository;
 
     @Mock
-    private KafkaTemplate<String, DomainEvent> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -82,5 +90,38 @@ class KafkaOutboxRelayTest {
         assertThat(outbox.getAttempts()).isEqualTo(3);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatus.FAILED);
         assertThat(outbox.getLastError()).contains("Kafka unavailable");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void keepsEventPendingWithoutCountingWorkerInterruptAsFailure() throws Exception {
+        CommentEvent event = CommentEvent.create(1L, 2L, 3L, 4L);
+        OutboxEvent outbox = OutboxEvent.pending(
+                event,
+                "comment-created-topic",
+                "1",
+                objectMapper.writeValueAsString(event)
+        );
+        CompletableFuture<SendResult<String, Object>> sendFuture =
+                mock(CompletableFuture.class);
+
+        when(outboxEventRepository.findPendingForPublish("PENDING"))
+                .thenReturn(List.of(outbox));
+        when(kafkaTemplate.send(anyString(), anyString(), any(DomainEvent.class)))
+                .thenReturn(sendFuture);
+        when(sendFuture.get(anyLong(), any(TimeUnit.class)))
+                .thenThrow(new InterruptedException("worker shutdown"));
+
+        try {
+            relay.publishPendingEvents();
+
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+            assertThat(outbox.getAttempts()).isZero();
+            assertThat(outbox.getStatus()).isEqualTo(OutboxStatus.PENDING);
+            assertThat(outbox.getLastError()).isNull();
+        } finally {
+            // Relay가 복구한 interrupt flag가 다른 테스트에 전파되지 않도록 정리한다.
+            Thread.interrupted();
+        }
     }
 }
