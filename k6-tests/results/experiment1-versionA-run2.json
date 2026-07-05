@@ -1,0 +1,17 @@
+{
+  "experiment": "notification-sync-vs-async",
+  "variant": "versionA",
+  "datasetUsers": 500,
+  "configuredRequests": 100,
+  "vus": 1,
+  "requests": 100,
+  "successes": 100,
+  "errorRate": 0,
+  "responseTimeMs": {
+    "average": 122.56311999999998,
+    "p95": 200.87885,
+    "p99": 326.79105999999996,
+    "max": 340.36
+  },
+  "throughputPerSecond": 7.735787578986258
+}

@@ -4,6 +4,8 @@ import cc.backend.amateurShow.entity.AmateurShow;
 import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
+import cc.backend.amateurShow.repository.projection.PerformerHashtagView;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
 import cc.backend.board.entity.Board;
@@ -13,6 +15,8 @@ import cc.backend.board.repository.CommentRepository;
 import cc.backend.event.entity.*;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
+import cc.backend.memberLike.entity.MemberLike;
+import cc.backend.memberLike.repository.MemberLikeRepository;
 import cc.backend.notice.dto.MemberNoticeResponseDTO;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.entity.MemberNotice;
@@ -26,8 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +44,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final AmateurShowRepository amateurShowRepository;
     private final CommentRepository commentRepository;
     private final AmateurTicketRepository amateurTicketRepository;
+    private final MemberLikeRepository memberLikeRepository;
 
     @Transactional
     @Override
@@ -242,6 +246,118 @@ public class NoticeServiceImpl implements NoticeService {
                 .contentId(notice.getContentId())
                 .createdAt(notice.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public NoticeResponseDTO.NoticeDTO notifyLikers(ApproveShowEvent event) {
+        AmateurShow show = event.getAmateurShow();
+        List<MemberLike> likers = memberLikeRepository.findByPerformerId(
+                event.getMember().getId()
+        );
+        if (likers.isEmpty()) return null;
+
+        Notice notice = noticeRepository.save(
+                Notice.builder()
+                        .type(NoticeType.AMATEURSHOW)
+                        .message("소극장 공연 '" + show.getName()
+                                + "' 등록 완료! 소극장 공연 페이지에서 확인해보세요!")
+                        .contentId(show.getId())
+                        .build()
+        );
+
+        memberNoticeRepository.saveAll(
+                likers.stream()
+                        .map(like -> MemberNotice.builder()
+                                .notice(notice)
+                                .member(like.getLiker())
+                                .build())
+                        .toList()
+        );
+
+        return NoticeResponseDTO.NoticeDTO.builder()
+                .id(notice.getId())
+                .noticeType(notice.getType())
+                .message(notice.getMessage())
+                .contentId(notice.getContentId())
+                .createdAt(notice.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public NoticeResponseDTO.NoticeDTO notifyRecommendation(ApproveShowEvent event) {
+        AmateurShow show = event.getAmateurShow();
+        if (noticeRepository.existsByContentIdAndType(show.getId(), NoticeType.RECOMMEND)) {
+            return null;
+        }
+
+        Set<String> newTags = parseHashtags(show.getHashtag());
+        if (newTags.isEmpty()) return null;
+
+        List<Member> targets = findRecommendationTargets(show, newTags);
+        if (targets.isEmpty()) return null;
+
+        Notice notice = noticeRepository.save(
+                Notice.builder()
+                        .type(NoticeType.RECOMMEND)
+                        .message("새로운 공연 '" + show.getName() + "' 어떠세요?")
+                        .contentId(show.getId())
+                        .build()
+        );
+
+        memberNoticeRepository.saveAll(
+                targets.stream()
+                        .map(member -> MemberNotice.builder()
+                                .member(member)
+                                .notice(notice)
+                                .personalMsg(createPersonalMessage(show, member))
+                                .isRead(false)
+                                .build())
+                        .toList()
+        );
+
+        return NoticeResponseDTO.NoticeDTO.builder()
+                .id(notice.getId())
+                .noticeType(notice.getType())
+                .message(notice.getMessage())
+                .contentId(notice.getContentId())
+                .createdAt(notice.getCreatedAt())
+                .build();
+    }
+
+    private Set<String> parseHashtags(String raw) {
+        return Arrays.stream(Optional.ofNullable(raw).orElse("").split("[#,\\s]+"))
+                .map(String::trim)
+                .filter(tag -> !tag.isEmpty())
+                .collect(Collectors.toSet());
+    }
+
+    private List<Member> findRecommendationTargets(AmateurShow newShow, Set<String> newTags) {
+        Set<Long> matchedPerformerIds = amateurShowRepository
+                .findApprovedHistoricalPerformerHashtags(
+                        ApprovalStatus.APPROVED,
+                        newShow.getId()
+                )
+                .stream()
+                .filter(row -> !Collections.disjoint(
+                        newTags,
+                        parseHashtags(row.getHashtag())
+                ))
+                .map(PerformerHashtagView::getPerformerId)
+                .collect(Collectors.toSet());
+
+        if (matchedPerformerIds.isEmpty()) return List.of();
+
+        return memberLikeRepository.findDistinctLikersByPerformerIdIn(
+                matchedPerformerIds
+        );
+    }
+
+    private String createPersonalMessage(AmateurShow show, Member member) {
+        return "새로운 공연 '" + show.getName() + "' 어떠세요? "
+                + show.getHashtag() + " "
+                + member.getName() + "님 취향에 딱!";
     }
 
     @Override

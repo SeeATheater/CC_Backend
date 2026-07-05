@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
     boolean existsByLikerAndPerformer(Member liker, Member performer);
@@ -36,5 +37,14 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
             @Param("member") Member member,
             @Param("now") LocalDateTime now,
             Pageable pageable
+    );
+
+    @Query("""
+        SELECT DISTINCT ml.liker
+        FROM MemberLike ml
+        WHERE ml.performer.id IN :performerIds
+    """)
+    List<Member> findDistinctLikersByPerformerIdIn(
+            @Param("performerIds") Set<Long> performerIds
     );
 }
