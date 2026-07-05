@@ -14,8 +14,10 @@ public class ApproveShowEventListener {
 
     @EventListener
     public NoticeResponseDTO.NoticeDTO handleApproveShowEvent(ApproveShowEvent event) {
-
-        return noticeService.notifyApproval(event);
+        NoticeResponseDTO.NoticeDTO approvalNotice = noticeService.notifyApproval(event);
+        noticeService.notifyLikers(event);
+        noticeService.notifyRecommendation(event);
+        return approvalNotice;
     }
 
 }
