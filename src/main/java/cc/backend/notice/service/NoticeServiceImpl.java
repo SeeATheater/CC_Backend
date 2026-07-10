@@ -1,7 +1,6 @@
 package cc.backend.notice.service;
 
 import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.amateurShow.entity.AmateurTicket;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.amateurShow.repository.AmateurTicketRepository;
 import cc.backend.amateurShow.entity.enums.ApprovalStatus;
@@ -15,19 +14,16 @@ import cc.backend.board.repository.CommentRepository;
 import cc.backend.event.entity.*;
 import cc.backend.member.entity.Member;
 import cc.backend.member.repository.MemberRepository;
-import cc.backend.memberLike.entity.MemberLike;
 import cc.backend.memberLike.repository.MemberLikeRepository;
-import cc.backend.notice.dto.MemberNoticeResponseDTO;
 import cc.backend.notice.dto.NoticeResponseDTO;
 import cc.backend.notice.entity.MemberNotice;
 import cc.backend.notice.entity.Notice;
 import cc.backend.notice.entity.enums.NoticeType;
 import cc.backend.notice.repository.MemberNoticeRepository;
 import cc.backend.notice.repository.NoticeRepository;
-import cc.backend.photoAlbum.dto.PhotoAlbumResponseDTO;
-import cc.backend.photoAlbum.entity.PhotoAlbum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -224,18 +220,21 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NoticeResponseDTO.NoticeDTO notifyApproval(ApproveShowEvent event) {
+        Member receiver = memberRepository.findById(event.getMemberId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MEMBER_NOT_FOUND));
+
         Notice notice = noticeRepository.save(Notice.builder()
                 .type(NoticeType.AMATEURSHOW)
-                .message("요청하신 " + "'" + event.getAmateurShow().getName() + "'"+ " 공연 등록이 승인되었습니다.")
-                .contentId(event.getAmateurShow().getId())
+                .message("요청하신 " + "'" + event.getShowName() + "'"+ " 공연 등록이 승인되었습니다.")
+                .contentId(event.getAmateurShowId())
                 .build()
         );
 
         memberNoticeRepository.save(MemberNotice.builder()
                 .notice(notice)
-                .member(event.getMember())
+                .member(receiver)
                 .build()
         );
 
@@ -249,28 +248,25 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NoticeResponseDTO.NoticeDTO notifyLikers(ApproveShowEvent event) {
-        AmateurShow show = event.getAmateurShow();
-        List<MemberLike> likers = memberLikeRepository.findByPerformerId(
-                event.getMember().getId()
-        );
+        List<Member> likers = memberLikeRepository.findLikersByPerformerId(event.getMemberId());
         if (likers.isEmpty()) return null;
 
         Notice notice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.AMATEURSHOW)
-                        .message("소극장 공연 '" + show.getName()
+                        .message("소극장 공연 '" + event.getShowName()
                                 + "' 등록 완료! 소극장 공연 페이지에서 확인해보세요!")
-                        .contentId(show.getId())
+                        .contentId(event.getAmateurShowId())
                         .build()
         );
 
         memberNoticeRepository.saveAll(
                 likers.stream()
-                        .map(like -> MemberNotice.builder()
+                        .map(liker -> MemberNotice.builder()
                                 .notice(notice)
-                                .member(like.getLiker())
+                                .member(liker)
                                 .build())
                         .toList()
         );
@@ -285,24 +281,23 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NoticeResponseDTO.NoticeDTO notifyRecommendation(ApproveShowEvent event) {
-        AmateurShow show = event.getAmateurShow();
-        if (noticeRepository.existsByContentIdAndType(show.getId(), NoticeType.RECOMMEND)) {
+        if (noticeRepository.existsByContentIdAndType(event.getAmateurShowId(), NoticeType.RECOMMEND)) {
             return null;
         }
 
-        Set<String> newTags = parseHashtags(show.getHashtag());
+        Set<String> newTags = parseHashtags(event.getHashtag());
         if (newTags.isEmpty()) return null;
 
-        List<Member> targets = findRecommendationTargets(show, newTags);
+        List<Member> targets = findRecommendationTargets(event.getAmateurShowId(), newTags);
         if (targets.isEmpty()) return null;
 
         Notice notice = noticeRepository.save(
                 Notice.builder()
                         .type(NoticeType.RECOMMEND)
-                        .message("새로운 공연 '" + show.getName() + "' 어떠세요?")
-                        .contentId(show.getId())
+                        .message("새로운 공연 '" + event.getShowName() + "' 어떠세요?")
+                        .contentId(event.getAmateurShowId())
                         .build()
         );
 
@@ -311,7 +306,7 @@ public class NoticeServiceImpl implements NoticeService {
                         .map(member -> MemberNotice.builder()
                                 .member(member)
                                 .notice(notice)
-                                .personalMsg(createPersonalMessage(show, member))
+                                .personalMsg(createPersonalMessage(event.getShowName(), event.getHashtag(), member))
                                 .isRead(false)
                                 .build())
                         .toList()
@@ -333,11 +328,11 @@ public class NoticeServiceImpl implements NoticeService {
                 .collect(Collectors.toSet());
     }
 
-    private List<Member> findRecommendationTargets(AmateurShow newShow, Set<String> newTags) {
+    private List<Member> findRecommendationTargets(Long newShowId, Set<String> newTags) {
         Set<Long> matchedPerformerIds = amateurShowRepository
                 .findApprovedHistoricalPerformerHashtags(
                         ApprovalStatus.APPROVED,
-                        newShow.getId()
+                        newShowId
                 )
                 .stream()
                 .filter(row -> !Collections.disjoint(
@@ -354,9 +349,9 @@ public class NoticeServiceImpl implements NoticeService {
         );
     }
 
-    private String createPersonalMessage(AmateurShow show, Member member) {
-        return "새로운 공연 '" + show.getName() + "' 어떠세요? "
-                + show.getHashtag() + " "
+    private String createPersonalMessage(String showName, String hashtag, Member member) {
+        return "새로운 공연 '" + showName + "' 어떠세요? "
+                + Optional.ofNullable(hashtag).orElse("") + " "
                 + member.getName() + "님 취향에 딱!";
     }
 

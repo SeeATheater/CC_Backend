@@ -4,6 +4,7 @@ import cc.backend.admin.amateurShow.dto.AdminAmateurShowRejectRequestDTO;
 import cc.backend.admin.amateurShow.dto.AdminAmateurShowSummaryResponseDTO;
 import cc.backend.admin.amateurShow.dto.AdminApprovalListResponseDTO;
 import cc.backend.amateurShow.entity.AmateurShow;
+import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
@@ -32,10 +33,21 @@ public class AdminApprovalService {
         AmateurShow show = amateurShowRepository.findById(showId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
+        if (show.getApprovalStatus() == ApprovalStatus.APPROVED) {
+            throw new GeneralException(ErrorStatus.AMATEURSHOW_ALREADY_APPROVED);
+        }
+
         show.approve();
 
         Member member  = show.getMember();
-        eventPublisher.publishEvent(new ApproveShowEvent(show, member));   //공연등록 승인 이벤트 생성
+        eventPublisher.publishEvent(
+                new ApproveShowEvent(
+                        show.getId(),
+                        member.getId(),
+                        show.getName(),
+                        show.getHashtag()
+                )
+        );   //공연등록 승인 이벤트 생성
 
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
