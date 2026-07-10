@@ -1,16 +1,18 @@
 package cc.backend.event.entity;
 
-import cc.backend.amateurShow.entity.AmateurShow;
-import cc.backend.member.entity.Member;
 import lombok.Getter;
 
 @Getter
 public class ApproveShowEvent {
-    private final AmateurShow amateurShow;
-    private final Member member;   //공연 등록자
+    private final Long amateurShowId;
+    private final Long memberId;   //공연 등록자
+    private final String showName;
+    private final String hashtag;
 
-    public ApproveShowEvent(AmateurShow amateurShow, Member member) {
-        this.amateurShow = amateurShow;
-        this.member = member;
+    public ApproveShowEvent(Long amateurShowId, Long memberId, String showName, String hashtag) {
+        this.amateurShowId = amateurShowId;
+        this.memberId = memberId;
+        this.showName = showName;
+        this.hashtag = hashtag;
     }
 }

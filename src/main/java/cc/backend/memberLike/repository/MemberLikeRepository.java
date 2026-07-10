@@ -40,6 +40,13 @@ public interface MemberLikeRepository extends JpaRepository<MemberLike, Long> {
     );
 
     @Query("""
+        SELECT ml.liker
+        FROM MemberLike ml
+        WHERE ml.performer.id = :performerId
+    """)
+    List<Member> findLikersByPerformerId(@Param("performerId") Long performerId);
+
+    @Query("""
         SELECT DISTINCT ml.liker
         FROM MemberLike ml
         WHERE ml.performer.id IN :performerIds
