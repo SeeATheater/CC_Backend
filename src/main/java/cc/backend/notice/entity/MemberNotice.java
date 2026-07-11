@@ -38,9 +38,8 @@ public class MemberNotice extends BaseEntity {
         this.isRead = isRead;
     }
 
-    public MemberNotice updateIsRead() {
+    public void updateIsRead(){
         this.isRead = true ;
-        return this;
     }
 
     public String resolveMessage() {
@@ -48,4 +47,5 @@ public class MemberNotice extends BaseEntity {
                 ? personalMsg
                 : notice.getMessage();
     }
+
 }

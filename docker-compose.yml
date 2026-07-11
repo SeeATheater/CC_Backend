@@ -2,6 +2,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    ports:
+      - "6379:6379" # 로컬 IntelliJ 접속용
     restart: unless-stopped
     mem_limit: 128m
     command: redis-server --appendonly yes
@@ -38,6 +40,7 @@ services:
       start_period: 40s
     depends_on:
       - redis
+      - kafka
 
   app-green:
     #그린 배포
@@ -65,7 +68,66 @@ services:
       start_period: 40s
     depends_on:
       - redis
+      - kafka
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "29092:29092" # 로컬 IntelliJ 접속용
+    environment:
+      # KRaft 필수 설정
+      CLUSTER_ID: "hjeeg3q1SoCw7IKoRw-rMQ"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+      # Listener 설정
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:29092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      # 단일 브로커 개발/배포용 설정
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      # Mac ARM / 메모리 설정
+      _JAVA_OPTIONS: "-XX:UseSVE=0"
+      KAFKA_HEAP_OPTS: "-Xms256M -Xmx256M"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
+    mem_limit: 600m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    mem_limit: 300m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   redis_data:
+    driver: local
+  kafka_data:
     driver: local

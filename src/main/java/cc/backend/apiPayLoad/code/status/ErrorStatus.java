@@ -121,10 +121,17 @@ public enum ErrorStatus implements BaseErrorCode {
 
 
     // ADMIN ERROR
-    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN4001", "관리자 계정이 없습니다");
+    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN4001", "관리자 계정이 없습니다"),
+
+
+    //OUTBOX ERROR
+    SERIALIZATION_FAIL(HttpStatus.METHOD_NOT_ALLOWED, "OUTBOX4001", "Outbox 직렬화 실패" );
+
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
+
 
     //Error
     @Override

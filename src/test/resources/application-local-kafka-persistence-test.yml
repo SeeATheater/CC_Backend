@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        show_sql: false
+  kafka:
+    consumer:
+      group-id: local-kafka-persistence-test
+      auto-offset-reset: earliest
+
+outbox:
+  polling-delay-ms: 100
+  max-attempts: 3

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
-    boolean existsByContentIdAndType(Long contentId, NoticeType type);
+    Boolean existsByContentIdAndType(Long contentId, NoticeType type);
 }

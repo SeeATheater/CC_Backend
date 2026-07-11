@@ -9,11 +9,11 @@ import cc.backend.amateurShow.repository.AmateurShowRepository;
 import cc.backend.apiPayLoad.PageResponse;
 import cc.backend.apiPayLoad.code.status.ErrorStatus;
 import cc.backend.apiPayLoad.exception.GeneralException;
-import cc.backend.event.entity.ApproveShowEvent;
-import cc.backend.event.entity.RejectShowEvent;
+import cc.backend.kafka.event.approvalShowEvent.ApprovalShowEvent;
+import cc.backend.kafka.event.rejectShowEvent.RejectShowEvent;
+import cc.backend.kafka.service.OutboxService;
 import cc.backend.member.entity.Member;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +26,11 @@ import java.util.List;
 public class AdminApprovalService {
 
     private final AmateurShowRepository amateurShowRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final OutboxService outboxService;
 
     @Transactional
     public AdminAmateurShowSummaryResponseDTO approveShow(Long showId) {
-        AmateurShow show = amateurShowRepository.findById(showId)
+        AmateurShow show = amateurShowRepository.findByIdForUpdate(showId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.AMATEURSHOW_NOT_FOUND));
 
         if (show.getApprovalStatus() == ApprovalStatus.APPROVED) {
@@ -39,15 +39,14 @@ public class AdminApprovalService {
 
         show.approve();
 
-        Member member  = show.getMember();
-        eventPublisher.publishEvent(
-                new ApproveShowEvent(
-                        show.getId(),
-                        member.getId(),
-                        show.getName(),
-                        show.getHashtag()
-                )
-        );   //공연등록 승인 이벤트 생성
+        Member performer  = show.getMember();
+
+        // 공연 승인 이벤트를 같은 트랜잭션에서 Outbox에 저장
+        outboxService.appendOutboxEvent(
+                ApprovalShowEvent.create(show.getId(), performer.getId()),
+                "approval-show-topic",
+                show.getId().toString()
+        );
 
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }
@@ -60,7 +59,16 @@ public class AdminApprovalService {
         show.reject(dto.getRejectReason());
 
         Member member  = show.getMember();
-        eventPublisher.publishEvent(new RejectShowEvent(show, member));   //공연등록 반려 이벤트 생성
+        // 공연 반려 이벤트를 같은 트랜잭션에서 Outbox에 저장
+        outboxService.appendOutboxEvent(
+                RejectShowEvent.create(
+                        show.getId(),
+                        member.getId(),
+                        show.getRejectReason()
+                ),
+                "reject-show-topic",
+                show.getId().toString()
+        );
 
         return AdminAmateurShowSummaryResponseDTO.from(show);
     }

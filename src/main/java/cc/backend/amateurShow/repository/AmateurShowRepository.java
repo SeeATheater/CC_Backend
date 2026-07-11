@@ -6,6 +6,7 @@ import cc.backend.amateurShow.entity.AmateurShowStatus;
 import cc.backend.amateurShow.entity.enums.ApprovalStatus;
 import cc.backend.amateurShow.repository.projection.PerformerHashtagView;
 import cc.backend.member.entity.Member;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -49,6 +50,10 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
 
     Optional<AmateurShow> findByIdAndMemberId(Long id, Long memberId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM AmateurShow s WHERE s.id = :id")
+    Optional<AmateurShow> findByIdForUpdate(@Param("id") Long id);
+
     Slice<AmateurShow> findByMember_IdOrderByIdDesc(Long memberId, Pageable pageable);
 
     long countByMember_Id(Long memberId);
@@ -86,7 +91,6 @@ public interface AmateurShowRepository extends JpaRepository<AmateurShow, Long>,
     @Query("UPDATE AmateurShow s SET s.status = 'ENDED' " +
             "WHERE s.status = 'ONGOING' AND s.end < :today")
     int updateShowsToEnded(@Param("today") LocalDate today);
-
     @Query("""
         SELECT
             s.member.id AS performerId,

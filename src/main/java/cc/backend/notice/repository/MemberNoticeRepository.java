@@ -12,6 +12,8 @@ import java.util.List;
 
 @Repository
 public interface MemberNoticeRepository extends JpaRepository<MemberNotice, Long> {
+    boolean existsByMemberIdAndNoticeContentId(Long memberId, Long contentId);
+
     List<MemberNotice> findAllByMemberIdOrderByCreatedAtDesc(Long memberId);
     @Query("""
         SELECT mn
